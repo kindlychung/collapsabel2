@@ -39,7 +39,7 @@ readFunFactory = function(header) {
 #' @slot cnames character vector of column names
 #' @slot header logical. Whether the first line is header
 #' @slot read_fun function. The function to be used when reading this file
-ReadInfo = setClass("ReadInfo", representation(filename = 'character', 
+.ReadInfo = setClass("ReadInfo", representation(filename = 'character', 
 				cnames = "character", 
 				header = "logical", 
 				read_fun = "function"), 

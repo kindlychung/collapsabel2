@@ -6,8 +6,7 @@
 #' @slot path character, file or dir path
 #' 
 #' @author kaiyin
-#' @export
-FilePath = setClass("FilePath", representation(path = "character"), 
+.FilePath = setClass("FilePath", representation(path = "character"), 
 		validity = function(object) {
 			missing_files = nonExistentFiles(object@path)
 			ifLen(missing_files, {

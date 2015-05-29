@@ -1,0 +1,1 @@
+setClass("PlGwas", contains = "PlInfo")

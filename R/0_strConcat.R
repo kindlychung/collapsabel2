@@ -19,7 +19,7 @@ setGeneric("strConcat",
 setMethod("strConcat",
 		signature(ss = "character", sep = "character"),
 		function(ss, sep) {
-			stopifnot(length(sep) != 1)
+			stopifnot(length(sep) == 1)
 			paste(ss, collapse = sep)
 		})
 
