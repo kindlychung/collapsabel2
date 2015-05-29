@@ -1,5 +1,6 @@
 tests
 man
+*.pdf
 .project
 .settings
 

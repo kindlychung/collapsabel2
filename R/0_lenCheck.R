@@ -21,7 +21,6 @@ setGeneric("lenCheck",
 #' @author kaiyin
 #' @docType methods
 #' @export
-# TODO: test
 setMethod("lenCheck",
 		signature(ilist = "list", ilengths = "numeric"),
 		function(ilist, ilengths) {

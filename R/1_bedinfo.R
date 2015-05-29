@@ -1,6 +1,6 @@
 #' An S4 class representing info about plink files
 #' 
-#' Info about plink bed files, including the root directory, 
+#' Info about plink files, including the root directory, 
 #' paths of plink .bed, .bim, .fam and .frq files, ff backing 
 #' directories for .bim, .fam and .frq files, etc.
 #' 
@@ -18,7 +18,6 @@
 #' }
 #' 
 #' @name PlInfo
-#' TODO: test
 .PlInfo = setClass("PlInfo", representation(main_dir = "character", 
 				plink_stem = "character",
 				plink_trio = "character", 
@@ -94,7 +93,7 @@ setMethod("initialize",
 		function(pl_info, bedstem) { 
 			# plink trio
 			ext_trio = c("bed", "bim", "fam")
-			plink_stem = bedstem
+			plink_stem = suppressWarnings(normalizePath(bedstem))
 			plink_trio = filePath(paste(bedstem, ext_trio, sep = "."))@path
 			plink_trio_base = basename(plink_trio)
 			names(plink_trio) = names(plink_trio_base) = ext_trio
