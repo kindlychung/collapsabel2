@@ -5,11 +5,13 @@ Version: 0.0.1
 Date: 2015-05-20
 Author: Kaiyin Zhong and Fan Liu
 Maintainer: Kaiyin Zhong <kindlychung@gmail.com>
-Depends: R (>= 2.15.0), txtutils, manqq2, ggplot2,
-         mice, magrittr, rentrez,
-         haplo.stats, dplyr, stringr, XML, xlsx
+Depends: R (>= 2.15.0), txtutils, ggplot2,
+         rentrez, rJava, 
+         haplo.stats, stringr, XML, xlsx
 Description: QCDH
 License: GPL
 URL: https://bitbucket.org/kindlychung/collapsabel/overview
 BugReports: https://bitbucket.org/kindlychung/collapsabel/issues
 Suggests: testthat
+SystemRequirements: Java
+

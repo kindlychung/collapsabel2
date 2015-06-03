@@ -28,8 +28,8 @@ setMethod("lenCheck",
 			
 			list_form = deparse(substitute(ilist))
 			lens = sapply(ilist, length)
-			bad_idx = lens != ilengths
-			
+			bad_idx = which(lens != ilengths)
+
 			if(all(bad_idx == FALSE)) {
 				TRUE
 			} else {
@@ -40,7 +40,10 @@ setMethod("lenCheck",
 								"\nObserved length: \n", 
 								as.character(lens), 
 								"\n Differ at these indices: \n", 
-								as.character(which(bad_idx)), 
+								as.character(bad_idx), 
+								"\n Or at these fields: \n", 
+								names(ilist)[bad_idx],
 								"\n"), " ")
 			}
+
 		})

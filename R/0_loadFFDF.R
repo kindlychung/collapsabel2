@@ -1,5 +1,5 @@
-require(ffbase)
-require(ff)
+#require(ff)
+#require(ffbase)
 
 setGeneric("loadFFDF",
 		function(dir, ...) {
@@ -8,7 +8,7 @@ setGeneric("loadFFDF",
 
 #' Load ffdf directory 
 #' @name loadFFDF
-#' @import ffbase
+#' @importFrom ffbase load.ffdf save.ffdf physical
 #' 
 #' @param dir the ffdf directory to be loaded
 #' @return an ffdf object 

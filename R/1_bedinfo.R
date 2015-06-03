@@ -13,11 +13,12 @@
 #' @examples 
 #' \donotrun{
 #' x = .PlInfo()
-#' x@plink_trio = c("/tmp/a.pdf")
+#' x@@plink_trio = c("/tmp/a.pdf")
 #' validObject(x) # error
 #' }
 #' 
 #' @name PlInfo
+#' @export 
 .PlInfo = setClass("PlInfo", representation(main_dir = "character", 
 				plink_stem = "character",
 				plink_trio = "character", 
@@ -34,14 +35,27 @@
 				ff_dir = "", 
 				ff_dir_trio = ""
 		), validity = function(object) {
-			msg = lenCheck(list(object@main_dir,
-							object@plink_stem ,
-							object@plink_trio ,
-							object@plink_trio_base ,
-							object@plink_frq ,
-							object@ff_dir ,
-							object@ff_dir_trio
-					), c(1, 1, 3, 3, 1, 1, 3))			
+			obj_slots = list(
+					object@main_dir,
+					object@plink_stem ,
+					object@plink_trio ,
+					object@plink_trio_base ,
+					object@plink_frq ,
+					object@ff_dir ,
+					object@ff_dir_trio
+			) 
+			names(obj_slots) = c(
+					"main_dir",
+					"plink_stem",
+					"plink_trio",
+					"plink_trio_base",
+					"plink_frq",
+					"ff_dir",
+					"ff_dir_trio"
+			)
+			msg = lenCheck(
+					obj_slots,
+					c(1, 1, 3, 3, 1, 1, 3))			
 			if(msg != TRUE) {
 				return(msg)
 			}
@@ -58,9 +72,9 @@
 		})
 
 
-setGeneric("initialize",
+setGeneric("plInfo",
 		function(pl_info, bedstem, ...) {
-			standardGeneric("initialize")
+			standardGeneric("plInfo")
 		})
 
 #' Constructor for PlInfo class
@@ -72,7 +86,7 @@ setGeneric("initialize",
 #' @return a PlInfo object
 #' @examples 
 #' \donotrun{
-#' pl_info = initialize(.PlInfo(), "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
+#' pl_info = plInfo(.PlInfo(), "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
 #' isSetup(pl_info) # false
 #' setup(pl_info)
 #' isSetup(pl_info) # true
@@ -86,9 +100,10 @@ setGeneric("initialize",
 #' head(frq_ff)
 #' }
 #' 
-#' @export 
 #' @author kaiyin
-setMethod("initialize",
+#' @name PlInfo_constructor
+#' @export 
+setMethod("plInfo",
 		signature(pl_info = "PlInfo", bedstem = "character"),
 		function(pl_info, bedstem) { 
 			# plink trio
@@ -121,6 +136,15 @@ setMethod("initialize",
 			pl_info
 		})
 
+#' @rdname PlInfo_constructor
+#' @export 
+setMethod("plInfo",
+		signature(pl_info = "missing", bedstem = "character"),
+		function(bedstem) {
+			plInfo(.PlInfo(), bedstem)
+		})
+
+
 setGeneric("isSetup",
 		function(pl_info, ...) {
 			standardGeneric("isSetup")
@@ -131,7 +155,7 @@ setGeneric("isSetup",
 #' @param pl_info PlInfo object
 #' @return TRUE or FALSE
 #' @examples 
-#' # see examples in initialize
+#' # see examples in plInfo
 #' 
 #' @author kaiyin
 #' @docType methods
@@ -151,7 +175,7 @@ setGeneric("setup",
 #' 
 #' @param pl_info 
 #' @examples 
-#' # see examples in initialize
+#' # see examples in plInfo
 #' 
 #' @author kaiyin
 #' @docType methods
@@ -159,10 +183,12 @@ setGeneric("setup",
 setMethod("setup",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			dir.create(pl_info@ff_dir)
 			if(isSetup(pl_info)) {
 				TRUE
 			} else {
+				if(!file.exists(pl_info@ff_dir)) {
+					dir.create(pl_info@ff_dir)
+				}
 				if(!file.exists(pl_info@plink_frq)) {
 					plinkr(bfile = pl_info@plink_stem, 
 							freq = "", 
@@ -186,11 +212,74 @@ setMethod("setup",
 			}
 		})
 
+setGeneric("nIndivPl",
+		function(pl_info, ...) {
+			standardGeneric("nIndivPl")
+		})
+
+#' Get number of individuals
+#' 
+#' @param pl_info PlInfo object
+#' @export 
+setMethod("nIndivPl",
+		signature(pl_info = "PlInfo"),
+		function(pl_info) {
+			fam = loadFam(pl_info)
+			as.integer(nrow(fam))
+		})
+
+setGeneric("nSnpPl",
+		function(pl_info, ...) {
+			standardGeneric("nSnpPl")
+		})
+
+#' Get number of SNPs.
+#' 
+#' @param pl_info PlInfo object
+#' @export 
+setMethod("nSnpPl",
+		signature(pl_info = "PlInfo"),
+		function(pl_info) {
+			bim = loadBim(pl_info)
+			as.integer(nrow(bim))
+		})
+
+setGeneric("bytesSnp",
+		function(pl_info, ...) {
+			standardGeneric("bytesSnp")
+		})
+
+#' Get number of bytes used by each SNP.
+#' 
+#' @param pl_info PlInfo object
+#' @export 
+setMethod("bytesSnp",
+		signature(pl_info = "PlInfo"),
+		function(pl_info) {
+			as.integer(ceiling(nIndivPl(pl_info) / 4L))
+		})
+
+setGeneric("nIndivApprPl",
+		function(pl_info, ...) {
+			standardGeneric("nIndivApprPl")
+		})
+
+#' Get apparent number of individuals
+#' 
+#' @param pl_info PlInfo object
+#' @export 
+setMethod("nIndivApprPl",
+		signature(pl_info = "PlInfo"),
+		function(pl_info) {
+			bytesSnp(pl_info) * 4L
+		})
 
 
 
 
-loadPlinkMeta = gtools::defmacro(ext, method_name, expr = {
+
+
+loadPlinkMeta = defmacro(ext, method_name, expr = {
 			setGeneric(method_name, 
 					function(pl_info, ...) {
 						standardGeneric(method_name)
@@ -228,7 +317,7 @@ NULL
 #' @param pl_info PlInfo object
 #' @return ffdf object
 #' @examples 
-#' # see examples in initialize
+#' # see examples in plInfo
 #' 
 #' @author kaiyin
 #' @docType methods
@@ -242,7 +331,7 @@ loadBim
 #' @param pl_info PlInfo object
 #' @return ffdf object
 #' @examples 
-#' # see examples in initialize
+#' # see examples in plInfo
 #' 
 #' @author kaiyin
 #' @docType methods
@@ -253,7 +342,7 @@ loadFam
 #' 
 #' @name loadFrq
 #' @examples 
-#' # see examples in initialize
+#' # see examples in plInfo
 #' 
 #' @param pl_info PlInfo object
 #' @return ffdf object
@@ -270,4 +359,5 @@ sourceAll = function() {
 		source(f)
 	}
 }
+
 

@@ -30,3 +30,41 @@ setMethod("strConcat",
 		function(ss, sep) {
 			paste(ss, collapse = "")
 		})
+setGeneric("strVectorRepr",
+		function(ss, print_out, ...) {
+			standardGeneric("strVectorRepr")
+		})
+
+
+#' String Representation of a character vector
+#' 
+#' 
+#' @param ss character. 
+#' @param print_out logical. Whether to print out the string representation.
+#' @return character.
+#' @examples 
+#' strVectorRepr(letters[1:3]) == 'c("a", "b", "c")'
+#' strVectorRepr(
+#'   as.character(1:3)) == 'c("1", "2", "3")'
+#' all(eval(parse(text = strVectorRepr(as.character(1:3)))) == 
+#'   c("1", "2", "3"))
+#' 
+#' @author kaiyin
+#' @export
+setMethod("strVectorRepr",
+		signature(ss = "character", print_out = "logical"),
+		function(ss, print_out = FALSE) {
+			ss = strConcat(
+					c(
+							"c(", 
+							strConcat(
+									paste('"', ss, '"', sep = ""), 
+									", "),
+							")"
+					)
+			)
+			if(print_out) {
+				message(ss)
+			}
+			ss
+		})

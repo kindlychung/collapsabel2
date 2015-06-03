@@ -1,3 +1,41 @@
+#' Define "macros" in R
+#' 
+#' See \link{http://cran.r-project.org/doc/Rnews/Rnews_2001-3.pdf}
+#' @author Thomas Lumley
+#' @export 
+defmacro <- function(..., expr){
+	expr <- substitute(expr)
+	a <- substitute(list(...))[-1]
+	## process the argument list
+	nn <- names(a)
+	if (is.null(nn)) nn <- rep("", length(a))
+	nn
+	for(i in seq(length=length(a))) {
+		if (nn[i] == "") {
+			nn[i] <- paste(a[[i]])
+			msg <- paste(a[[i]], "not supplied")
+			a[[i]] <- substitute(stop(foo),
+					list(foo = msg))
+		}
+	}
+	names(a) = nn
+	a = as.list(a)
+	ff = eval(substitute( 
+					function() { 
+						tmp = substitute(body)
+						eval(tmp, parent.frame())
+					}, 
+					list(body = expr)))
+	formals(ff) = a
+	mm = match.call()
+	mm$expr = NULL
+	mm[[1]] = as.name("macro")
+	mm_src = c(deparse(mm), deparse(expr))
+	attr(ff, "source") = mm_src
+	ff
+}
+
+
 #' IfLen macro
 #' 
 #' Check whether a object has non-zero length, and 
@@ -6,14 +44,13 @@
 #' @param df An object which can be passed to \code{length}
 #' @param body1 If \code{length(df)} is not zero, then this clause is evaluated, otherwise, body2 is evaluated.
 #' @param body2 See above.
-#' @importFrom gtools defmacro
 #' 
 #' @examples 
 #' ifLen(c(1, 2), { print('yes!') }, {print("no!")})
 #' 
 #' @author kaiyin
 #' @export
-ifLen = gtools::defmacro(df, body1, body2 = {}, expr = {
+ifLen = defmacro(df, body1, body2 = {}, expr = {
 			if(length(df) != 0) {
 				body1
 			} else {
@@ -31,15 +68,16 @@ ifLen = gtools::defmacro(df, body1, body2 = {}, expr = {
 #' @param x the predicate to be evalueated, and to be assigned to a temporary variable as described in \code{sym_str}
 #' @param body1 expression to be evaluated when the temporary variable is TRUE.
 #' @param body2 expression to be evaluated when the temporary variable is FALSE.
-#' @importFrom gtools defmacro
 #' 
 #' @examples 
+#' ifLet(..temp.., TRUE, {print(paste("true.", as.character(..temp..)))}, 
+#' 		{print(paste("false.", as.character(..temp..)))})
 #' ifLet("..temp..", TRUE, {print(paste("true.", as.character(..temp..)))}, 
 #' 		{print(paste("false.", as.character(..temp..)))})
 #' 
 #' @author kaiyin
 #' @export
-ifLet = gtools::defmacro(sym_str, x, body1, body2={}, expr = {
+ifLet = defmacro(sym_str, x, body1, body2={}, expr = {
 			stopifnot(is.character(sym_str))
 			stopifnot(length(sym_str) == 1)
 			assign(sym_str, x)
@@ -50,6 +88,16 @@ ifLet = gtools::defmacro(sym_str, x, body1, body2={}, expr = {
 			}
 		})
 
+
+
+
+
+
+
+
+
+
+
 #' IfLetLen macro
 #' 
 #' Similar to ifLet, but conditioned on whether the length of 
@@ -59,7 +107,6 @@ ifLet = gtools::defmacro(sym_str, x, body1, body2={}, expr = {
 #' @param x the predicate to be evalueated, and to be assigned to a temporary var called \code{..temp..}
 #' @param body1 expression to be evaluated when \code{..temp..} is TRUE.
 #' @param body2 expression to be evaluated when \code{..temp..} is FALSE.
-#' @importFrom gtools defmacro
 #' 
 #' @examples 
 #' ifLetLen("..temp..", 1:3, {print(paste("true.", as.character(..temp..)))}, 
@@ -67,7 +114,7 @@ ifLet = gtools::defmacro(sym_str, x, body1, body2={}, expr = {
 #' 
 #' @author kaiyin
 #' @export
-ifLetLen = gtools::defmacro(sym_str, x, body1, body2={}, expr = {
+ifLetLen = defmacro(sym_str, x, body1, body2={}, expr = {
 			stopifnot(is.character(sym_str))
 			stopifnot(length(sym_str) == 1)
 			assign(sym_str, x)
@@ -77,3 +124,13 @@ ifLetLen = gtools::defmacro(sym_str, x, body1, body2={}, expr = {
 				body2
 			})
 		})
+
+
+#' Print quoted expression then its value
+#' 
+#' @param expr expression to be evaluated.
+#' @export 
+eprint = function(expr) {
+	message(substitute(expr))
+	print(expr)
+}
