@@ -85,7 +85,6 @@
 			
 
 			covars = covarNames(object)
-			browser()
 			if(length(covars) > 0) {
 				covar_not_there = which(! covars %in% first_line)
 				if(length(covar_not_there) > 0) {
@@ -130,7 +129,7 @@ setGeneric("plGwas",
 
 #' Constructor for PlGwas class
 #' 
-#' @name plGwas
+#' @name plGwas_methods
 #' 
 #' @param pl_gwas PlGwas or PlInfo object
 #' @param phe character. Phenotype file
@@ -160,7 +159,7 @@ setMethod("plGwas",
 		})
 
 
-#' @rdname plGwas
+#' @rdname plGwas_methods
 #' @export 
 setMethod("plGwas",
 		signature(pl_gwas = "PlInfo", phe = "character", 
@@ -176,7 +175,7 @@ setMethod("plGwas",
 		}
 )
 
-#' @rdname plGwas
+#' @rdname plGwas_methods
 #' @export 
 setMethod("plGwas",
 		signature(pl_gwas = "PlInfo", phe = "character", 
@@ -192,28 +191,28 @@ setMethod("plGwas",
 )
 
 
-#pl_info = plInfo(bedstem = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
-## Error in validObject
-#pl_gwas = plGwas(pl_info, 
-#		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-#		phe_name = "nothing", 
-#		covar_name = "Sex,Cage", 
-#		gwas_tag = "mmp13_page_sex_age")
-## Error in validObject
-#pl_gwas = plGwas(pl_info, 
-#		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-#		phe_name = "Page", 
-#		covar_name = "nothing,Cage", 
-#		gwas_tag = "mmp13_page_sex_age")
-#covarNames(pl_gwas)
-#pl_gwas = plGwas(pl_info, 
-#		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-#		phe_name = "Page", 
-#		covar_name = "Sex,Cage", 
-#		gwas_tag = "mmp13_page_sex_age")
+pl_info = plInfo(bedstem = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
+# Error in validObject
+pl_gwas = plGwas(pl_info, 
+		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
+		phe_name = "nothing", 
+		covar_name = "Sex,Cage", 
+		gwas_tag = "mmp13_page_sex_age")
+# Error in validObject
+pl_gwas = plGwas(pl_info, 
+		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
+		phe_name = "Page", 
+		covar_name = "nothing,Cage", 
+		gwas_tag = "mmp13_page_sex_age")
+pl_gwas = plGwas(pl_info, 
+		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
+		phe_name = "Page", 
+		covar_name = "Sex,Cage", 
+		gwas_tag = "mmp13_page_sex_age")
+all(covarNames(pl_gwas) == c("Sex", "Age"))
 
 
-#' @rdname plGwas
+#' @rdname plGwas_methods
 #' @export 
 setMethod("plGwas",
 		signature(pl_gwas = "missing", phe = "character", 
@@ -229,26 +228,33 @@ setMethod("plGwas",
 		}
 )
 
-#x = plInfo(bedstem = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
-#nSnpPl(x)
-#nIndivPl(x)
-#validObject(x)
-#y = as(x, "PlGwas")
-#y
-#z = as(y, "PlInfo")
-#z
-#x = readLiteral('/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe', 
-#		nrows = 1)
-#head(x)
-#x = 1:1e7
-#nx = paste("item", x, sep = "")
-#names(x) = nx
-#n_ns = 10000
-#ns_choose = sample(nx, n_ns)
-#system.time(..tmp <- x[ns_choose])
-#system.time(..tmp <- x[nx %in% ns_choose])
-#system.time(..tmp <- x[which(nx %in% ns_choose)])
 
 
 
 
+
+setGeneric("gwasDir",
+		function(pl_gwas, ...) {
+			standardGeneric("gwasDir")
+		})
+
+#' GWAS results directory of a certain GWAS scan
+#'  
+#' @name gwasDir_methods
+#' @alias gwasDir,PlGwas-method
+#' 
+#' @param pl_gwas PlGwas object
+#' @return character. 
+#' 
+#' @author kaiyin
+#' @docType methods
+#' @export
+setMethod("gwasDir",
+		signature(pl_gwas = "PlGwas"),
+		function(pl_gwas) {
+			gwas_dir = file.path(.collapsabel_gwas, pl_gwas@gwas_tag)
+			if(!file.exists(gwas_dir)) {
+				dir.create(gwas_dir)
+			}
+			gwas_dir
+		})

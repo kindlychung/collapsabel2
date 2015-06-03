@@ -37,7 +37,7 @@ setMethod("loadFFDF",
 			#
 			setwd(paren_dir)
 			tryCatch({
-						load.ffdf(ffdf_dir)
+						ffbase::load.ffdf(ffdf_dir)
 						file_list = list.files(ffdf_dir)
 						ff_obj_name = stringr::str_match(string = file_list[1], pattern = "^(.*)\\$")[2]
 						eval(as.symbol(ff_obj_name))
@@ -77,7 +77,7 @@ setMethod("saveFFDF",
 		signature(df = "data.frame", dir = "character", overwrite = "logical"),
 		function(df, dir, overwrite) {
 			df.ff = df2ffdf(df)
-			save.ffdf(df.ff, dir = dir, overwrite = overwrite)
+			ffbase::save.ffdf(df.ff, dir = dir, overwrite = overwrite)
 		})
 
 #' @rdname saveFFDF

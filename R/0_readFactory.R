@@ -28,7 +28,8 @@ setMethod("correctTypes",
 			dat_colns = colnames(dat)
 			for(i in 1:length(col_names)) {
 				if(col_names[i] %in% dat_colns) {
-					dat[, col_names[i]] = as(dat[, col_names[i]], types[i])
+					dat[, col_names[i]] = suppressWarnings(
+							as(dat[, col_names[i]], types[i]))
 				}
 			}
 			dat
@@ -331,12 +332,16 @@ readFam = readFactory("fam")
 
 #' @rdname readAssoc
 #' @export 
-readLogistic = readLinear  = function(filename, cn_select = .linear_header)  {
+readLogistic = function(filename, cn_select = .linear_header)  {
 	info = readInfo(filename)
 	dat = info@read_fun(info, cn_select)
 	correctTypes(dat, c("CHR", "BP", "NMISS", "BETA", "STAT", "P"), 
 			c(rep("integer", 3), rep("numeric", 3)))
 }
+
+#' @rdname readAssoc
+#' @export 
+readLinear = readLogistic
 
 
 #' Plink output file headers

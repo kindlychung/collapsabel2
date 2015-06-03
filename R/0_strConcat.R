@@ -50,10 +50,11 @@ setGeneric("strVectorRepr",
 #'   c("1", "2", "3"))
 #' 
 #' @author kaiyin
+#' @name strVectorRepr_methods
 #' @export
 setMethod("strVectorRepr",
 		signature(ss = "character", print_out = "logical"),
-		function(ss, print_out = FALSE) {
+		function(ss, print_out) {
 			ss = strConcat(
 					c(
 							"c(", 
@@ -67,4 +68,13 @@ setMethod("strVectorRepr",
 				message(ss)
 			}
 			ss
+		})
+
+
+#' @rdname strVectorRepr_methods
+#' @export 
+setMethod("strVectorRepr",
+		signature(ss = "character", print_out = "missing"), 
+		function(ss, print_out) {
+			strVectorRepr(ss, FALSE)
 		})
