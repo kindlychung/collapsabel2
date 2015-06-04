@@ -34,10 +34,9 @@ setMethod("loadFFDF",
 			paren_dir = dirname(dir)
 			ffdf_dir = basename(dir)
 
-			#
 			setwd(paren_dir)
 			tryCatch({
-						ffbase::load.ffdf(ffdf_dir)
+						capture.output(ffbase::load.ffdf(ffdf_dir))
 						file_list = list.files(ffdf_dir)
 						ff_obj_name = stringr::str_match(string = file_list[1], pattern = "^(.*)\\$")[2]
 						eval(as.symbol(ff_obj_name))

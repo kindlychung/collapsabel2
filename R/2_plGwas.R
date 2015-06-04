@@ -191,25 +191,6 @@ setMethod("plGwas",
 )
 
 
-pl_info = plInfo(bedstem = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
-# Error in validObject
-pl_gwas = plGwas(pl_info, 
-		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-		phe_name = "nothing", 
-		covar_name = "Sex,Cage", 
-		gwas_tag = "mmp13_page_sex_age")
-# Error in validObject
-pl_gwas = plGwas(pl_info, 
-		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-		phe_name = "Page", 
-		covar_name = "nothing,Cage", 
-		gwas_tag = "mmp13_page_sex_age")
-pl_gwas = plGwas(pl_info, 
-		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-		phe_name = "Page", 
-		covar_name = "Sex,Cage", 
-		gwas_tag = "mmp13_page_sex_age")
-all(covarNames(pl_gwas) == c("Sex", "Age"))
 
 
 #' @rdname plGwas_methods
@@ -254,7 +235,204 @@ setMethod("gwasDir",
 		function(pl_gwas) {
 			gwas_dir = file.path(.collapsabel_gwas, pl_gwas@gwas_tag)
 			if(!file.exists(gwas_dir)) {
-				dir.create(gwas_dir)
+				dir.create(gwas_dir, recursive = TRUE)
 			}
 			gwas_dir
 		})
+
+
+setGeneric("gwasOutStem",
+		function(pl_gwas, ...) {
+			standardGeneric("gwasOutStem")
+		})
+
+#' Plink output filename
+#' 
+#' To be passed as the \code{--out} option to plink.
+#' 
+#' @name gwasOutStem
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return character. Plink output filename, without extension
+#' 
+#' @author kaiyin
+#' @docType methods
+#' @export
+setMethod("gwasOutStem",
+		signature(pl_gwas = "PlGwas"),
+		function(pl_gwas) {
+			file.path(gwasDir(pl_gwas), basename(pl_gwas@plink_stem))
+		})
+
+isS4Class = function(obj, c) {
+	isS4(obj) && is(obj, c)
+}
+
+#' Run a GWAS
+#' 
+#' @param pl_gwas PlGwas object
+#' @param opts GWAS options. Default to an empty list.
+#' @param assoc logical. If set to TRUE, the \code{--assoc} option will be passed to plink.
+#' 
+#' @author kaiyin
+#' @export
+runGwas = function(pl_gwas, assoc = FALSE, opts=list()) {
+	# TODO: save.RDS the plgwas obj
+	# TODO: list and fetch plgwas obj
+	# TODO: add assoc option
+	# TODO: try detect binary trait. --linear or --logistic
+	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	stopifnot(is.logical(assoc))
+	stopifnot(is.list(opts))
+	opts$bfile = pl_gwas@plink_stem
+	opts$pheno = pl_gwas@plink_phe
+	opts$pheno_name = pl_gwas@phe_name
+	opts$covar = pl_gwas@plink_phe
+	opts$covar_name = pl_gwas@covar_name
+	opts$allow_no_sex = ""
+	opts$stdout = gwasLog(pl_gwas)
+	opts$out = gwasOutStem(pl_gwas)
+	if(assoc) {
+		opts$assoc = ""
+	} else if(binPhe(pl_gwas)) {
+		opts$logistic = "hide-covar beta"
+	} else {
+		opts$linear = "hide-covar"
+	}
+	do.call(plinkr, opts)
+}
+
+#' Read phenotype file
+#' 
+#' @param pl_gwas PlGwas object
+#' @param cn_select Colnames to select. Default to "..all", which means all columns are read in.
+#' @return data.frame
+#' 
+#' @author kaiyin
+#' @export
+readPhe = function(pl_gwas, cn_select = "..all") {
+	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	info = readInfo(pl_gwas@plink_phe)
+	phe = info@read_fun(info, cn_select)
+	if(length(cn_select) == 1 && cn_select == "..all") {
+		classes = colClasses(headPhe(pl_gwas, 1))
+	} else {
+		classes = colClasses(headPhe(pl_gwas, 1)[, cn_select, drop = FALSE])
+	}
+	correctTypes(phe, types = classes)
+}
+
+#' Read first n lines of a phenotype file
+#' 
+#' @param pl_gwas PlGwas object
+#' @param nrows number of lines to read
+#' @return data.frame
+#' 
+#' @author kaiyin
+#' @export
+headPhe = function(pl_gwas, nrows = 5L) {
+	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	stopifnot(is.numeric(nrows))
+	read.table(pl_gwas@plink_phe, header = TRUE, nrows = nrows, 
+			stringsAsFactors = FALSE)
+}
+
+#' Check whether a trait is binary
+#' 
+#' @param v numeric vector.
+#' @param na_value a vector of numeric values which should be seen as NA.
+#' @return logical
+#' @examples
+#' \donotrun{
+#' !isBinary(c(1, 1.1, 1, 1.1, NA))
+#' isBinary(c(1, 2, 1, 2, NA))
+#' !isBinary(c(-9, 2.3, 4.1, -9, -9), -9)
+#' isBinary(c(-9, 2, 4, -9, -9), -9)
+#' isBinary(c(1, 2, 2, 1, -9, -9.9), c(-9, -9.9))
+#' }
+#' 
+#' @author kaiyin
+#' @export
+isBinary = function(v, na_value = NULL) {
+	stopifnot(is.numeric(v))
+	v = unique(na.omit(v))
+	if(! is.null(na_value)) {
+		v = v[! v %in% na_value]
+	}
+	if(length(v) > 2L || any(as.integer(v) != v)) {
+		FALSE
+	} else {
+		TRUE
+	}
+}
+
+#' Check whether phenotype of a GWAS is binary
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return logical
+#' 
+#' @author kaiyin
+#' @export
+binPhe = function(pl_gwas) {
+	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	phe = readPhe(pl_gwas, pl_gwas@phe_name)
+	isBinary(phe[, 1])
+}
+
+#' Plink log fie
+#' 
+#' Redirect stdout to this file when plink is running.
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return character. Path to log file.
+#' 
+#' @author kaiyin
+#' @export
+gwasLog = function(pl_gwas) {
+	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	sprintf("%s.stdout_log", gwasOutStem(pl_gwas))
+}
+
+
+
+
+pl_info = plInfo(bedstem = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
+# Error in validObject
+pl_gwas = plGwas(pl_info, 
+		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
+		phe_name = "nothing", 
+		covar_name = "Sex,Cage", 
+		gwas_tag = "mmp13_page_sex_age")
+# Error in validObject
+pl_gwas = plGwas(pl_info, 
+		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
+		phe_name = "Page", 
+		covar_name = "nothing,Cage", 
+		gwas_tag = "mmp13_page_sex_age")
+pl_gwas = plGwas(pl_info, 
+		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
+		phe_name = "Page", 
+		covar_name = "Sex,Cage", 
+		gwas_tag = "mmp13_page_sex_age")
+pl_gwas@phe_name == "Page"
+pl_gwas@covar_name == "Sex, Cage"
+all(covarNames(pl_gwas) == c("Sex", "Age"))
+g_dir = gwasDir(pl_gwas)
+print(g_dir)
+file.exists(gwasDir(pl_gwas))
+file.info(gwasDir(pl_gwas))$isdir
+g_out = gwasOutStem(pl_gwas)
+print(g_out)
+debugonce(plinkr)
+runGwas(pl_gwas)
+classes = colClasses(headPhe(pl_gwas, 1))
+phe = readPhe(pl_gwas)
+all(classes == colClasses(phe))
+phe = readPhe(pl_gwas, c("FID", "Cage", "Sex"))
+all(colClasses(phe) == c("character", "numeric", "integer"))
+binPhe(pl_gwas)
+gwasLog(pl_gwas)
+
+
+
+

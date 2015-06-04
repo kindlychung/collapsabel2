@@ -86,12 +86,12 @@ setGeneric("plInfo",
 #' @return a PlInfo object
 #' @examples 
 #' \donotrun{
-#' pl_info = plInfo(.PlInfo(), "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
-#' isSetup(pl_info) # false
-#' setup(pl_info)
-#' isSetup(pl_info) # true
-#' bim_ff = loadMyBim(pl_info)
-#' head(bim_ff)
+pl_info = plInfo(.PlInfo(), "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
+isSetup(pl_info) # false
+setup(pl_info)
+isSetup(pl_info) # true
+bim_ff = suppressMessages(loadBim(pl_info))
+head(bim_ff)
 #' fam_ff = loadFam(pl_info)
 #' head(fam_ff)
 #' summary(fam_ff[, "IID"])
@@ -240,7 +240,7 @@ setGeneric("nSnpPl",
 setMethod("nSnpPl",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			bim = loadBim(pl_info)
+			bim <- loadBim(pl_info)
 			as.integer(nrow(bim))
 		})
 
@@ -287,7 +287,8 @@ loadPlinkMeta = defmacro(ext, method_name, expr = {
 			setMethod(method_name, 
 					signature(pl_info = "PlInfo"), 
 					function(pl_info) {
-						loadFFDF(pl_info@ff_dir_trio[ext])
+						suppressMessages(res <- loadFFDF(pl_info@ff_dir_trio[ext]))
+						res
 					})
 		})
 

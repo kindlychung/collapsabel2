@@ -1207,7 +1207,6 @@ plinkr = function(
 	stdout="",
 	stderr="",
 	wait=TRUE
-	
 ) {
 	paramList = mget(names(formals()),sys.frame(sys.nframe()))
 	# Should I wait for the process to finish?
