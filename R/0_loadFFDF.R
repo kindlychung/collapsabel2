@@ -9,6 +9,7 @@ setGeneric("loadFFDF",
 #' Load ffdf directory 
 #' @name loadFFDF
 #' @importFrom ffbase load.ffdf save.ffdf physical
+#' @importFrom stringr str_match
 #' 
 #' @param dir the ffdf directory to be loaded
 #' @return an ffdf object 

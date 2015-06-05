@@ -44,10 +44,3 @@ checkFileExist = function(files) {
 					stop(paste("Non-existent files:", paste(miss_files, collapse=", ")))
 				})
 }
-
-#checkFileExist = gtools::defmacro(files, expr = {
-#                miss_files = nonExistentFiles(files)
-#				ifLen(miss_files, {
-#					stop(paste("Non-existent files:", paste(miss_files, collapse=", ")))
-#				})		
-#		})

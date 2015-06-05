@@ -124,7 +124,6 @@ setMethod("plGwas",
 				gwas_tag, 
 				assoc, opts
 		) {
-			browser()
 			pl_gwas@gwas_tag = gwas_tag
 			pl_gwas@opts$bfile = pl_gwas@pl_info@plink_stem
 			pl_gwas@opts$pheno = pheno
@@ -321,29 +320,155 @@ gwasOut = function(pl_gwas) {
 #' @author kaiyin
 #' @export
 runGwas = function(pl_gwas) {
-	# TODO: save.RDS the plgwas obj
 	# TODO: list and fetch plgwas obj
-	# TODO: add assoc option
-	# TODO: try detect binary trait. --linear or --logistic
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
 	do.call(plinkr, pl_gwas@opts)
+	saveRDS(pl_gwas, gwasRDS(pl_gwas))
+}
+
+#' Get RDS file path of a PlGwas object
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return character. path of a PlGwas object
+#' 
+#' @author kaiyin
+#' @export
+gwasRDS = function(pl_gwas) {
+	tag2RDSPath(pl_gwas@gwas_tag)
+}
+
+#' List GWAS tags
+#' 
+#' @author kaiyin
+#' @export
+listGwasTags = function() {
+	list.files(.collapsabel_gwas)
 }
 
 
-#' Check progress of a plink job
+tag2Dir = function(gwas_tag) {
+	file.path(.collapsabel_gwas, gwas_tag)
+}
+
+tag2RDSPath = function(gwas_tag) {
+	d = tag2Dir(gwas_tag)
+	file.path(d, tag2RDS(gwas_tag))
+}
+
+dir2Tag = function(gwas_dir) {
+	basename(gwas_dir)
+}
+
+tag2RDS = function(gwas_tag) {
+	paste(gwas_tag, 
+			"_PlGwas.rds", 
+			sep = "")
+}
+
+#' Load PlGwas object by tag, from the RDS file
+#' 
+#' @param gwas_tag character. Tag of a GWAS run.
+#' @return PlGwas object.
+#' 
+#' @author kaiyin
+#' @export
+loadGwas = function(gwas_tag) {
+	stopifnot(is.character(gwas_tag))
+	stopifnot(length(gwas_tag) == 1)
+	gwas_dirs = listGwasTags()
+	if(gwas_tag %in% gwas_dirs) {
+		rds_file = gwasRDS(pl_gwas)
+		if(file.exists(rds_file)) {
+			readRDS(rds_file)
+		} else {
+			FALSE
+		}
+	} else {
+		FALSE
+	}
+}
+
+# TODO: remove GWASs
+
+
+#' Check progress of a plink job (approximately)
 #' 
 #' @param pl_gwas PlGwas object.
 #' @return numeric. Percentage of progress.
 #' 
 #' @author kaiyin
 #' @export
-gwasPercentDone = function(pl_gwas) {
+gwasPercentApprox = function(pl_gwas) {
 	out_file = gwasOut(pl_gwas)
 	if(file.exists(out_file)) {
-		fileSize(out_file) / theoPlinkOutSize(pl_gwas)
+		fileSize(out_file) / theoPlinkOutSize(pl_gwas) * 100
 	} else {
-		0L
+		0
 	}
+}
+
+#' Read stdout from plink into a character vector, each element is a line
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return character
+#' 
+#' @author kaiyin
+#' @export
+readGwasLogLines = function(pl_gwas) {
+	log_file = gwasLog(pl_gwas)
+	if(file.exists(log_file)) {
+		suppressWarnings(readLines(log_file))
+	} else {
+		""
+	}
+}
+
+#' Read stdout from plink as a string
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return character.
+#' 
+#' @author kaiyin
+#' @export
+readGwasLogStr = function(pl_gwas) {
+	s = readGwasLogLines(pl_gwas)
+	cat(s)
+	invisible(s)
+}
+
+
+#' Check progress of a plink job (by reading its log file)
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return numeric. Percentage finished.
+#' 
+#' @author kaiyin
+#' @export
+gwasPercent = function(pl_gwas) {
+	s = readGwasLogLines(pl_gwas)
+	s1 = s[length(s)]
+	s2 = s[length(s) - 1]
+	if(grepl(pattern = "^\\s*Writing.*results to$", x = s2)) {
+		m = stringr::str_match(string = s1, 
+				pattern = ".*done\\.$")
+		if(!is.na(m)) return(100)
+		m = stringr::str_match(string = s1, 
+				pattern = "[^0-9]+(\\d+)%$")
+		as.numeric(m[1, 2])
+	} else {
+		0
+	}
+}
+
+#' Check whether a plink job is finished.
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return logical.
+#' 
+#' @author kaiyin
+#' @export
+gwasFinished = function(pl_gwas) {
+	gwasPercent(pl_gwas) == 100
 }
 
 #' Approximate output file size of a plink job.

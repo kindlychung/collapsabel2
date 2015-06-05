@@ -1247,13 +1247,12 @@ plinkr = function(
 	paramNameWithValue[idxOdd] = paramName
 	paramNameWithValue[idxEven] = paramVector
 	
-	print(paramNameWithValue)
 	ret = system2('plink', paramNameWithValue, wait=wait, stdout=stdout, stderr=stderr)
     if(ret != 0) {
 		warning("plink failed.")
-		FALSE
+		invisible(FALSE)
     } else {
-		TRUE
+		invisible(TRUE)
 	}
 }
 

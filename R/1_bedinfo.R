@@ -229,7 +229,7 @@ setMethod("nIndivPl",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
 			fam = loadFam(pl_info)
-			as.integer(nrow(fam))
+			as.numeric(nrow(fam))
 		})
 
 setGeneric("nSnpPl",
@@ -245,7 +245,7 @@ setMethod("nSnpPl",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
 			bim <- loadBim(pl_info)
-			as.integer(nrow(bim))
+			as.numeric(nrow(bim))
 		})
 
 setGeneric("bytesSnp",
@@ -260,7 +260,7 @@ setGeneric("bytesSnp",
 setMethod("bytesSnp",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			as.integer(ceiling(nIndivPl(pl_info) / 4L))
+			as.numeric(ceiling(nIndivPl(pl_info) / 4))
 		})
 
 setGeneric("nIndivApprPl",
@@ -275,7 +275,7 @@ setGeneric("nIndivApprPl",
 setMethod("nIndivApprPl",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			bytesSnp(pl_info) * 4L
+			as.numeric(bytesSnp(pl_info) * 4)
 		})
 
 

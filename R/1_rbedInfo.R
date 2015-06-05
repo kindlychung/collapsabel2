@@ -6,10 +6,10 @@ setOldClass("ffdf")
 #' @import rJava
 #' @slot pl_info PlInfo object
 #' @slot jbed jobjRef object, of Bed class in java
-#' @slot nsnp integer. Number of SNPs.
-#' @slot nindiv integer. Number of individuals.
-#' @slot nindiv_appr integer. Apparent number of individuals.
-#' @slot bytes_snp integer. Number of bytes used for each SNP.
+#' @slot nsnp numeric. Number of SNPs.
+#' @slot nindiv numeric. Number of individuals.
+#' @slot nindiv_appr numeric. Apparent number of individuals.
+#' @slot bytes_snp numeric. Number of bytes used for each SNP.
 #' @slot bim ffdf object. Data from .bim file.
 #' @slot fam ffdf object. Data from .fam file.
 #' @export 
@@ -17,21 +17,21 @@ setOldClass("ffdf")
 		representation(
 				pl_info = "PlInfo", 
 				jbed = "jobjRef", 
-				nsnp = "integer", 
-				nindiv = "integer", 
-				nindiv_appr = "integer", 
-				bytes_snp = "integer", 
-#				snp_idx = "integer",
+				nsnp = "numeric", 
+				nindiv = "numeric", 
+				nindiv_appr = "numeric", 
+				bytes_snp = "numeric", 
+#				snp_idx = "numeric",
 				bim = "ffdf",
 				fam = "ffdf"
 		), 
 		prototype(
 				pl_info = .PlInfo(), 
 				jbed = .jnew("java/lang/Integer", 0L), 
-				nsnp = 0L, 
-				nindiv = 0L, 
-				nindiv_appr = 0L, 
-				bytes_snp = 0L, 
+				nsnp = 0, 
+				nindiv = 0, 
+				nindiv_appr = 0, 
+				bytes_snp = 0, 
 				bim = df2ffdf(data.frame(x = NA)),
 				fam = df2ffdf(data.frame(x = NA))
 		),
@@ -91,7 +91,7 @@ rbedInfo = function(bedstem) {
 #	snp_idx = 1L:nsnp
 	bim = loadBim(pl_info)
 	fam = loadFam(pl_info)
-	jbed = .jnew("vu/co/kaiyin/Bed", bed_path, bytes_snp, nindiv)
+	jbed = .jnew("vu/co/kaiyin/Bed", bed_path, as.integer(bytes_snp), as.integer(nindiv))
 	.RbedInfo(pl_info = pl_info, 
 			jbed = jbed, 
 			nsnp = nsnp, 
