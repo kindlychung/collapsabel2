@@ -17,73 +17,44 @@
 
 #' An S4 class representing info about GWAS on plink files
 #' 
-#' @slot plink_phe character. Phenotype file. First line is header, first 2 columns are FID and IID.
-#' @slot phe_name character. Colname of phenotype.
-#' @slot covar_name character. A string of covariate names, separated by comma.
 #' @slot gwas_tag character. Tag for this GWAS.
-#' @slot gwas_notes character. Notes for this GWAS.
-#' @examples 
-#' \donotrun{
-#' }
+#' @slot opts list. Plink options.
 #' 
 #' @name PlGwas
 #' @export 
 .PlGwas = setClass("PlGwas", 
 		representation(
-				plink_phe = "character", 
-				phe_name = "character",
-				covar_name = "character",
-				gwas_tag = "character", 
-				gwas_notes = "character"
+				gwas_tag = "character",
+				opts = "list"
 		), 
 		prototype(
-				plink_phe = "", 
-				phe_name = "",
-				covar_name = "",
-				gwas_tag = "", 
-				gwas_notes = ""
+				gwas_tag = "",
+				opts = list()
 		), 
-		contains = "PlInfo", 
+		contains = "RbedInfo", 
 		validity = function(object) {
-			obj_slots = list(
-					object@plink_phe,
-					object@phe_name, 
-					object@covar_name, 
-					object@gwas_tag
-			)
-			names(obj_slots) = c(
-					"plink_phe", 
-					"phe_name",
-					"covar_name",
-					"gwas_tag"
-			)
-			msg = lenCheck(obj_slots, rep(1, 4))
+			obj_slots = list( object@gwas_tag)
+			names(obj_slots) = c( "gwas_tag")
+			msg = lenCheck(obj_slots, 1)
 			if(msg != TRUE) {
 				return(msg)
 			}
 			
-			if(!file.exists(object@plink_phe)) {
-				return("plink phenotype file does not exist.")
-			}
+#			if(!file.exists(object@opts$pheno)) {
+#				return("plink phenotype file does not exist.")
+#			}
 			
-			first_line = readLiteral(object@plink_phe, nrows = 1)[1, ]
-			if(!all(object@phe_name %in% first_line)) {
+			first_line = readLiteral(object@opts$pheno, nrows = 1)[1, ]
+			
+			if(length(object@opts$pheno_name) != 1) 
+				return("one phenotype at a time.")
+
+			if(!(object@opts$pheno_name %in% first_line)) {
 				return(
 						sprintf("phenotype name (%s) not in phenotype file.", 
-								object@phe_name))
+								object@opts$phe_name))
 			}
 			
-			ifLetLen(".m.covars", covarNames(object), {
-						ifLetLen(".m.idx", 
-								which(! .m.covars %in% first_line), 
-								{
-									return(strConcat(c(
-															"Covars not found: ", 
-															strConcat(.m.covars[.m.idx], " "))))
-								})
-					})
-			
-
 			covars = covarNames(object)
 			if(length(covars) > 0) {
 				covar_not_there = which(! covars %in% first_line)
@@ -119,11 +90,12 @@ setGeneric("covarNames",
 setMethod("covarNames",
 		signature(pl_gwas = "PlGwas"),
 		function(pl_gwas) {
-			strsplit(pl_gwas@covar_name, ",")[[1]]
+			strsplit(pl_gwas@opts$covar_name, ",")[[1]]
 		})
 
 setGeneric("plGwas",
-		function(pl_gwas, phe, phe_name, covar_name, gwas_tag, gwas_notes, ...) {
+		function(pl_gwas, pheno, pheno_name, covar_name, gwas_tag, 
+				assoc, opts, ...) {
 			standardGeneric("plGwas")
 		})
 
@@ -132,85 +104,125 @@ setGeneric("plGwas",
 #' @name plGwas_methods
 #' 
 #' @param pl_gwas PlGwas or PlInfo object
-#' @param phe character. Phenotype file
-#' @param phe_name character. Phenotype names.
+#' @param pheno character. Phenotype file
+#' @param pheno_name character. Phenotype names.
 #' @param covar_name character. Covariate names.
 #' @param gwas_tag character. Tag for this GWAS.
-#' @param gwas_notes character. Notes for this GWAS.
 #' @return PlGwas object
 #' 
 #' @author kaiyin
 #' @docType methods
 #' @export
 setMethod("plGwas",
-		signature(pl_gwas = "PlGwas", phe = "character", 
-				phe_name = "character", covar_name = "character", 
-				gwas_tag = "character", gwas_notes = "character"),
-		function(pl_gwas, 
-				phe, phe_name, covar_name, 
-				gwas_tag, gwas_notes) {
-			pl_gwas@plink_phe = phe
-			pl_gwas@phe_name = phe_name
-			pl_gwas@covar_name = covar_name
+		signature(pl_gwas = "PlGwas", pheno = "character", 
+				pheno_name = "character", covar_name = "character", 
+				gwas_tag = "character",  
+				assoc = "logical", opts = "list"
+		),
+		function(pl_gwas, pheno, 
+				pheno_name, covar_name, 
+				gwas_tag, 
+				assoc, opts
+		) {
+			browser()
 			pl_gwas@gwas_tag = gwas_tag
-			pl_gwas@gwas_notes = gwas_notes
+			pl_gwas@opts$bfile = pl_gwas@pl_info@plink_stem
+			pl_gwas@opts$pheno = pheno
+			pl_gwas@opts$pheno_name = pheno_name
+			pl_gwas@opts$covar = pheno
+			pl_gwas@opts$covar_name = covar_name
+			pl_gwas@opts$allow_no_sex = ""
+#			pl_gwas@opts$stdout = opts$stderr = ""
+			pl_gwas@opts$stdout = opts$stderr = gwasLog(pl_gwas)
+			pl_gwas@opts$out = gwasOutStem(pl_gwas)
+			pl_gwas@opts$wait = FALSE
+			if(assoc) {
+				pl_gwas@opts$assoc = ""
+			} else if(binPhe(pl_gwas)) {
+				pl_gwas@opts$logistic = "hide-covar beta"
+			} else {
+				pl_gwas@opts$linear = "hide-covar"
+			}
 			validObject(pl_gwas)
 			pl_gwas
 		})
 
-
 #' @rdname plGwas_methods
 #' @export 
 setMethod("plGwas",
-		signature(pl_gwas = "PlInfo", phe = "character", 
-				phe_name = "character", covar_name = "character", 
-				gwas_tag = "character", gwas_notes = "character"),
+		signature(pl_gwas = "RbedInfo", pheno = "character", 
+				pheno_name = "character", covar_name = "character", 
+				gwas_tag = "character", 
+				assoc = "logical", opts = "list"),
 		function(pl_gwas, 
-				phe, phe_name, covar_name, 
-				gwas_tag, gwas_notes) {
+				pheno, pheno_name, covar_name, 
+				gwas_tag, 
+				assoc, opts) {
 			pl_gwas = as(pl_gwas, "PlGwas")
 			plGwas(pl_gwas,  
-					phe, phe_name, covar_name, 
-					gwas_tag, gwas_notes)
+					pheno, pheno_name, covar_name, 
+					gwas_tag ,
+					assoc, opts
+			)
+		}
+)
+
+
+#' @rdname plGwas_methods
+#' @export 
+setMethod("plGwas",
+		signature(pl_gwas = "RbedInfo", pheno = "character", 
+				pheno_name = "character", covar_name = "character", 
+				gwas_tag = "character",
+				assoc = "missing", opts = "missing"),
+		function(pl_gwas, 
+				pheno, pheno_name, covar_name, 
+				gwas_tag, 
+				assoc, opts) {
+			plGwas(pl_gwas,  
+					pheno, pheno_name, covar_name, 
+					gwas_tag, 
+					FALSE, list())
 		}
 )
 
 #' @rdname plGwas_methods
 #' @export 
 setMethod("plGwas",
-		signature(pl_gwas = "PlInfo", phe = "character", 
-				phe_name = "character", covar_name = "character", 
-				gwas_tag = "character", gwas_notes = "missing"),
+		signature(pl_gwas = "RbedInfo", pheno = "character", 
+				pheno_name = "character", covar_name = "character", 
+				gwas_tag = "character", 
+				assoc = "missing", opts = "list"
+		),
 		function(pl_gwas, 
-				phe, phe_name, covar_name, 
-				gwas_tag, gwas_notes) {
+				pheno, pheno_name, covar_name, 
+				gwas_tag, 
+				assoc, opts) {
 			plGwas(pl_gwas,  
-					phe, phe_name, covar_name, 
-					gwas_tag, "")
+					pheno, pheno_name, covar_name, 
+					gwas_tag, 
+					FALSE, opts)
 		}
 )
-
-
-
 
 #' @rdname plGwas_methods
 #' @export 
 setMethod("plGwas",
-		signature(pl_gwas = "missing", phe = "character", 
-				phe_name = "character", covar_name = "character", 
-				gwas_tag = "character", gwas_notes = "character"),
+		signature(pl_gwas = "RbedInfo", pheno = "character", 
+				pheno_name = "character", covar_name = "character", 
+				gwas_tag = "character", 
+				assoc = "logical", opts = "missing"
+		),
 		function(pl_gwas, 
-				phe, phe_name, covar_name, 
-				gwas_tag, gwas_notes) {
-			pl_gwas = .PlGwas()
+				pheno, pheno_name, covar_name, 
+				gwas_tag, 
+				assoc, opts) {
 			plGwas(pl_gwas,  
-					phe, phe_name, covar_name, 
-					gwas_tag, gwas_notes)
+					pheno, pheno_name, covar_name, 
+					gwas_tag, 
+					assoc, list())
 		}
 )
-
-
-
 
 
 
@@ -222,7 +234,6 @@ setGeneric("gwasDir",
 #' GWAS results directory of a certain GWAS scan
 #'  
 #' @name gwasDir_methods
-#' @alias gwasDir,PlGwas-method
 #' 
 #' @param pl_gwas PlGwas object
 #' @return character. 
@@ -261,12 +272,45 @@ setGeneric("gwasOutStem",
 setMethod("gwasOutStem",
 		signature(pl_gwas = "PlGwas"),
 		function(pl_gwas) {
-			file.path(gwasDir(pl_gwas), basename(pl_gwas@plink_stem))
+			file.path(gwasDir(pl_gwas), basename(pl_gwas@pl_info@plink_stem))
 		})
 
+#' Check whether an S4 object is of a certain class
+#' 
+#' @param obj S4 object
+#' @param c Class name
+#' @return  logical
+#' 
+#' @author kaiyin
+#' @export
 isS4Class = function(obj, c) {
 	isS4(obj) && is(obj, c)
 }
+
+#' GWAS output file name
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return character
+#' 
+#' @author kaiyin
+#' @export
+gwasOut = function(pl_gwas) {
+	stem = gwasOutStem(pl_gwas)
+	if("assoc" %in% names(pl_gwas@opts)) {
+		if(binPhe(pl_gwas)) {
+			paste(stem, ".assoc", sep = '')
+		} else {
+			paste(stem, ".qassoc", sep = '')
+		}
+	} else if("linear" %in% names(pl_gwas@opts)) {
+		paste(stem, ".assoc.linear", sep = "")
+	} else if("logistic" %in% names(pl_gwas@opts)) {
+		paste(stem, ".assoc.logistic", sep = "")
+	} else {
+		stop("no modeling option specified?")
+	}
+}
+
 
 #' Run a GWAS
 #' 
@@ -276,31 +320,71 @@ isS4Class = function(obj, c) {
 #' 
 #' @author kaiyin
 #' @export
-runGwas = function(pl_gwas, assoc = FALSE, opts=list()) {
+runGwas = function(pl_gwas) {
 	# TODO: save.RDS the plgwas obj
 	# TODO: list and fetch plgwas obj
 	# TODO: add assoc option
 	# TODO: try detect binary trait. --linear or --logistic
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
-	stopifnot(is.logical(assoc))
-	stopifnot(is.list(opts))
-	opts$bfile = pl_gwas@plink_stem
-	opts$pheno = pl_gwas@plink_phe
-	opts$pheno_name = pl_gwas@phe_name
-	opts$covar = pl_gwas@plink_phe
-	opts$covar_name = pl_gwas@covar_name
-	opts$allow_no_sex = ""
-	opts$stdout = gwasLog(pl_gwas)
-	opts$out = gwasOutStem(pl_gwas)
-	if(assoc) {
-		opts$assoc = ""
-	} else if(binPhe(pl_gwas)) {
-		opts$logistic = "hide-covar beta"
-	} else {
-		opts$linear = "hide-covar"
-	}
-	do.call(plinkr, opts)
+	do.call(plinkr, pl_gwas@opts)
 }
+
+
+#' Check progress of a plink job
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return numeric. Percentage of progress.
+#' 
+#' @author kaiyin
+#' @export
+gwasPercentDone = function(pl_gwas) {
+	out_file = gwasOut(pl_gwas)
+	if(file.exists(out_file)) {
+		fileSize(out_file) / theoPlinkOutSize(pl_gwas)
+	} else {
+		0L
+	}
+}
+
+#' Approximate output file size of a plink job.
+#' 
+#' @param pl_gwas PlGwas object.
+#' @return integer.
+#' 
+#' @author kaiyin
+#' @export
+theoPlinkOutSize = function(pl_gwas) {
+	100 * pl_gwas@nsnp
+}
+
+#' Get file size
+#' 
+#' @param filename character. Path to file.
+#' @return integer. Size of file.
+#' 
+#' @author kaiyin
+#' @export
+fileSize = function(filename) {
+	stopifnot(is.character(filename))
+	stopifnot(length(filename) == 1)
+	filename = filePath(filename)@path
+	file.info(filename)$size
+}
+	
+#' Call system command with format string
+#' 
+#' @param ... passed to \code{sprintf}
+#' @examples 
+#' \donotrun{
+#' systemFormat("ls %s", R.home())
+#' }
+#' 
+#' @author kaiyin
+#' @export
+systemFormat = function(...) {
+	system(sprintf(...))
+}
+
 
 #' Read phenotype file
 #' 
@@ -312,7 +396,7 @@ runGwas = function(pl_gwas, assoc = FALSE, opts=list()) {
 #' @export
 readPhe = function(pl_gwas, cn_select = "..all") {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
-	info = readInfo(pl_gwas@plink_phe)
+	info = readInfo(pl_gwas@opts$pheno)
 	phe = info@read_fun(info, cn_select)
 	if(length(cn_select) == 1 && cn_select == "..all") {
 		classes = colClasses(headPhe(pl_gwas, 1))
@@ -332,8 +416,8 @@ readPhe = function(pl_gwas, cn_select = "..all") {
 #' @export
 headPhe = function(pl_gwas, nrows = 5L) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
-	stopifnot(is.numeric(nrows))
-	read.table(pl_gwas@plink_phe, header = TRUE, nrows = nrows, 
+	stopifnot(is.numeric(nrows) && length(nrows) == 1)
+	read.table(pl_gwas@opts$pheno, header = TRUE, nrows = nrows, 
 			stringsAsFactors = FALSE)
 }
 
@@ -375,7 +459,7 @@ isBinary = function(v, na_value = NULL) {
 #' @export
 binPhe = function(pl_gwas) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
-	phe = readPhe(pl_gwas, pl_gwas@phe_name)
+	phe = readPhe(pl_gwas, pl_gwas@opts$pheno_name)
 	isBinary(phe[, 1])
 }
 
@@ -396,42 +480,6 @@ gwasLog = function(pl_gwas) {
 
 
 
-pl_info = plInfo(bedstem = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
-# Error in validObject
-pl_gwas = plGwas(pl_info, 
-		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-		phe_name = "nothing", 
-		covar_name = "Sex,Cage", 
-		gwas_tag = "mmp13_page_sex_age")
-# Error in validObject
-pl_gwas = plGwas(pl_info, 
-		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-		phe_name = "Page", 
-		covar_name = "nothing,Cage", 
-		gwas_tag = "mmp13_page_sex_age")
-pl_gwas = plGwas(pl_info, 
-		phe = "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13.phe",
-		phe_name = "Page", 
-		covar_name = "Sex,Cage", 
-		gwas_tag = "mmp13_page_sex_age")
-pl_gwas@phe_name == "Page"
-pl_gwas@covar_name == "Sex, Cage"
-all(covarNames(pl_gwas) == c("Sex", "Age"))
-g_dir = gwasDir(pl_gwas)
-print(g_dir)
-file.exists(gwasDir(pl_gwas))
-file.info(gwasDir(pl_gwas))$isdir
-g_out = gwasOutStem(pl_gwas)
-print(g_out)
-debugonce(plinkr)
-runGwas(pl_gwas)
-classes = colClasses(headPhe(pl_gwas, 1))
-phe = readPhe(pl_gwas)
-all(classes == colClasses(phe))
-phe = readPhe(pl_gwas, c("FID", "Cage", "Sex"))
-all(colClasses(phe) == c("character", "numeric", "integer"))
-binPhe(pl_gwas)
-gwasLog(pl_gwas)
 
 
 

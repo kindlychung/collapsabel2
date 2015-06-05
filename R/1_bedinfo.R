@@ -64,11 +64,12 @@
 							== ext_trio)) {
 				return(paste("Extensions should be: ", strConcat(ext_trio)))
 			}
-			ifLetLen("miss_files", nonExistentFiles(object@plink_trio), {
-						miss_files
-					}, {
-						TRUE
-					})
+			miss_files = nonExistentFiles(object@plink_trio)
+			if(length(miss_files) > 0) {
+				return(miss_files)
+			} else {
+				return(TRUE)
+			}
 		})
 
 
@@ -86,12 +87,12 @@ setGeneric("plInfo",
 #' @return a PlInfo object
 #' @examples 
 #' \donotrun{
-pl_info = plInfo(.PlInfo(), "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
-isSetup(pl_info) # false
-setup(pl_info)
-isSetup(pl_info) # true
-bim_ff = suppressMessages(loadBim(pl_info))
-head(bim_ff)
+#' pl_info = plInfo(.PlInfo(), "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
+#' isSetup(pl_info) # false
+#' setup(pl_info)
+#' isSetup(pl_info) # true
+#' bim_ff = suppressMessages(loadBim(pl_info))
+#' head(bim_ff)
 #' fam_ff = loadFam(pl_info)
 #' head(fam_ff)
 #' summary(fam_ff[, "IID"])
@@ -133,6 +134,9 @@ setMethod("plInfo",
 			pl_info@ff_dir = ff_dir
 			pl_info@ff_dir_trio = ff_dir_trio
 			validObject(pl_info)
+			if(! isSetup(pl_info)) {
+				setup(pl_info)
+			}
 			pl_info
 		})
 
@@ -202,11 +206,11 @@ setMethod("setup",
 					saveFFDF(frq, dir = pl_info@ff_dir_trio["frq"], overwrite = TRUE)
 				}
 				if(!file.exists(ff_bim)) {
-					bim = txtutils::readBim(pl_info@plink_trio["bim"], "..all")
+					bim = readBim(pl_info@plink_trio["bim"], "..all")
 					saveFFDF(bim, dir = pl_info@ff_dir_trio["bim"], overwrite = TRUE)
 				}
 				if(!file.exists(ff_fam)) {
-					fam = txtutils::readFam(pl_info@plink_trio["fam"], "..all")
+					fam = readFam(pl_info@plink_trio["fam"], "..all")
 					saveFFDF(fam, dir = pl_info@ff_dir_trio["fam"], overwrite = TRUE)
 				}
 			}

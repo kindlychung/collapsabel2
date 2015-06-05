@@ -605,7 +605,7 @@
 #' @param	stderr	Passed to system2, see its documentation.
 #' @seealso \code{\link{getPlinkParam}}
 #' 
-plinkr = function(
+plinkCmdStr = function(
 	D=NULL,
 	K=NULL,
 	a1_allele=NULL,
@@ -1206,12 +1206,16 @@ plinkr = function(
 	twothreefile = NULL,
 	stdout="",
 	stderr="",
-	wait=TRUE
+	wait=TRUE,
+	fifo_file = NULL
 ) {
 	paramList = mget(names(formals()),sys.frame(sys.nframe()))
 	# Should I wait for the process to finish?
 	wait = paramList$wait
 	paramList$wait = NULL
+	
+	fifo_file = paramList$fifo_file
+	paramList$fifo_file = NULL
 
 	# stdout and stderr settings, default is to the R console
 	stdout = paramList$stdout
@@ -1240,6 +1244,7 @@ plinkr = function(
 	}
 
 
+	
 	nParam = length(paramName)
 	idxOdd = seq(1, nParam * 2, 2)
 	idxEven = seq(2, nParam * 2, 2)
@@ -1247,13 +1252,14 @@ plinkr = function(
 	paramNameWithValue[idxOdd] = paramName
 	paramNameWithValue[idxEven] = paramVector
 	
-	print(paramNameWithValue)
-	ret = system2('plink', paramNameWithValue, wait=wait, stdout=stdout, stderr=stderr)
-    if(ret != 0) {
-		warning("plink failed.")
-		FALSE
-    } else {
-		TRUE
-	}
+	cmd_str = strConcat(c("plink", paramNameWithValue), sep = " ")
+	cmd_str
+#	if(is.null(fifo_file)) {
+#		cmd_str
+#	} else {
+#		sprintf("%s > %s; echo plink_job_over > %s", 
+#				cmd_str, fifo_file, fifo_file)
+#	}
+
 }
 

@@ -1,7 +1,3 @@
-# this makes sure that your java classes and jar files are loaded
-.onLoad <- function(libname, pkgname) {
-	.jpackage(pkgname, lib.loc = libname)
-}
 
 setOldClass("ffdf")
 
@@ -57,7 +53,8 @@ setOldClass("ffdf")
 #' @return An RbedInfo object.
 #' @examples 
 #' \donotrun{
-#' rbed_info = rbedInfo("/users/kaiyin/eclipseworkspace/collapsabel/tests/testthat/test")
+#' debugonce(rbedInfo)
+#' rbed_info = rbedInfo(bedstem = "/users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/test")
 #' rbed_info@@nsnp
 #' rbed_info@@nindiv
 #' rbed_info@@bytes_snp
@@ -148,7 +145,7 @@ setGeneric("realBedSize",
 setMethod("realBedSize",
 		signature(rbed_info = "RbedInfo"),
 		function(rbed_info) {
-			file.info(rbed_info@pl_info@plink_trio["bed"])$size
+			as.numeric(file.info(rbed_info@pl_info@plink_trio["bed"])$size)
 		})
 
 
@@ -172,8 +169,8 @@ setGeneric("theoBedSize",
 setMethod("theoBedSize",
 		signature(rbed_info = "RbedInfo"),
 		function(rbed_info) {
-			(rbed_info@nindiv_appr * 
-						rbed_info@nsnp / 4) + 3
+			(as.numeric(rbed_info@nindiv_appr) * 
+						as.numeric(rbed_info@nsnp) / 4) + 3
 		})
 
 

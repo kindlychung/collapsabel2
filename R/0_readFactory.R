@@ -79,7 +79,7 @@ readFunFactory = function(header) {
 #		stopifnot(all(cn_select %in% cnames)) 		
 		col_sel_idx = which(cnames %in% cn_select)
 		
-		dat = txtutils::readcols(filename, 
+		dat = readcols(filename, 
 				col_sel_idx, 
 				as.integer(header), 
 				1)
