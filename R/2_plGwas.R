@@ -40,9 +40,9 @@
 				return(msg)
 			}
 			
-#			if(!file.exists(object@opts$pheno)) {
-#				return("plink phenotype file does not exist.")
-#			}
+			if(!file.exists(object@opts$pheno)) {
+				return("plink phenotype file does not exist.")
+			}
 			
 			first_line = readLiteral(object@opts$pheno, nrows = 1)[1, ]
 			
@@ -52,7 +52,7 @@
 			if(!(object@opts$pheno_name %in% first_line)) {
 				return(
 						sprintf("phenotype name (%s) not in phenotype file.", 
-								object@opts$phe_name))
+								object@opts$pheno_name))
 			}
 			
 			covars = covarNames(object)
@@ -131,6 +131,7 @@ setMethod("plGwas",
 			pl_gwas@opts$covar = pheno
 			pl_gwas@opts$covar_name = covar_name
 			pl_gwas@opts$allow_no_sex = ""
+			validObject(pl_gwas)
 #			pl_gwas@opts$stdout = opts$stderr = ""
 			pl_gwas@opts$stdout = opts$stderr = gwasLog(pl_gwas)
 			pl_gwas@opts$out = gwasOutStem(pl_gwas)
@@ -142,7 +143,6 @@ setMethod("plGwas",
 			} else {
 				pl_gwas@opts$linear = "hide-covar"
 			}
-			validObject(pl_gwas)
 			pl_gwas
 		})
 
@@ -324,6 +324,83 @@ runGwas = function(pl_gwas) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
 	do.call(plinkr, pl_gwas@opts)
 	saveRDS(pl_gwas, gwasRDS(pl_gwas))
+}
+
+#' Read GWAS output from plink
+
+#' If the GWAS is finished, returns a data.frame, 
+#' otherwise returns NULL.
+#' @param pl_gwas PlGwas object.
+#' @param cn_select Colnames to select. Default to "..all"
+#' @return data.frame or null
+#' 
+#' @author kaiyin
+#' @export
+readGwasOutOnce = function(pl_gwas, cn_select = "..all") {
+	if(!gwasFinished(pl_gwas)) {
+		NULL
+	} else {
+		readPlinkOut(gwasOut(pl_gwas), cn_select)
+	}
+}
+
+#' Read GWAS output from plink
+#' 
+#' Optionally wait for GWAS to finish if necessary. 
+#' 
+#' @param pl_gwas PlGwas object.
+#' @param cn_select character. Colnames to select. Default to "..all"
+#' @param wait logical. 
+#' @param timeout numeric. Give up trying after this amount of time in seconds.
+#' @param time numeric. Time to wait in each cycle. 
+#' @return data.frame or null
+#' 
+#' @author kaiyin
+#' @export
+readGwasOut = function(pl_gwas, cn_select = "..all", wait = FALSE, timeout = 10, time = 0.1) {
+	if(!wait) {
+		readGwasOutOnce(pl_gwas, cn_select) 
+	} else {
+		n_loop = timeout / time
+		for(k in 1:n_loop) {
+			res = readGwasOutOnce(pl_gwas, cn_select)
+			if(is.null(res)) {
+				Sys.sleep(time)
+				next
+			} else {
+				return(res)
+			}
+		}
+	}
+}
+
+#' Remove GWAS results by tag
+#' 
+#' @param gwas_tag character. Tag for GWAS.
+#' 
+#' @author kaiyin
+#' @export
+removeGwasTag = function(gwas_tag) {
+	unlink(tag2Dir(gwas_tag))
+}
+
+plTrim = function(pl_gwas, suffix) {
+	old_stem = pl_gwas@pl_info@plink_stem
+	new_stem = paste(old_stem, suffix, sep = "_")
+	if(pl_gwas@indiv != countlines(pl_gwas@opts$pheno)) {
+		plinkr(bfile = old_stem, 
+				keep = pl_gwas@opts$pheno, 
+				out = new_stem, 
+				wait = TRUE)
+		plGwas(rbedInfo(new_stem), 
+				pl_gwas@opts$pheno, 
+				pl_gwas@opts$pheno_name, 
+				pl_gwas@opts$covar_name, 
+				pl_gwas@gwas_tag, 
+				ifelse("assoc" %in% names(pl_gwas@opts), TRUE, FALSE))
+	} else {
+		pl_gwas
+	}
 }
 
 #' Get RDS file path of a PlGwas object
