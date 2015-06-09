@@ -311,17 +311,43 @@ gwasOut = function(pl_gwas) {
 }
 
 
-#' Run a GWAS
+#' Set analysis model
 #' 
-#' @param pl_gwas PlGwas object
-#' @param opts GWAS options. Default to an empty list.
-#' @param assoc logical. If set to TRUE, the \code{--assoc} option will be passed to plink.
+#' @param pl_gwas PlGwas object.
+#' @param mod character. One of "linear", "logistic" or "assoc", default to "linear". 
+#' @return PlGwas object
 #' 
 #' @author kaiyin
 #' @export
-runGwas = function(pl_gwas) {
-	# TODO: list and fetch plgwas obj
+setOptModel = function(pl_gwas, mod = "linear") {
+	poss_mods = c("linear", "logistic", "assoc")
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	stopifnot((length(mod) == 1) && (mod %in% poss_mods))
+	mods_to_null = poss_mods[poss_mods != mod]
+	for(m in mods_to_null) {
+		pl_gwas@opts[[m]] = NULL
+	}
+	if(mod == "logistic" || mod == "linear") {
+		pl_gwas@opts[[mod]] = "hide-covar"
+	} else {
+		pl_gwas@opts[[mod]] = ""
+	}
+	pl_gwas
+}
+
+
+#' Run a GWAS
+#' 
+#' @param pl_gwas PlGwas object
+#' @param wait logical. Wait until GWAS is finished if this is set to TRUE. Default to FALSE.
+#' 
+#' @author kaiyin
+#' @export
+runGwas = function(pl_gwas, wait = FALSE) {
+	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	if(wait) {
+		pl_gwas@opts$wait = TRUE
+	}
 	do.call(plinkr, pl_gwas@opts)
 	saveRDS(pl_gwas, gwasRDS(pl_gwas))
 }
@@ -357,7 +383,7 @@ readGwasOutOnce = function(pl_gwas, cn_select = "..all") {
 #' 
 #' @author kaiyin
 #' @export
-readGwasOut = function(pl_gwas, cn_select = "..all", wait = FALSE, timeout = 10, time = 0.1) {
+readGwasOut = function(pl_gwas, cn_select = "..all", wait = FALSE, timeout = 10, time = 1) {
 	if(!wait) {
 		readGwasOutOnce(pl_gwas, cn_select) 
 	} else {
@@ -367,10 +393,9 @@ readGwasOut = function(pl_gwas, cn_select = "..all", wait = FALSE, timeout = 10,
 			if(is.null(res)) {
 				Sys.sleep(time)
 				next
-			} else {
-				return(res)
-			}
+			} 
 		}
+		res
 	}
 }
 
@@ -384,20 +409,37 @@ removeGwasTag = function(gwas_tag) {
 	unlink(tag2Dir(gwas_tag))
 }
 
-plTrim = function(pl_gwas, suffix) {
+#' Trim plink files
+#' 
+#' This function calculates number of individuals in .fam file (n1)
+#' and number of individuals in phenotype file (n2). If n1 > n2, then
+#' all the individuals not included in the phenotype file will be 
+#' removed from plink files.
+#' 
+#' @param pl_gwas PlGwas object.
+#' @param suffix character. Suffix to the new plink file names.
+#' @return PlGwas object
+#' 
+#' @author kaiyin
+#' @export
+plTrim = function(pl_gwas, suffix="trimmed") {
 	old_stem = pl_gwas@pl_info@plink_stem
 	new_stem = paste(old_stem, suffix, sep = "_")
-	if(pl_gwas@indiv != countlines(pl_gwas@opts$pheno)) {
+	if(pl_gwas@nindiv > countlines(pl_gwas@opts$pheno)) {
 		plinkr(bfile = old_stem, 
 				keep = pl_gwas@opts$pheno, 
 				out = new_stem, 
-				wait = TRUE)
-		plGwas(rbedInfo(new_stem), 
+				wait = TRUE, 
+				make_bed = "")
+		pl_gwas_trimmed = plGwas(rbedInfo(new_stem), 
 				pl_gwas@opts$pheno, 
 				pl_gwas@opts$pheno_name, 
 				pl_gwas@opts$covar_name, 
-				pl_gwas@gwas_tag, 
-				ifelse("assoc" %in% names(pl_gwas@opts), TRUE, FALSE))
+				paste(pl_gwas@gwas_tag, suffix, sep = "_"), 
+				ifelse("assoc" %in% names(pl_gwas@opts), TRUE, FALSE)
+				)
+		pl_gwas_trimmed@opts$bfile = new_stem
+		pl_gwas_trimmed
 	} else {
 		pl_gwas
 	}
@@ -494,10 +536,11 @@ gwasPercentApprox = function(pl_gwas) {
 readGwasLogLines = function(pl_gwas) {
 	log_file = gwasLog(pl_gwas)
 	if(file.exists(log_file)) {
-		suppressWarnings(readLines(log_file))
+		res = suppressWarnings(readLines(log_file))
 	} else {
-		""
+		res = NULL
 	}
+	res
 }
 
 #' Read stdout from plink as a string
@@ -523,6 +566,9 @@ readGwasLogStr = function(pl_gwas) {
 #' @export
 gwasPercent = function(pl_gwas) {
 	s = readGwasLogLines(pl_gwas)
+	if(is.null(s)) {
+		return(0)
+	}
 	s1 = s[length(s)]
 	s2 = s[length(s) - 1]
 	if(grepl(pattern = "^\\s*Writing.*results to$", x = s2)) {

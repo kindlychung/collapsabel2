@@ -40,8 +40,7 @@ setOldClass("ffdf")
 				return("jbed is not of java Bed class.")
 			}
 			if(! bedSizeCorrect(object)) {
-				return(sprintf("bed file size %d does not agree with that of bim and bed files", 
-								))
+				return("bed file size does not agree with that of bim and bed files")
 			}
 			
 			TRUE

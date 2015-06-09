@@ -196,7 +196,8 @@ setMethod("setup",
 				if(!file.exists(pl_info@plink_frq)) {
 					plinkr(bfile = pl_info@plink_stem, 
 							freq = "", 
-							out = pl_info@plink_stem)
+							out = pl_info@plink_stem, 
+							wait = TRUE)
 				}
 				ff_frq = pl_info@ff_dir_trio["frq"]
 				ff_bim = pl_info@ff_dir_trio["bim"]
