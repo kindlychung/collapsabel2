@@ -214,6 +214,7 @@ setMethod("readBed",
 			res = getJArray(mat_ref = mat_ref)
 			res = setNames(res, rbed_info@bim[snp_vec, "SNP"])
 			res = cbind(fidIid(rbed_info), res)
+			
 			res$FID = as.character(res$FID)
 			res$IID = as.character(res$IID)
 			res
