@@ -197,6 +197,10 @@ setMethod("readBed",
 					.jarray(1L:(rbed_info@nsnp)))
 			res = getJArray(mat_ref = mat_ref)
 			res = setNames(res, rbed_info@bim[, "SNP"])
+			res = cbind(fidIid(rbed_info), res)
+			res$FID = as.character(res$FID)
+			res$IID = as.character(res$IID)
+			res
 		})
 
 #' @rdname readBed
@@ -209,7 +213,22 @@ setMethod("readBed",
 					.jarray(snp_vec))
 			res = getJArray(mat_ref = mat_ref)
 			res = setNames(res, rbed_info@bim[snp_vec, "SNP"])
+			res = cbind(fidIid(rbed_info), res)
+			res$FID = as.character(res$FID)
+			res$IID = as.character(res$IID)
+			res
 		})
+
+#' FID and IID columns from fam file
+#' 
+#' @param rbed_info RbedInfo object
+#' @return data.frame of two columns "FID" and "IID"
+#' 
+#' @author kaiyin
+#' @export
+fidIid = function(rbed_info) {
+	rbed_info@fam[, c("FID", "IID")]
+}
 
 #' @rdname readBed
 #' @export 

@@ -62,7 +62,7 @@ setMethod("correctTypes",
 #' @author kaiyin
 #' @export
 readFunFactory = function(header) {
-	function(object, cn_select) {
+	function(object, cn_select = "..all") {
 		filename = object@filename
 		cnames = object@cnames
 		header = object@header

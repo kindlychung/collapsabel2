@@ -344,12 +344,21 @@ setOptModel = function(pl_gwas, mod = "linear") {
 #' @author kaiyin
 #' @export
 runGwas = function(pl_gwas, wait = FALSE) {
+	dir.create2(gwasDir(pl_gwas))
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
 	if(wait) {
 		pl_gwas@opts$wait = TRUE
 	}
 	do.call(plinkr, pl_gwas@opts)
 	saveRDS(pl_gwas, gwasRDS(pl_gwas))
+}
+
+dir.create2 = function(dir) {
+	if(!file.exists(dir)) {
+		dir.create(dir, recursive = TRUE)
+	} else {
+		TRUE
+	}
 }
 
 #' Read GWAS output from plink
@@ -565,18 +574,17 @@ readGwasLogStr = function(pl_gwas) {
 #' @author kaiyin
 #' @export
 gwasPercent = function(pl_gwas) {
-	s = readGwasLogLines(pl_gwas)
+	if(!file.exists(gwasLog(pl_gwas))) return(0)
+	s = strConcat(readGwasLogLines(pl_gwas), " ")
 	if(is.null(s)) {
 		return(0)
 	}
-	s1 = s[length(s)]
-	s2 = s[length(s) - 1]
-	if(grepl(pattern = "^\\s*Writing.*results to$", x = s2)) {
-		m = stringr::str_match(string = s1, 
-				pattern = ".*done\\.$")
-		if(!is.na(m)) return(100)
-		m = stringr::str_match(string = s1, 
-				pattern = "[^0-9]+(\\d+)%$")
+	m = stringr::str_match(string = s, 
+			pattern = "Writing.*to.*done\\.$")
+	if(!is.na(m[1, 1])) return(100)
+	m = stringr::str_match(string = s, 
+			pattern = "Writing.*to.*[^0-9]+(\\d+)%$")
+	if(!is.na(m[1, 1])) {
 		as.numeric(m[1, 2])
 	} else {
 		0
@@ -651,7 +659,34 @@ readPhe = function(pl_gwas, cn_select = "..all") {
 	} else {
 		classes = colClasses(headPhe(pl_gwas, 1)[, cn_select, drop = FALSE])
 	}
-	correctTypes(phe, types = classes)
+	phe = correctTypes(phe, types = classes)
+	phe = charify(phe, c("FID", "IID"))
+	phe
+}
+
+#' Convert certain columns of a data.frame to character type
+#' 
+#' @param dat data.frame
+#' @param cols character. Names of columns to be converted.
+#' @return  data.frame
+#' @examples 
+#' \donotrun{
+#' x = data.frame(x = 1:3, y= 2:4)
+#' all(colClasses(x) == c("integer", "integer"))
+#' x = charify(x, "x")
+#' all(colClasses(x) == c("character", "integer"))
+#' }
+#' 
+#' @author kaiyin
+#' @export
+charify = function(dat, cols) {
+	cnames = colnames(dat)
+	for(cols_i in cols) {
+		if(cols_i %in% cnames) {
+			dat[, cols_i] = as.character(dat[, cols_i])
+		}
+	}
+	dat
 }
 
 #' Read first n lines of a phenotype file
@@ -726,7 +761,30 @@ gwasLog = function(pl_gwas) {
 }
 
 
+glm2 = function(dat, y, xs, ...) {
+	name_orig = colnames(dat)
+	name_legit = paste("x", seq_along(dat), sep = "")
+	names_dat = data.frame(name_orig, name_legit, stringsAsFactors = FALSE)
+	dat = setNames(dat, name_legit)
+	y1 = names_dat$name_legit[names_dat$name_orig == y]
+	xs1 = names_dat$name_legit[names_dat$name_orig %in% xs]
+	glm_model = glm(
+			as.formula(
+					sprintf("%s~%s", y1, strConcat(xs1, "+"))),
+			data = dat, 
+			...
+	)
+	coefs = summary(glm_model)$coefficients
+	
+	list(model = glm_model, names_dat = names_dat)
+}
 
+changeNames = function(old_names, names_dat, reverse = FALSE) {
+	if(reverse) {
+		names_dat = names_dat[, c(2, 1)]
+	}
+
+}
 
 
 
