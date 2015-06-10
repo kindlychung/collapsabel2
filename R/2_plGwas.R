@@ -761,13 +761,26 @@ gwasLog = function(pl_gwas) {
 }
 
 
+#' GLM with arbitrary column names
+#' 
+#' Substitute column names that are unsuitable for formulas
+#' and substitute back when returning results.
+#' 
+#' @param dat data.frame
+#' @param y character. Column name of dependent variable.
+#' @param xs character. Column names of independent variable.
+#' @param ... passed to glm.
+#' @return 
+#' 
+#' @author kaiyin
+#' @export
 glm2 = function(dat, y, xs, ...) {
 	name_orig = colnames(dat)
 	name_legit = paste("x", seq_along(dat), sep = "")
 	names_dat = data.frame(name_orig, name_legit, stringsAsFactors = FALSE)
 	dat = setNames(dat, name_legit)
-	y1 = names_dat$name_legit[names_dat$name_orig == y]
-	xs1 = names_dat$name_legit[names_dat$name_orig %in% xs]
+	y1 = changeByMap(y, names_dat)
+	xs1 = changeByMap(xs, names_dat)
 	glm_model = glm(
 			as.formula(
 					sprintf("%s~%s", y1, strConcat(xs1, "+"))),
@@ -775,15 +788,43 @@ glm2 = function(dat, y, xs, ...) {
 			...
 	)
 	coefs = summary(glm_model)$coefficients
-	
-	list(model = glm_model, names_dat = names_dat)
+	rownames(coefs) = changeByMap(rownames(coefs), 
+			names_dat, reverse = TRUE)
+	coefs
 }
 
-changeNames = function(old_names, names_dat, reverse = FALSE) {
+#' Transform a vector by a mapping
+#' 
+#' The mapping is represented by a data.frame:
+#' 1st column is the domain, 2st column is the range.
+#' 
+#'
+#' @param old_vector vector of any type.
+#' @param mapping_dat data.frame, first column must be the same type as the \code{old_vector}
+#' @param reverse logical. Reverse domain and range if set to TRUE
+#' @examples 
+#' names_dat = data.frame(c("a", "b", "c"), c("d", "e", "f"), stringsAsFactors=FALSE)
+#' changeByMap(c("a", "a", "b"), names_dat) == c("d", "d", "e")
+#' x = changeByMap(c(NA, "a", "b"), names_dat)
+#' is.na(x[1])
+#' @return 
+#' 
+#' @author kaiyin
+#' @export
+changeByMap = function(old_vector, mapping_dat, reverse = FALSE) {
 	if(reverse) {
-		names_dat = names_dat[, c(2, 1)]
+		mapping_dat = mapping_dat[, c(2, 1)]
 	}
-
+	sapply(old_vector, function(elem) {
+				if(is.na(elem)) {
+					return(NA)
+				}
+				if(! elem %in% mapping_dat[, 1]) {
+					elem
+				} else {
+					mapping_dat[mapping_dat[, 1] == elem, 2]
+				}
+			})
 }
 
 
