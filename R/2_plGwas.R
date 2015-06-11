@@ -48,7 +48,7 @@
 			
 			if(length(object@opts$pheno_name) != 1) 
 				return("one phenotype at a time.")
-
+			
 			if(!(object@opts$pheno_name %in% first_line)) {
 				return(
 						sprintf("phenotype name (%s) not in phenotype file.", 
@@ -392,7 +392,7 @@ readGwasOutOnce = function(pl_gwas, cn_select = "..all") {
 #' 
 #' @author kaiyin
 #' @export
-readGwasOut = function(pl_gwas, cn_select = "..all", wait = FALSE, timeout = 10, time = 1) {
+readGwasOut = function(pl_gwas, cn_select = "..all", wait = FALSE, timeout = 10, time = 0.1) {
 	if(!wait) {
 		readGwasOutOnce(pl_gwas, cn_select) 
 	} else {
@@ -446,7 +446,7 @@ plTrim = function(pl_gwas, suffix="trimmed") {
 				pl_gwas@opts$covar_name, 
 				paste(pl_gwas@gwas_tag, suffix, sep = "_"), 
 				ifelse("assoc" %in% names(pl_gwas@opts), TRUE, FALSE)
-				)
+		)
 		pl_gwas_trimmed@opts$bfile = new_stem
 		pl_gwas_trimmed
 	} else {
@@ -626,7 +626,7 @@ fileSize = function(filename) {
 	filename = filePath(filename)@path
 	file.info(filename)$size
 }
-	
+
 #' Call system command with format string
 #' 
 #' @param ... passed to \code{sprintf}
@@ -761,70 +761,46 @@ gwasLog = function(pl_gwas) {
 }
 
 
-#' GLM with arbitrary column names
+#' Invoke a GWAS in R
 #' 
-#' Substitute column names that are unsuitable for formulas
-#' and substitute back when returning results.
-#' 
-#' @param dat data.frame
-#' @param y character. Column name of dependent variable.
-#' @param xs character. Column names of independent variable.
-#' @param ... passed to glm.
-#' @return 
+#' @param pl_gwas PlGwas object.
+#' @param snp_vec numeric or character. Vector of SNPs.
+#' @return matrix. Coefficient matrix. One row for each SNP.
 #' 
 #' @author kaiyin
 #' @export
-glm2 = function(dat, y, xs, ...) {
-	name_orig = colnames(dat)
-	name_legit = paste("x", seq_along(dat), sep = "")
-	names_dat = data.frame(name_orig, name_legit, stringsAsFactors = FALSE)
-	dat = setNames(dat, name_legit)
-	y1 = changeByMap(y, names_dat)
-	xs1 = changeByMap(xs, names_dat)
-	glm_model = glm(
-			as.formula(
-					sprintf("%s~%s", y1, strConcat(xs1, "+"))),
-			data = dat, 
-			...
-	)
-	coefs = summary(glm_model)$coefficients
-	rownames(coefs) = changeByMap(rownames(coefs), 
-			names_dat, reverse = TRUE)
-	coefs
+gwasR = function(pl_gwas, snp_vec) {
+	pheno_name = pl_gwas@opts$pheno_name
+	covars = covarNames(pl_gwas)
+	gwas_dat = gwasDat(pl_gwas, snp_vec)
+	if(binPhe(pl_gwas)) {
+		model_family = binomial
+	} else {
+		model_family = gaussian
+	}
+	glmIter(gwas_dat$dat, 
+			y = pheno_name, 
+			xs = gwas_dat$geno_names, 
+			covars = covars 
+			)
 }
 
-#' Transform a vector by a mapping
+
+#' Read genotype and phenotype data into R
 #' 
-#' The mapping is represented by a data.frame:
-#' 1st column is the domain, 2st column is the range.
-#' 
-#'
-#' @param old_vector vector of any type.
-#' @param mapping_dat data.frame, first column must be the same type as the \code{old_vector}
-#' @param reverse logical. Reverse domain and range if set to TRUE
-#' @examples 
-#' names_dat = data.frame(c("a", "b", "c"), c("d", "e", "f"), stringsAsFactors=FALSE)
-#' changeByMap(c("a", "a", "b"), names_dat) == c("d", "d", "e")
-#' x = changeByMap(c(NA, "a", "b"), names_dat)
-#' is.na(x[1])
-#' @return 
+#' @param pl_gwas PlGwas object.
+#' @param snp_vec numeric or character. Vector of SNPs.
+#' @return data.frame
 #' 
 #' @author kaiyin
 #' @export
-changeByMap = function(old_vector, mapping_dat, reverse = FALSE) {
-	if(reverse) {
-		mapping_dat = mapping_dat[, c(2, 1)]
-	}
-	sapply(old_vector, function(elem) {
-				if(is.na(elem)) {
-					return(NA)
-				}
-				if(! elem %in% mapping_dat[, 1]) {
-					elem
-				} else {
-					mapping_dat[mapping_dat[, 1] == elem, 2]
-				}
-			})
+gwasDat = function(pl_gwas, snp_vec) {
+	geno = readBed(pl_gwas, snp_vec)
+	phe = readPhe(pl_gwas)
+	list(dat = dplyr::left_join(phe, geno, by = c("FID", "IID")), 
+			geno_names = colnames(geno)[3:ncol(geno)],
+			pheno_names = colnames(phe)[3:ncol(phe)]
+	)
 }
 
 

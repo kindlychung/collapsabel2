@@ -66,12 +66,13 @@ setOldClass("ffdf")
 #' print(bed_full)
 #' bed1 = readBed(rbed_info, 1:4)
 #' print(bed1)
-#' bed1a = readBed(rbed_info, snp_names = paste("snp", 1:4, sep=""))
+#' bed1a = readBed(rbed_info, paste("snp", 1:4, sep=""))
 #' all(na.omit(bed1a == bed1))
 #' bed2 = readBed(rbed_info, 3:6)
-#' bed2a = readBed(rbed_info, snp_names = paste("snp", 3:6, sep = ""))
+#' bed2a = readBed(rbed_info, paste("snp", 3:6, sep = ""))
 #' all(na.omit(bed2 == bed2a))
 #' }
+#' TODO: test
 #' 
 #' @author kaiyin
 #' @export
@@ -174,7 +175,7 @@ setMethod("theoBedSize",
 
 
 setGeneric("readBed",
-		function(rbed_info, snp_vec, snp_names, ...) {
+		function(rbed_info, snp_vec, ...) {
 			standardGeneric("readBed")
 		})
 
@@ -184,15 +185,14 @@ setGeneric("readBed",
 #' 
 #' @param rbed_info RbedInfo object
 #' @param snp_vec numeric. Vector of SNP index, from 1 to total number of SNPs.
-#' @param snp_name character. Vector of SNP names.
 #' @return data.frame Genotype data from bed file.
 #' 
 #' @author kaiyin
 #' @docType methods
 #' @export
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "missing", snp_names = "missing"),
-		function(rbed_info, snp_vec, snp_names) {
+		signature(rbed_info = "RbedInfo", snp_vec = "missing"),
+		function(rbed_info, snp_vec) {
 			mat_ref = rbed_info@jbed$readbed(
 					.jarray(1L:(rbed_info@nsnp)))
 			res = getJArray(mat_ref = mat_ref)
@@ -206,8 +206,8 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "numeric", snp_names = "missing"),
-		function(rbed_info, snp_vec, snp_names) {
+		signature(rbed_info = "RbedInfo", snp_vec = "numeric"),
+		function(rbed_info, snp_vec) {
 			snp_vec = as.integer(unique(snp_vec))
 			mat_ref = rbed_info@jbed$readbed(
 					.jarray(snp_vec))
@@ -234,19 +234,19 @@ fidIid = function(rbed_info) {
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "missing", snp_names = "character"),
-		function(rbed_info, snp_vec, snp_names) {
+		signature(rbed_info = "RbedInfo", snp_vec = "character"),
+		function(rbed_info, snp_vec) {
 			snp_vec = which(
 					rbed_info@bim[, "SNP"] %in% 
-							snp_names)
+							snp_vec)
 			snp_vec = as.integer(unique(snp_vec))
 			readBed(rbed_info, snp_vec)
 		})
 
 
-getJArray <- function(mat_ref) {
+getJArray <- function(mat_ref, na_vals = -9) {
 	res = .jevalArray(mat_ref, simplify = TRUE)
-	res[res == -9] = NA
+	res[res %in% na_vals] = NA
 	res = as.data.frame(res)
 	res
 }
