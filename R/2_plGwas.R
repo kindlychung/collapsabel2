@@ -135,7 +135,7 @@ setMethod("plGwas",
 #			pl_gwas@opts$stdout = opts$stderr = ""
 			pl_gwas@opts$stdout = opts$stderr = gwasLog(pl_gwas)
 			pl_gwas@opts$out = gwasOutStem(pl_gwas)
-			pl_gwas@opts$wait = FALSE
+			pl_gwas@opts$wait = TRUE
 			if(assoc) {
 				pl_gwas@opts$assoc = ""
 			} else if(binPhe(pl_gwas)) {
@@ -343,11 +343,11 @@ setOptModel = function(pl_gwas, mod = "linear") {
 #' 
 #' @author kaiyin
 #' @export
-runGwas = function(pl_gwas, wait = FALSE) {
+runGwas = function(pl_gwas, wait = TRUE) {
 	dir.create2(gwasDir(pl_gwas))
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
-	if(wait) {
-		pl_gwas@opts$wait = TRUE
+	if(!wait) {
+		pl_gwas@opts$wait = FALSE
 	}
 	do.call(plinkr, pl_gwas@opts)
 	saveRDS(pl_gwas, gwasRDS(pl_gwas))
@@ -392,7 +392,7 @@ readGwasOutOnce = function(pl_gwas, cn_select = "..all") {
 #' 
 #' @author kaiyin
 #' @export
-readGwasOut = function(pl_gwas, cn_select = "..all", wait = FALSE, timeout = 10, time = 0.1) {
+readGwasOut = function(pl_gwas, cn_select = "..all", wait = TRUE, timeout = 10, time = 0.1) {
 	if(!wait) {
 		readGwasOutOnce(pl_gwas, cn_select) 
 	} else {
@@ -439,7 +439,8 @@ plTrim = function(pl_gwas, suffix="trimmed") {
 				keep = pl_gwas@opts$pheno, 
 				out = new_stem, 
 				wait = TRUE, 
-				make_bed = "")
+				make_bed = "", 
+				stdout = FALSE)
 		pl_gwas_trimmed = plGwas(rbedInfo(new_stem), 
 				pl_gwas@opts$pheno, 
 				pl_gwas@opts$pheno_name, 
@@ -512,7 +513,7 @@ loadGwas = function(gwas_tag) {
 			FALSE
 		}
 	} else {
-		FALSE
+		NULL
 	}
 }
 
@@ -795,6 +796,8 @@ gwasR = function(pl_gwas, snp_vec) {
 #' @author kaiyin
 #' @export
 gwasDat = function(pl_gwas, snp_vec) {
+	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	stopifnot(is.numeric(snp_vec) || is.character(snp_vec))
 	geno = readBed(pl_gwas, snp_vec)
 	phe = readPhe(pl_gwas)
 	list(dat = dplyr::left_join(phe, geno, by = c("FID", "IID")), 

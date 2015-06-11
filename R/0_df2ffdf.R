@@ -6,9 +6,7 @@ setGeneric("df2ffdf",
 
 #' Converts a data frame to an ffdf
 #' 
-#' @importFrom ff ffdf
 #' @importFrom ff as.ff
-#' @importFrom ff as.ram 
 #' @param df the data.frame you want to convert.
 #' @return an ffdf object.
 #' @examples 
