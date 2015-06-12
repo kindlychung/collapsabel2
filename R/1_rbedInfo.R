@@ -21,7 +21,6 @@ setOldClass("ffdf")
 				nindiv = "numeric", 
 				nindiv_appr = "numeric", 
 				bytes_snp = "numeric", 
-#				snp_idx = "numeric",
 				bim = "ffdf",
 				fam = "ffdf"
 		), 
@@ -73,6 +72,7 @@ setOldClass("ffdf")
 #' all(na.omit(bed2 == bed2a))
 #' }
 #' TODO: test
+#' @importFrom collUtils rBed
 #' 
 #' @author kaiyin
 #' @export
@@ -91,7 +91,8 @@ rbedInfo = function(bedstem) {
 #	snp_idx = 1L:nsnp
 	bim = loadBim(pl_info)
 	fam = loadFam(pl_info)
-	jbed = .jnew("vu/co/kaiyin/Bed", bed_path, as.integer(bytes_snp), as.integer(nindiv))
+	jbed = collUtils::rBed(bed_path, as.integer(bytes_snp), as.integer(nindiv))
+#	jbed = .jnew("vu/co/kaiyin/Bed", bed_path, as.integer(bytes_snp), as.integer(nindiv))
 	.RbedInfo(pl_info = pl_info, 
 			jbed = jbed, 
 			nsnp = nsnp, 
@@ -242,6 +243,7 @@ setMethod("readBed",
 			snp_vec = as.integer(unique(snp_vec))
 			readBed(rbed_info, snp_vec)
 		})
+
 
 
 getJArray <- function(mat_ref, na_vals = -9) {

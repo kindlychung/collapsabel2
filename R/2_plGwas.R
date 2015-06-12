@@ -466,6 +466,7 @@ gwasRDS = function(pl_gwas) {
 	tag2RDSPath(pl_gwas@gwas_tag)
 }
 
+
 #' List GWAS tags
 #' 
 #' @author kaiyin
@@ -506,7 +507,7 @@ loadGwas = function(gwas_tag) {
 	stopifnot(length(gwas_tag) == 1)
 	gwas_dirs = listGwasTags()
 	if(gwas_tag %in% gwas_dirs) {
-		rds_file = gwasRDS(pl_gwas)
+		rds_file = tag2RDSPath(gwas_tag)
 		if(file.exists(rds_file)) {
 			readRDS(rds_file)
 		} else {
