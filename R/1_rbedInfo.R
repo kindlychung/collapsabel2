@@ -38,10 +38,6 @@ setOldClass("ffdf")
 			if(! .jinstanceof(object@jbed, "vu/co/kaiyin/Bed")) {
 				return("jbed is not of java Bed class.")
 			}
-			if(! bedSizeCorrect(object)) {
-				return("bed file size does not agree with that of bim and bed files")
-			}
-			
 			TRUE
 		})
 
@@ -71,38 +67,30 @@ setOldClass("ffdf")
 #' bed2a = readBed(rbed_info, paste("snp", 3:6, sep = ""))
 #' all(na.omit(bed2 == bed2a))
 #' }
-#' TODO: test
-#' @importFrom collUtils rBed
 #' 
 #' @author kaiyin
 #' @export
-rbedInfo = function(bedstem) {
+rbedInfo = function(bedstem, ff_setup = TRUE) {
 	stopifnot(length(bedstem) == 1)
 	stopifnot(is.character(bedstem))
-	pl_info = plInfo(bedstem = bedstem)
-	if(! isSetup(pl_info)) {
-		setup(pl_info)
-	}
+	pl_info = plInfo(bedstem = bedstem, ff_setup = ff_setup)
 	bed_path = pl_info@plink_trio["bed"]
-    bytes_snp = bytesSnp(pl_info)
-	nindiv = nIndivPl(pl_info)
-	nindiv_appr = nIndivApprPl(pl_info)
-	nsnp = nSnpPl(pl_info)
-#	snp_idx = 1L:nsnp
-	bim = loadBim(pl_info)
-	fam = loadFam(pl_info)
-	jbed = collUtils::rBed(bed_path, as.integer(bytes_snp), as.integer(nindiv))
-#	jbed = .jnew("vu/co/kaiyin/Bed", bed_path, as.integer(bytes_snp), as.integer(nindiv))
-	.RbedInfo(pl_info = pl_info, 
-			jbed = jbed, 
-			nsnp = nsnp, 
-			nindiv = nindiv, 
-			nindiv_appr = nindiv_appr, 
-#			snp_idx = snp_idx,
-			bytes_snp = bytes_snp, 
-			bim = bim,
-			fam = fam
-	)
+	
+	rbed_info = .RbedInfo()
+	rbed_info@pl_info = pl_info
+	rbed_info@jbed = collUtils::rBed(bed_path)
+	if(ff_setup) {
+		rbed_info@bytes_snp = bytesSnp(pl_info)
+		rbed_info@nindiv = nIndivPl(pl_info)
+		rbed_info@nindiv_appr = nIndivApprPl(pl_info)
+		rbed_info@nsnp = nSnpPl(pl_info)
+		rbed_info@bim = loadBim(pl_info)
+		rbed_info@fam = loadFam(pl_info)
+		validObject(rbed_info) 
+		rbed_info
+	} else {
+		rbed_info
+	}
 }
 
 setGeneric("bedSizeCorrect",
@@ -176,7 +164,8 @@ setMethod("theoBedSize",
 
 
 setGeneric("readBed",
-		function(rbed_info, snp_vec, ...) {
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames, ...) {
 			standardGeneric("readBed")
 		})
 
@@ -192,34 +181,119 @@ setGeneric("readBed",
 #' @docType methods
 #' @export
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "missing"),
-		function(rbed_info, snp_vec) {
-			mat_ref = rbed_info@jbed$readbed(
-					.jarray(1L:(rbed_info@nsnp)))
+		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+				fid_iid = "logical", snp_names_as_colnames = "logical"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			snp_vec = as.integer(snp_vec)
+
+			mat_ref = rbed_info@jbed$readBed(
+					.jarray(snp_vec))
 			res = getJArray(mat_ref = mat_ref)
-			res = setNames(res, rbed_info@bim[, "SNP"])
-			res = cbind(fidIid(rbed_info), res)
-			res$FID = as.character(res$FID)
-			res$IID = as.character(res$IID)
+			if(snp_names_as_colnames) {
+				res = setNames(res, as.character(rbed_info@bim[, "SNP"])[snp_vec])
+			}
+			if(fid_iid) {
+				res = cbind(fidIid(rbed_info), res)
+				res$FID = as.character(res$FID)
+				res$IID = as.character(res$IID)
+			}
 			res
+		})
+
+
+
+#' @rdname readBed
+#' @export 
+setMethod("readBed",
+		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+				fid_iid = "missing", snp_names_as_colnames = "missing"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			nsnp = rbed_info@jbed$getnSNPs()
+			readBed(rbed_info, 1:nsnp, TRUE, TRUE)
 		})
 
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "numeric"),
-		function(rbed_info, snp_vec) {
-			snp_vec = as.integer(unique(snp_vec))
-			mat_ref = rbed_info@jbed$readbed(
-					.jarray(snp_vec))
-			res = getJArray(mat_ref = mat_ref)
-			res = setNames(res, rbed_info@bim[snp_vec, "SNP"])
-			res = cbind(fidIid(rbed_info), res)
-			
-			res$FID = as.character(res$FID)
-			res$IID = as.character(res$IID)
-			res
+		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+				fid_iid = "missing", snp_names_as_colnames = "missing"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			readBed(rbed_info, snp_vec, TRUE, TRUE)
 		})
+
+#' @rdname readBed
+#' @export 
+setMethod("readBed",
+		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+				fid_iid = "logical", snp_names_as_colnames = "missing"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			nsnp = rbed_info@jbed$getnSNPs()
+			readBed(rbed_info,
+					snp_vec = 1:nsnp,
+					fid_iid = fid_iid, 
+					snp_names_as_colnames = TRUE)
+		})
+
+#' @rdname readBed
+#' @export 
+setMethod("readBed",
+		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+				fid_iid = "logical", snp_names_as_colnames = "missing"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			readBed(rbed_info, snp_vec, fid_iid, TRUE)
+		})
+
+#' @rdname readBed
+#' @export 
+setMethod("readBed",
+		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+				fid_iid = "missing", snp_names_as_colnames = "logical"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			nsnp = rbed_info@jbed$getnSNPs()
+			readBed(rbed_info, 1:nsnp, TRUE, snp_names_as_colnames)
+		})
+
+
+#' @rdname readBed
+#' @export 
+setMethod("readBed",
+		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+				fid_iid = "missing", snp_names_as_colnames = "logical"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			readBed(rbed_info, snp_vec, TRUE, snp_names_as_colnames)
+		})
+
+#' @rdname readBed
+#' @export 
+setMethod("readBed",
+		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+				fid_iid = "logical", snp_names_as_colnames = "logical"),
+		function(rbed_info, snp_vec, 
+				fid_iid, snp_names_as_colnames
+		) {
+			nsnp = rbed_info@jbed$getnSNPs()
+			readBed(rbed_info, 1:nsnp, fid_iid, snp_names_as_colnames)
+		})
+
+
+
+
+
+
 
 #' FID and IID columns from fam file
 #' 
@@ -232,17 +306,6 @@ fidIid = function(rbed_info) {
 	rbed_info@fam[, c("FID", "IID")]
 }
 
-#' @rdname readBed
-#' @export 
-setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "character"),
-		function(rbed_info, snp_vec) {
-			snp_vec = which(
-					rbed_info@bim[, "SNP"] %in% 
-							snp_vec)
-			snp_vec = as.integer(unique(snp_vec))
-			readBed(rbed_info, snp_vec)
-		})
 
 
 
@@ -253,7 +316,112 @@ getJArray <- function(mat_ref, na_vals = -9) {
 	res
 }
 
+#' Add a "shift" suffix to a stem
+#' 
+#' @param stem character.
+#' @param n_shift numeric.
+#' @return character. 
+#' @examples 
+#' # add suffix to stem
+#' shiftedStem("a", 100) == "a_shift_0100"
+#' shiftedStem("home/a", 100) == "home/a_shift_0100"
+#' shiftedStem("/home/a", 100) == "/home/a_shift_0100"
+#' shiftedStem(c("/home/a", "/home/b"), 100) == c("/home/a_shift_0100", 
+#' 		"/home/b_shift_0100")
+#' 
+#' @author kaiyin
+#' @export
+shiftedStem = function(stem, n_shift) {
+	sprintf("%s_shift_%04d", stem, n_shift)
+}
 
+#' Shift bed files
+#' 
+#' Generates collapsed genotypes by shifting the bed file
+#' (i.e. SNP1 collapsed with SNP2, SNP2 collapsed with SNP3, etc, 
+#' when \code{n_shift == 1}).
+#' 
+#' @param rbed_info RbedInfo object
+#' @param n_shift integer. 
+#' @param collapse_matrix matrix of integers. See details.
+#' 
+#' @details Collapsing matrix.
+#' The collapse_matrix parameter allows collapsing of two genotypes in
+#' a arbitrary way. Each genotype is represented by either 0, 1, 2, or 3:
+#' \describe{
+#' \item{0}{Homozygote of the minor allele.}
+#' \item{1}{NA}
+#' \item{2}{Heterozygote.}
+#' \item{3}{Homozygote of the major allele.}
+#' }
+#' 
+#' The collapsing function is implemented as a matrix lookup function, i.e.
+#' \eqn{Collapse(S1, S2) = CollapseMatrix[S1][S2]}.
+#' 
+#' The default collapsing matrix is:
+#' 
+#' \tabular{rrrr}{
+#'   0 \tab 0 \tab 0 \tab 0\cr
+#'   0 \tab 1 \tab 1 \tab 1\cr
+#'   0 \tab 1 \tab 0 \tab 3\cr
+#'   0 \tab 1 \tab 3 \tab 3
+#' }
+#' 
+#' @return RbedInfo object, with the shifted bed file path in it. 
+#' 
+#' @author kaiyin
+#' @export
+shiftBed = function(rbed_info, n_shift, collapse_matrix = NULL) {
+	stopifnot(isS4Class(rbed_info, "RbedInfo"))
+	n_shift = as.integer(n_shift)
+	if(!is.null(collapse_matrix)) {
+		stopifnot(is.integer(collapse_matrix) && 
+						all(dim(collapse_matrix) == c(4, 4)))
+		rbed_info@jbed$shift(n_shift, collapse_matrix)
+	} else {
+		rbed_info@jbed$shift(n_shift)
+	}
+	rbedInfo(bedstem = shiftedStem(rbed_info@pl_info@plink_stem, n_shift), 
+			ff_setup = FALSE)
+}
 
+#' Remove files by matching the starting part
+#' 
+#' If \code{x} is a string, then this function matches \code{x*} by globbing.
+#' If \code{x} is a "PlInfo" object, it matches \code{x@@plink_stem*}, 
+#' If \code{x} is a "RbedInfo" object, it matches \code{x@@pl_info@@plink_stem*}.
+#' Otherwise nothing is removed.
+#' 
+#' 
+#' @param x character, PlInfo, or RbedInfo object.
+#' 
+#' @author kaiyin
+#' @export
+rmFilesByStem = function(x) {
+	if(is.character(x)) {
+		unlink(Sys.glob(paste(x, "*", sep = "")))
+	} else if(isS4Class(x, "PlInfo")) {
+		unlink(Sys.glob(paste(x@plink_stem, "*", sep = "")))
+	} else if(isS4Class(x, "RbedInfo")) {
+		unlink(Sys.glob(paste(x@pl_info@plink_stem, "*", sep = "")))
+	} else {
+		NULL
+	}
+}
 
-
+#' Create gCDH task directory by tag
+#' 
+#' The task folder is a subfolder of the value of \code{.collapsabel_gcdh}. 
+#' It will be created if it does not yet exist.
+#' 
+#' @param gcdh_tag character. Tag for gCDH task.
+#' @return character. Directory of the task.
+#' 
+#' @author kaiyin
+#' @export
+gcdhDir = function(gcdh_tag) {
+	stopifnot(is.character(gcdh_tag) && length(gcdh_tag) == 1)
+	d = file.path(.collapsabel_gcdh, gcdh_tag)
+	dir.create2(d)
+	d
+}

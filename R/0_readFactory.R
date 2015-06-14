@@ -9,6 +9,7 @@ setGeneric("correctTypes",
 #' @param col_names character. Names of columns, the types of which you want to change.
 #' @param types character. Names of new types. Should be the same length as \code{col_names}
 #' @return data.frame. With specified classes.
+#' @import collUtils
 #' @examples 
 #' \donotrun{
 #' dat = randNormDat(3, 3)

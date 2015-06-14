@@ -131,8 +131,6 @@ setMethod("plGwas",
 			pl_gwas@opts$covar = pheno
 			pl_gwas@opts$covar_name = covar_name
 			pl_gwas@opts$allow_no_sex = ""
-			validObject(pl_gwas)
-#			pl_gwas@opts$stdout = opts$stderr = ""
 			pl_gwas@opts$stdout = opts$stderr = gwasLog(pl_gwas)
 			pl_gwas@opts$out = gwasOutStem(pl_gwas)
 			pl_gwas@opts$wait = TRUE
@@ -343,14 +341,16 @@ setOptModel = function(pl_gwas, mod = "linear") {
 #' 
 #' @author kaiyin
 #' @export
-runGwas = function(pl_gwas, wait = TRUE) {
+runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = TRUE) {
 	dir.create2(gwasDir(pl_gwas))
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
 	if(!wait) {
 		pl_gwas@opts$wait = FALSE
 	}
 	do.call(plinkr, pl_gwas@opts)
-	saveRDS(pl_gwas, gwasRDS(pl_gwas))
+	if(save_pl_gwas) {
+		saveRDS(pl_gwas, gwasRDS(pl_gwas))
+	}
 }
 
 dir.create2 = function(dir) {
@@ -367,45 +367,12 @@ dir.create2 = function(dir) {
 #' otherwise returns NULL.
 #' @param pl_gwas PlGwas object.
 #' @param cn_select Colnames to select. Default to "..all"
-#' @return data.frame or null
+#' @return data.frame 
 #' 
 #' @author kaiyin
 #' @export
-readGwasOutOnce = function(pl_gwas, cn_select = "..all") {
-	if(!gwasFinished(pl_gwas)) {
-		NULL
-	} else {
-		readPlinkOut(gwasOut(pl_gwas), cn_select)
-	}
-}
-
-#' Read GWAS output from plink
-#' 
-#' Optionally wait for GWAS to finish if necessary. 
-#' 
-#' @param pl_gwas PlGwas object.
-#' @param cn_select character. Colnames to select. Default to "..all"
-#' @param wait logical. 
-#' @param timeout numeric. Give up trying after this amount of time in seconds.
-#' @param time numeric. Time to wait in each cycle. 
-#' @return data.frame or null
-#' 
-#' @author kaiyin
-#' @export
-readGwasOut = function(pl_gwas, cn_select = "..all", wait = TRUE, timeout = 10, time = 0.1) {
-	if(!wait) {
-		readGwasOutOnce(pl_gwas, cn_select) 
-	} else {
-		n_loop = timeout / time
-		for(k in 1:n_loop) {
-			res = readGwasOutOnce(pl_gwas, cn_select)
-			if(is.null(res)) {
-				Sys.sleep(time)
-				next
-			} 
-		}
-		res
-	}
+readGwasOut = function(pl_gwas, cn_select = "..all") {
+	readPlinkOut(gwasOut(pl_gwas), cn_select)
 }
 
 #' Remove GWAS results by tag
@@ -415,7 +382,8 @@ readGwasOut = function(pl_gwas, cn_select = "..all", wait = TRUE, timeout = 10, 
 #' @author kaiyin
 #' @export
 removeGwasTag = function(gwas_tag) {
-	unlink(tag2Dir(gwas_tag))
+	unlink(tag2Dir(gwas_tag), recursive = TRUE, 
+			force = TRUE)
 }
 
 #' Trim plink files
@@ -511,7 +479,7 @@ loadGwas = function(gwas_tag) {
 		if(file.exists(rds_file)) {
 			readRDS(rds_file)
 		} else {
-			FALSE
+			NULL
 		}
 	} else {
 		NULL
@@ -744,6 +712,7 @@ isBinary = function(v, na_value = NULL) {
 #' @export
 binPhe = function(pl_gwas) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
+	validObject(pl_gwas)
 	phe = readPhe(pl_gwas, pl_gwas@opts$pheno_name)
 	isBinary(phe[, 1])
 }

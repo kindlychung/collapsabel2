@@ -1,3 +1,13 @@
+plinkTrio <- function(bedstem, must_exist = FALSE) {
+	ext_trio = c("bed", "bim", "fam")
+	plink_trio = paste(bedstem, ext_trio, sep = ".")
+	if(must_exist) {
+		filePath(plink_trio)@path
+	} else {
+		plink_trio
+	}
+}
+
 #' An S4 class representing info about plink files
 #' 
 #' Info about plink files, including the root directory, 
@@ -29,11 +39,11 @@
 		), 
 		prototype(main_dir = "", 
 				plink_stem = "",
-				plink_trio = "", 
-				plink_trio_base = "", 
+				plink_trio = rep("", 3), 
+				plink_trio_base = rep("", 3), 
 				plink_frq = "",
 				ff_dir = "", 
-				ff_dir_trio = ""
+				ff_dir_trio = rep("", 3)
 		), validity = function(object) {
 			obj_slots = list(
 					object@main_dir,
@@ -74,7 +84,7 @@
 
 
 setGeneric("plInfo",
-		function(pl_info, bedstem, ...) {
+		function(pl_info, bedstem, ff_setup, ...) {
 			standardGeneric("plInfo")
 		})
 
@@ -105,12 +115,12 @@ setGeneric("plInfo",
 #' @name PlInfo_constructor
 #' @export 
 setMethod("plInfo",
-		signature(pl_info = "PlInfo", bedstem = "character"),
-		function(pl_info, bedstem) { 
+		signature(pl_info = "PlInfo", bedstem = "character", ff_setup = "logical"),
+		function(pl_info, bedstem, ff_setup) { 
 			# plink trio
 			ext_trio = c("bed", "bim", "fam")
 			plink_stem = suppressWarnings(normalizePath(bedstem))
-			plink_trio = filePath(paste(bedstem, ext_trio, sep = "."))@path
+			plink_trio = plinkTrio(bedstem = bedstem, must_exist = TRUE)
 			plink_trio_base = basename(plink_trio)
 			names(plink_trio) = names(plink_trio_base) = ext_trio
 			
@@ -134,7 +144,7 @@ setMethod("plInfo",
 			pl_info@ff_dir = ff_dir
 			pl_info@ff_dir_trio = ff_dir_trio
 			validObject(pl_info)
-			if(! isSetup(pl_info)) {
+			if(! isSetup(pl_info) && ff_setup) {
 				setup(pl_info)
 			}
 			pl_info
@@ -143,11 +153,26 @@ setMethod("plInfo",
 #' @rdname PlInfo_constructor
 #' @export 
 setMethod("plInfo",
-		signature(pl_info = "missing", bedstem = "character"),
-		function(bedstem) {
-			plInfo(.PlInfo(), bedstem)
+		signature(pl_info = "PlInfo", bedstem = "character", ff_setup = "missing"),
+		function(pl_info, bedstem, ff_setup) { 
+			plInfo(pl_info, bedstem, TRUE)
 		})
 
+#' @rdname PlInfo_constructor
+#' @export 
+setMethod("plInfo",
+		signature(pl_info = "missing", bedstem = "character", ff_setup = "logical"),
+		function(pl_info, bedstem, ff_setup) {
+			plInfo(.PlInfo(), bedstem, ff_setup)
+		})
+
+#' @rdname PlInfo_constructor
+#' @export 
+setMethod("plInfo",
+		signature(pl_info = "missing", bedstem = "character", ff_setup = "missing"),
+		function(pl_info, bedstem, ff_setup) {
+			plInfo(.PlInfo(), bedstem, TRUE)
+		})
 
 setGeneric("isSetup",
 		function(pl_info, ...) {
