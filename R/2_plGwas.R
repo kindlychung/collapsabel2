@@ -377,13 +377,26 @@ readGwasOut = function(pl_gwas, cn_select = "..all") {
 
 #' Remove GWAS results by tag
 #' 
-#' @param gwas_tag character. Tag for GWAS.
+#' @param x character. Tag for GWAS or gCDH.
 #' 
 #' @author kaiyin
 #' @export
-removeGwasTag = function(gwas_tag) {
-	unlink(tag2Dir(gwas_tag), recursive = TRUE, 
+removeGwasTag = function(x, type = "gwas") {
+	unlink(tag2Dir(x, type), recursive = TRUE, 
 			force = TRUE)
+}
+
+#' @rdname removeGwasTag
+#' @export 
+removeTag = removeGwasTag
+
+#' @rdname removeGwasTag
+#' @export 
+removeAllTags = function(type = "gwas") {
+	tags = listTags(type = type) 
+	for(tag in tags) {
+		removeTag(tag, type = type)
+	}
 }
 
 #' Trim plink files
@@ -435,33 +448,50 @@ gwasRDS = function(pl_gwas) {
 }
 
 
-#' List GWAS tags
+#' List GWAS or gCDH tags
+#' 
+#' @param type character. Either "gwas" or "gcdh".
 #' 
 #' @author kaiyin
 #' @export
-listGwasTags = function() {
-	list.files(.collapsabel_gwas)
+listGwasTags = function(type = "gwas") {
+	stopifnot(type %in% c("gwas", "gcdh"))
+	if(type == "gwas") list.files(.collapsabel_gwas)
+	else list.files(.collapsabel_gcdh)
+}
+
+#' @rdname listGwasTags
+#' @export
+listTags = listGwasTags
+
+
+tag2Dir = function(x, type = "gwas") {
+	if(type %in% c("gwas", "gcdh")) {
+		file.path(
+				get(paste(".collapsabel", type, sep = "_")), 
+				x)
+	} else {
+		stop("unknown tag type")
+	}
 }
 
 
-tag2Dir = function(gwas_tag) {
-	file.path(.collapsabel_gwas, gwas_tag)
-}
-
-tag2RDSPath = function(gwas_tag) {
-	d = tag2Dir(gwas_tag)
-	file.path(d, tag2RDS(gwas_tag))
-}
-
-dir2Tag = function(gwas_dir) {
-	basename(gwas_dir)
-}
-
-tag2RDS = function(gwas_tag) {
-	paste(gwas_tag, 
+tag2RDS = function(x) {
+	paste(x, 
 			"_PlGwas.rds", 
 			sep = "")
 }
+
+tag2RDSPath = function(x, type = "gwas") {
+	d = tag2Dir(x, type)
+	file.path(d, tag2RDS(x))
+}
+
+
+dir2Tag = function(x) {
+	basename(x)
+}
+
 
 #' Load PlGwas object by tag, from the RDS file
 #' 
@@ -486,7 +516,6 @@ loadGwas = function(gwas_tag) {
 	}
 }
 
-# TODO: remove GWASs
 
 
 #' Check progress of a plink job (approximately)

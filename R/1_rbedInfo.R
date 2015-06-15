@@ -181,12 +181,17 @@ setGeneric("readBed",
 #' @docType methods
 #' @export
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
 				fid_iid = "logical", snp_names_as_colnames = "logical"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
 		) {
-			snp_vec = as.integer(snp_vec)
+			if(is.numeric(snp_vec)) {
+				snp_vec = as.integer(snp_vec)
+			} else if(is.character(snp_vec)) {
+			} else {
+				stop("snp_vec must be either numeric or character.")
+			}
 
 			mat_ref = rbed_info@jbed$readBed(
 					.jarray(snp_vec))
@@ -219,7 +224,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
 				fid_iid = "missing", snp_names_as_colnames = "missing"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -245,7 +250,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
 				fid_iid = "logical", snp_names_as_colnames = "missing"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -269,7 +274,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "numeric",
+		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
 				fid_iid = "missing", snp_names_as_colnames = "logical"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -409,7 +414,7 @@ rmFilesByStem = function(x) {
 	}
 }
 
-#' Create gCDH task directory by tag
+#' Create gCDH task directories by tag
 #' 
 #' The task folder is a subfolder of the value of \code{.collapsabel_gcdh}. 
 #' It will be created if it does not yet exist.
@@ -421,7 +426,23 @@ rmFilesByStem = function(x) {
 #' @export
 gcdhDir = function(gcdh_tag) {
 	stopifnot(is.character(gcdh_tag) && length(gcdh_tag) == 1)
-	d = file.path(.collapsabel_gcdh, gcdh_tag)
+	dir_names = c(gcdh_tag, "nmiss", "beta", "stat", "p")
+	d = file.path(.collapsabel_gcdh, dir_names[1])
 	dir.create2(d)
-	d
+	ds = file.path(d, dir_names[2:5])
+	res = c(d, ds)
+	names(res) = c("root", dir_names[2:5])
+	res
 }
+
+listGcdhTags = function() {
+	basename(list.files(.collapsabel_gcdh))
+}
+
+rmGcdhTag = function(tag) {
+	unlink(tag2Dir(tag, ))
+}
+
+
+
+# TODO: test readBed with extremely large bed files (RS123 50G)
