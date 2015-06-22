@@ -83,6 +83,7 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 		})
 
 
+# TODO: use big.matrix to set bim, fam and frq files
 setGeneric("plInfo",
 		function(pl_info, bedstem, ff_setup, ...) {
 			standardGeneric("plInfo")

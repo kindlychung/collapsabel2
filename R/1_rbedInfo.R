@@ -435,13 +435,7 @@ gcdhDir = function(gcdh_tag) {
 	res
 }
 
-listGcdhTags = function() {
-	basename(list.files(.collapsabel_gcdh))
-}
 
-rmGcdhTag = function(tag) {
-	unlink(tag2Dir(tag, ))
-}
 
 
 

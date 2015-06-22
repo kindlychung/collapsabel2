@@ -1,20 +1,3 @@
-#' CollapsABEL home directory
-#' @name collapsabel_dir
-#' @export 
-.collapsabel_dir = file.path(Sys.getenv("HOME"), ".collapsabel")
-
-#' CollapsABEL gwas directory
-#' @name collapsabel_dir
-#' @export 
-.collapsabel_gwas = file.path(.collapsabel_dir, "gwas")
-
-#' CollapsABEL gCDH analysis directory
-#' @name collapsabel_dir
-#' @export 
-.collapsabel_gcdh = file.path(.collapsabel_dir, "gcdh")
-
-
-
 #' An S4 class representing info about GWAS on plink files
 #' 
 #' @slot gwas_tag character. Tag for this GWAS.

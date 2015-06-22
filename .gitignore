@@ -3,4 +3,5 @@ man
 *.pdf
 .project
 .settings
+*.bed
 
