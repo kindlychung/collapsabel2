@@ -46,6 +46,10 @@
 .plink_out_ext = c("assoc", "qassoc", "linear", "logistic")
 
 
+#' Alpha-numeric characters
+#' @export
+alphaNumeric = c(letters, LETTERS, as.character(0:9))
+
 globalVariables(
 		c(
 				".assoc_header", 
@@ -55,6 +59,7 @@ globalVariables(
 				".plink_out_ext", 
 				".collapsabel_dir", 
 				".collapsabel_gwas", 
-				".collapsabel_gcdh"
+				".collapsabel_gcdh", 
+				"alphaNumeric"
 						)
 )
