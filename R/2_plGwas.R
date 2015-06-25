@@ -336,14 +336,6 @@ runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = TRUE) {
 	}
 }
 
-dir.create2 = function(dir) {
-	if(!file.exists(dir)) {
-		dir.create(dir, recursive = TRUE)
-	} else {
-		TRUE
-	}
-}
-
 #' Read GWAS output from plink
 
 #' If the GWAS is finished, returns a data.frame, 

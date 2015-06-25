@@ -29,43 +29,37 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 #' 
 #' @name PlInfo
 #' @export 
-.PlInfo = setClass("PlInfo", representation(main_dir = "character", 
+.PlInfo = setClass("PlInfo", representation(
+				main_dir = "character", 
 				plink_stem = "character",
 				plink_trio = "character", 
 				plink_trio_base = "character", 
-				plink_frq = "character",
-				ff_dir = "character", 
-				ff_dir_trio = "character"
+				plink_frq = "character"
 		), 
-		prototype(main_dir = "", 
+		prototype(
+				main_dir = "", 
 				plink_stem = "",
 				plink_trio = rep("", 3), 
 				plink_trio_base = rep("", 3), 
-				plink_frq = "",
-				ff_dir = "", 
-				ff_dir_trio = rep("", 3)
+				plink_frq = ""
 		), validity = function(object) {
 			obj_slots = list(
 					object@main_dir,
 					object@plink_stem ,
 					object@plink_trio ,
 					object@plink_trio_base ,
-					object@plink_frq ,
-					object@ff_dir ,
-					object@ff_dir_trio
+					object@plink_frq 
 			) 
 			names(obj_slots) = c(
 					"main_dir",
 					"plink_stem",
 					"plink_trio",
 					"plink_trio_base",
-					"plink_frq",
-					"ff_dir",
-					"ff_dir_trio"
+					"plink_frq"
 			)
 			msg = lenCheck(
 					obj_slots,
-					c(1, 1, 3, 3, 1, 1, 3))			
+					c(1, 1, 3, 3, 1))			
 			if(msg != TRUE) {
 				return(msg)
 			}
@@ -131,21 +125,14 @@ setMethod("plInfo",
 			# frq file
 			plink_frq = paste(bedstem, ".frq", sep="")
 			
-			# ff dirs
-			ff_dir = file.path(main_dir, paste(".ff", basename(bedstem), sep = "_"))
-			ff_dir_trio = file.path(ff_dir, c(basename(plink_frq), plink_trio_base[c("bim", "fam")]))
-			names(ff_dir_trio) = c("frq", "bim", "fam")
-			
 			# return a PlInfo obj
 			pl_info@main_dir = main_dir
 			pl_info@plink_stem = plink_stem
 			pl_info@plink_trio = plink_trio
 			pl_info@plink_trio_base = plink_trio_base
 			pl_info@plink_frq = plink_frq
-			pl_info@ff_dir = ff_dir
-			pl_info@ff_dir_trio = ff_dir_trio
 			validObject(pl_info)
-			if(! isSetup(pl_info) && ff_setup) {
+			if(ff_setup) {
 				setup(pl_info)
 			}
 			pl_info
@@ -180,6 +167,10 @@ setGeneric("isSetup",
 			standardGeneric("isSetup")
 		})
 
+sqliteFilePl = function(pl_info) {
+	sprintf("%s.sqlite", pl_info@plink_stem)
+}
+
 #' Check if a directory containing .bed .fam and .bim files is properly setup
 #'  
 #' @param pl_info PlInfo object
@@ -193,7 +184,7 @@ setGeneric("isSetup",
 setMethod("isSetup",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			all(file.exists(pl_info@ff_dir_trio))
+			isSQLite3(sqliteFilePl(pl_info))
 		})
 
 setGeneric("setup",
@@ -216,8 +207,9 @@ setMethod("setup",
 			if(isSetup(pl_info)) {
 				TRUE
 			} else {
-				if(!file.exists(pl_info@ff_dir)) {
-					dir.create(pl_info@ff_dir)
+				sqlite_file = sqliteFilePl(pl_info)
+				if(file.exists(sqlite_file)) {
+					unlink(sqlite_file)
 				}
 				if(!file.exists(pl_info@plink_frq)) {
 					plinkr(bfile = pl_info@plink_stem, 
@@ -225,21 +217,19 @@ setMethod("setup",
 							out = pl_info@plink_stem, 
 							wait = TRUE)
 				}
-				ff_frq = pl_info@ff_dir_trio["frq"]
-				ff_bim = pl_info@ff_dir_trio["bim"]
-				ff_fam = pl_info@ff_dir_trio["fam"]
-				if(!file.exists(ff_frq)) {
-					frq = read.table(pl_info@plink_frq, header = TRUE)
-					saveFFDF(frq, dir = pl_info@ff_dir_trio["frq"], overwrite = TRUE)
-				}
-				if(!file.exists(ff_bim)) {
-					bim = readBim(pl_info@plink_trio["bim"], "..all")
-					saveFFDF(bim, dir = pl_info@ff_dir_trio["bim"], overwrite = TRUE)
-				}
-				if(!file.exists(ff_fam)) {
-					fam = readFam(pl_info@plink_trio["fam"], "..all")
-					saveFFDF(fam, dir = pl_info@ff_dir_trio["fam"], overwrite = TRUE)
-				}
+				frq = read.table(pl_info@plink_frq, header = TRUE, stringsAsFactors = FALSE)
+				bim = readBim(pl_info@plink_trio["bim"])
+				fam = readFam(pl_info@plink_trio["fam"])
+				fam = setNames(fam, c("FID", "IID", "PID", "MID", "SEX", "PHE"))
+				tryCatch({
+							file.create2(sqlite_file)
+							db = RSQLite::dbConnect(RSQLite::SQLite(), sqlite_file)
+							RSQLite::dbWriteTable(db, "bim", bim)
+							RSQLite::dbWriteTable(db, "fam", fam)
+							RSQLite::dbWriteTable(db, "frq", frq)
+						}, finally = {
+							RSQLite::dbDisconnect(db)
+						})			
 			}
 		})
 
@@ -255,8 +245,7 @@ setGeneric("nIndivPl",
 setMethod("nIndivPl",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			fam = loadFam(pl_info)
-			as.numeric(nrow(fam))
+			getQuery(sqliteFilePl(pl_info), "select count(iid) from fam")[1, 1]
 		})
 
 setGeneric("nSnpPl",
@@ -271,8 +260,7 @@ setGeneric("nSnpPl",
 setMethod("nSnpPl",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			bim <- loadBim(pl_info)
-			as.numeric(nrow(bim))
+			getQuery(sqliteFilePl(pl_info), "select count(snp) from bim")[1, 1]
 		})
 
 setGeneric("bytesSnp",
@@ -306,90 +294,13 @@ setMethod("nIndivApprPl",
 		})
 
 
-
-
-
-
-loadPlinkMeta = defmacro(ext, method_name, expr = {
-			setGeneric(method_name, 
-					function(pl_info, ...) {
-						standardGeneric(method_name)
-					})
-			setMethod(method_name, 
-					signature(pl_info = "PlInfo"), 
-					function(pl_info) {
-						suppressMessages(res <- loadFFDF(pl_info@ff_dir_trio[ext]))
-						res
-					})
-		})
-
-loadPlinkMeta("bim", "loadBim")
-loadPlinkMeta("fam", "loadFam")
-loadPlinkMeta("frq", "loadFrq")
-
-
-#' Loading function for .bim .fam and .frq data
+#' FID and IID columns from fam file
 #' 
-#' These three S4 methods \code{loadBim, loadFam, loadFrq} are
-#' generated by a factory function. They all receive an PlInfo object as parameter.
-#' In a properly setup plink directory, .bim .fam and .frq
-#' files should have been converted to ff format. These three 
-#' functions load the corresponding ff backing files on disk.
-#' 
-#' @name loading_functions
+#' @param rbed_info RbedInfo object
+#' @return data.frame of two columns "FID" and "IID"
 #' 
 #' @author kaiyin
-#' @docType methods
-NULL
-
-#' Load plink bim file (in ff format) into R
-#' 
-#' @name loadBim
-#' 
-#' @param pl_info PlInfo object
-#' @return ffdf object
-#' @examples 
-#' # see examples in plInfo
-#' 
-#' @author kaiyin
-#' @docType methods
 #' @export
-loadBim
-
-#' Load plink fam file (in ff format) into R
-#' 
-#' @name loadFam
-#' 
-#' @param pl_info PlInfo object
-#' @return ffdf object
-#' @examples 
-#' # see examples in plInfo
-#' 
-#' @author kaiyin
-#' @docType methods
-#' @export
-loadFam
-
-#' Load plink frq file (in ff format) into R
-#' 
-#' @name loadFrq
-#' @examples 
-#' # see examples in plInfo
-#' 
-#' @param pl_info PlInfo object
-#' @return ffdf object
-#' 
-#' @author kaiyin
-#' @docType methods
-#' @export
-loadFrq
-
-sourceAll = function() {
-	r_files = file.path("R", list.files("R"))
-	for(f in r_files) {
-		print(f)
-		source(f)
-	}
+fidIid = function(pl_info) {
+	getQuery(sqliteFilePl(pl_info), "select fid, iid from fam order by rowid")
 }
-
-

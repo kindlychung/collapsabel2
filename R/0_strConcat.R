@@ -78,3 +78,33 @@ setMethod("strVectorRepr",
 		function(ss, print_out) {
 			strVectorRepr(ss, FALSE)
 		})
+
+
+#' @rdname strVectorRepr_methods
+#' @export 
+strVectorSQLRepr = function(vec, print_out = FALSE, single_quote = TRUE) {
+	if(single_quote) {
+		quoted_strings = strConcat(paste("'", vec, "'", sep = ""), ",")
+	} else {
+		quoted_strings = strConcat(paste('"', vec, '"', sep = ""), ",")
+	}
+	res = strConcat(c("(", quoted_strings, ")"))
+	if(print_out) {
+		message(res)
+	}
+	res
+}
+
+#' @rdname strVectorRepr_methods
+#' @export 
+numVectorSQLRepr = function(vec, print_out = FALSE) {
+	res = strConcat(c(
+					"(", 
+					paste(as.character(vec), collapse = ", "), 
+					")"
+			))
+	if(print_out) {
+		message(res)
+	}
+	res
+}

@@ -1,5 +1,4 @@
 
-setOldClass("ffdf")
 
 #' S4 class for necessary info to read a bed file into R
 #' 
@@ -10,8 +9,6 @@ setOldClass("ffdf")
 #' @slot nindiv numeric. Number of individuals.
 #' @slot nindiv_appr numeric. Apparent number of individuals.
 #' @slot bytes_snp numeric. Number of bytes used for each SNP.
-#' @slot bim ffdf object. Data from .bim file.
-#' @slot fam ffdf object. Data from .fam file.
 #' @export 
 .RbedInfo = setClass("RbedInfo", 
 		representation(
@@ -20,9 +17,7 @@ setOldClass("ffdf")
 				nsnp = "numeric", 
 				nindiv = "numeric", 
 				nindiv_appr = "numeric", 
-				bytes_snp = "numeric", 
-				bim = "ffdf",
-				fam = "ffdf"
+				bytes_snp = "numeric"
 		), 
 		prototype(
 				pl_info = .PlInfo(), 
@@ -30,9 +25,7 @@ setOldClass("ffdf")
 				nsnp = 0, 
 				nindiv = 0, 
 				nindiv_appr = 0, 
-				bytes_snp = 0, 
-				bim = df2ffdf(data.frame(x = NA)),
-				fam = df2ffdf(data.frame(x = NA))
+				bytes_snp = 0
 		),
 		validity = function(object) {
 			if(! .jinstanceof(object@jbed, "vu/co/kaiyin/Bed")) {
@@ -70,7 +63,7 @@ setOldClass("ffdf")
 #' 
 #' @author kaiyin
 #' @export
-rbedInfo = function(bedstem, ff_setup = TRUE) {
+rbedInfo = function(bedstem, ff_setup = FALSE) {
 	stopifnot(length(bedstem) == 1)
 	stopifnot(is.character(bedstem))
 	pl_info = plInfo(bedstem = bedstem, ff_setup = ff_setup)
@@ -80,12 +73,11 @@ rbedInfo = function(bedstem, ff_setup = TRUE) {
 	rbed_info@pl_info = pl_info
 	rbed_info@jbed = collUtils::rBed(bed_path)
 	if(ff_setup) {
+		setup(pl_info)
 		rbed_info@bytes_snp = bytesSnp(pl_info)
 		rbed_info@nindiv = nIndivPl(pl_info)
 		rbed_info@nindiv_appr = nIndivApprPl(pl_info)
 		rbed_info@nsnp = nSnpPl(pl_info)
-		rbed_info@bim = loadBim(pl_info)
-		rbed_info@fam = loadFam(pl_info)
 		validObject(rbed_info) 
 		rbed_info
 	} else {
@@ -165,7 +157,7 @@ setMethod("theoBedSize",
 
 setGeneric("readBed",
 		function(rbed_info, snp_vec, 
-				fid_iid, snp_names_as_colnames, ...) {
+				fid_iid = TRUE, snp_names_as_colnames = TRUE, ...) {
 			standardGeneric("readBed")
 		})
 
@@ -187,8 +179,17 @@ setMethod("readBed",
 				fid_iid, snp_names_as_colnames
 		) {
 			if(is.numeric(snp_vec)) {
-				snp_vec = as.integer(snp_vec)
+				snp_vec = sort(as.integer(snp_vec))
+				snp_names = getQuery(
+						sqliteFilePl(rbed_info@pl_info), 
+						sprintf("select snp from bim where rowid in %s order by rowid", 
+								numVectorSQLRepr(snp_vec)))[, 1]
 			} else if(is.character(snp_vec)) {
+				snp_names = snp_vec
+				snp_vec = snpRowId(rbed_info@pl_info, snp_vec)
+				snp_ord = order(snp_vec)
+				snp_vec = snp_vec[snp_ord]
+				snp_names = snp_names[snp_ord]
 			} else {
 				stop("snp_vec must be either numeric or character.")
 			}
@@ -197,15 +198,63 @@ setMethod("readBed",
 					.jarray(snp_vec))
 			res = getJArray(mat_ref = mat_ref)
 			if(snp_names_as_colnames) {
-				res = setNames(res, as.character(rbed_info@bim[, "SNP"])[snp_vec])
+				res = setNames(res, snp_names)
 			}
 			if(fid_iid) {
-				res = cbind(fidIid(rbed_info), res)
+				res = cbind(fidIid(rbed_info@pl_info), res)
 				res$FID = as.character(res$FID)
 				res$IID = as.character(res$IID)
 			}
 			res
 		})
+
+#' Get row number of SNPs from their names
+#' 
+#' @param pl_info PlInfo object.
+#' @param snp_names character. Vector of SNP names.
+#' @return integer. Vector of row numbers.
+#' 
+#' @author kaiyin
+#' @export
+snpRowId = function(pl_info, snp_names) {
+	stopifnot(isSetup(pl_info))
+	getQuery(sqliteFilePl(pl_info), 
+			sprintf("select rowid from bim where snp in %s order by rowid", strVectorSQLRepr(snp_names)))[, 1]
+}
+
+
+
+#' Send query to SQLite database
+#' 
+#' @param db_name character. Path to database.
+#' @param query_string character. Query string.
+#' 
+#' @author kaiyin
+#' @export
+sendQuery = function(db_name, query_string) {
+	db = RSQLite::dbConnect(RSQLite::SQLite(), db_name, synchronous = "full")
+	tryCatch({
+				RSQLite::dbSendQuery(db, query_string)
+			}, finally = {
+				RSQLite::dbDisconnect(db)
+			})
+}
+
+#' Get query results from a SQLite database
+#' 
+#' @param db_name character. Path to database.
+#' @param query_string character. Query string.
+#' 
+#' @author kaiyin
+#' @export
+getQuery = function(db_name, query_string) {
+	db = RSQLite::dbConnect(RSQLite::SQLite(), db_name)
+	tryCatch({
+				return(RSQLite::dbGetQuery(db, query_string))
+			}, finally = {
+				RSQLite::dbDisconnect(db)
+			})
+}
 
 
 
@@ -294,26 +343,6 @@ setMethod("readBed",
 			readBed(rbed_info, 1:nsnp, fid_iid, snp_names_as_colnames)
 		})
 
-
-
-
-
-
-
-#' FID and IID columns from fam file
-#' 
-#' @param rbed_info RbedInfo object
-#' @return data.frame of two columns "FID" and "IID"
-#' 
-#' @author kaiyin
-#' @export
-fidIid = function(rbed_info) {
-	rbed_info@fam[, c("FID", "IID")]
-}
-
-
-
-
 getJArray <- function(mat_ref, na_vals = -9) {
 	res = .jevalArray(mat_ref, simplify = TRUE)
 	res[res %in% na_vals] = NA
@@ -376,7 +405,7 @@ shiftedStem = function(stem, n_shift) {
 #' 
 #' @author kaiyin
 #' @export
-shiftBed = function(rbed_info, n_shift, collapse_matrix = NULL) {
+shiftBed = function(rbed_info, n_shift, ff_setup = FALSE, collapse_matrix = NULL) {
 	stopifnot(isS4Class(rbed_info, "RbedInfo"))
 	n_shift = as.integer(n_shift)
 	if(!is.null(collapse_matrix)) {
@@ -386,8 +415,10 @@ shiftBed = function(rbed_info, n_shift, collapse_matrix = NULL) {
 	} else {
 		rbed_info@jbed$shift(n_shift)
 	}
-	rbedInfo(bedstem = shiftedStem(rbed_info@pl_info@plink_stem, n_shift), 
-			ff_setup = FALSE)
+	invisible(
+			rbedInfo(bedstem = shiftedStem(rbed_info@pl_info@plink_stem, n_shift), 
+			ff_setup = ff_setup)
+			) 
 }
 
 #' Remove files by matching the starting part
