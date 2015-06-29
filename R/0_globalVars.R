@@ -45,6 +45,20 @@
 #' @export
 .plink_out_ext = c("assoc", "qassoc", "linear", "logistic")
 
+#' Plink stdout
+#' 
+#' Possible values are "" (to R console) / FALSE (discard) / TRUE (capture in a string)
+#' @name plink_stdout
+#' @export
+.plink_stdout = FALSE
+
+#' Plink stderr
+#' 
+#' Possible values are "" (to R console) / FALSE (discard) / TRUE (capture in a string)
+#' @name plink_stderr
+#' @export
+.plink_stderr = FALSE
+
 
 #' Alpha-numeric characters
 #' @export

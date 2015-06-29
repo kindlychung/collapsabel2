@@ -1204,8 +1204,8 @@ plinkr = function(
 	zero_cms=NULL,
 	one = NULL,
 	twothreefile = NULL,
-	stdout="",
-	stderr="",
+	stdout=.plink_stdout,
+	stderr=.plink_stderr,
 	wait=TRUE
 ) {
 	paramList = mget(names(formals()),sys.frame(sys.nframe()))

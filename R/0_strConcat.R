@@ -108,3 +108,6 @@ numVectorSQLRepr = function(vec, print_out = FALSE) {
 	}
 	res
 }
+
+
+

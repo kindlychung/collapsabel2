@@ -386,5 +386,56 @@ correctDesc = function(desc_file) {
 	desc
 }
 
+#' Generate a big.matrix filename (.bin or .desc)
+#' 
+#' @param mat_name character. Stem of filename.
+#' @param type character. Either "bin" or "desc"
+#' @return character. big.matrix filename
+#' 
+#' @author kaiyin
+#' @export
+bmFilename = function(mat_name, type) {
+	stopifnot(type %in% c("bin", "desc"))
+	sprintf("%s.%s", mat_name, type)
+}
+
+#' Get the big.matrix file path according to GCDH task tag
+#' 
+#' @param tag character. GCDH task tag.
+#' @param mat_name character. nmiss, beta, stat, p, etc.
+#' @param type character. Either "bin" or "desc"
+#' 
+#' @author kaiyin
+#' @export
+bmFilepath = function(tag, mat_name, type) {
+	file.path(
+			tag2Dir(tag, "gcdh"),
+			bmFilename(mat_name, type)
+			)
+}
+
+#' Create a big.matrix under specified GCDH tag
+#' @param tag character. GCDH tag.
+#' @param bm_name character. Name of the big.matrix to be created.
+#' @param nrow integer. Number of rows of the big.matrix
+#' @param ncol integer. Number of columns of the big.matrix. Default to 1.
+#' 
+#' @author kaiyin
+#' @export
+gcdhBmCreate = function(tag, bm_name, nrow, ncol = 1) {
+	bigmemory::filebacked.big.matrix(
+			nrow = nrow, 
+			ncol = ncol, 
+			type = "double", 
+			backingfile      = bmFilename(bm_name, "bin"),
+			descriptorfile   = bmFilename(bm_name, "desc"),
+			backingpath      = tag2Dir(tag, "gcdh"),
+			binarydescriptor = TRUE
+	)	
+}
+
+
+
+
 
 

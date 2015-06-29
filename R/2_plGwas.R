@@ -304,6 +304,7 @@ setOptModel = function(pl_gwas, mod = "linear") {
 	poss_mods = c("linear", "logistic", "assoc")
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
 	stopifnot((length(mod) == 1) && (mod %in% poss_mods))
+	# nullify all modes that are not selected
 	mods_to_null = poss_mods[poss_mods != mod]
 	for(m in mods_to_null) {
 		pl_gwas@opts[[m]] = NULL
@@ -451,17 +452,22 @@ tag2Dir = function(x, type = "gwas") {
 }
 
 
-tag2RDS = function(x) {
-	paste(x, 
-			"_PlGwas.rds", 
-			sep = "")
+tag2RDS = function(x, type = "gwas") {
+	if(type == "gwas") {
+		paste(x, 
+				"_PlGwas.rds", 
+				sep = "")
+	} else {
+		paste(x, 
+				"_GCDH.rds", 
+				sep = "")
+	}
 }
 
 tag2RDSPath = function(x, type = "gwas") {
 	d = tag2Dir(x, type)
-	file.path(d, tag2RDS(x))
+	file.path(d, tag2RDS(x, type))
 }
-
 
 dir2Tag = function(x) {
 	basename(x)

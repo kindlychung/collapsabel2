@@ -77,7 +77,6 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 		})
 
 
-# TODO: use big.matrix to set bim, fam and frq files
 setGeneric("plInfo",
 		function(pl_info, bedstem, ff_setup, ...) {
 			standardGeneric("plInfo")
@@ -114,10 +113,13 @@ setMethod("plInfo",
 		function(pl_info, bedstem, ff_setup) { 
 			# plink trio
 			ext_trio = c("bed", "bim", "fam")
-			plink_stem = suppressWarnings(normalizePath(bedstem))
-			plink_trio = plinkTrio(bedstem = bedstem, must_exist = TRUE)
+			plink_trio = normalizePath(
+					plinkTrio(bedstem = bedstem, must_exist = FALSE)
+			) 
 			plink_trio_base = basename(plink_trio)
 			names(plink_trio) = names(plink_trio_base) = ext_trio
+			plink_stem = tools::file_path_sans_ext(plink_trio["bed"])
+			names(plink_stem) = NULL
 			
 			# main dir where plink files sit
 			main_dir = dirname(plink_trio[1])
@@ -167,6 +169,13 @@ setGeneric("isSetup",
 			standardGeneric("isSetup")
 		})
 
+#' SQLite file of a PlInfo object
+#' 
+#' @param pl_info PlInfo object
+#' @return character. Path to SQLite database file.
+#' 
+#' @author kaiyin
+#' @export
 sqliteFilePl = function(pl_info) {
 	sprintf("%s.sqlite", pl_info@plink_stem)
 }

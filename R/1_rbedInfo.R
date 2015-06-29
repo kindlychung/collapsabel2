@@ -66,13 +66,48 @@
 rbedInfo = function(bedstem, ff_setup = FALSE) {
 	stopifnot(length(bedstem) == 1)
 	stopifnot(is.character(bedstem))
-	pl_info = plInfo(bedstem = bedstem, ff_setup = ff_setup)
+	pl_info = plInfo(bedstem = bedstem)
 	bed_path = pl_info@plink_trio["bed"]
 	
 	rbed_info = .RbedInfo()
 	rbed_info@pl_info = pl_info
 	rbed_info@jbed = collUtils::rBed(bed_path)
 	if(ff_setup) {
+		setupRbed(rbed_info)
+	} else {
+		rbed_info
+	}
+}
+
+#' Check if an RbedInfo object is properly set up
+#' @param rbed_info RbedInfo object
+#' @return logical.
+#' 
+#' @author kaiyin
+#' @export
+isSetupRbed = function(rbed_info) {
+	res = isSetup(rbed_info@pl_info) && 
+			rbed_info@bytes_snp > 0 &&
+			rbed_info@nindiv_appr > 0 && 
+			rbed_info@nindiv > 0 &&
+			rbed_info@nsnp > 0
+	if(is.na(res) || is.null(res)) {
+		res = FALSE
+	}
+	res
+}
+
+#' Setup an RbedInfo object
+#' @param rbed_info RbedInfo object
+#' @return RbedInfo object
+#' 
+#' @author kaiyin
+#' @export
+setupRbed = function(rbed_info) {
+	if(isSetupRbed(rbed_info)) {
+		rbed_info
+	} else {
+		pl_info = rbed_info@pl_info
 		setup(pl_info)
 		rbed_info@bytes_snp = bytesSnp(pl_info)
 		rbed_info@nindiv = nIndivPl(pl_info)
@@ -80,10 +115,9 @@ rbedInfo = function(bedstem, ff_setup = FALSE) {
 		rbed_info@nsnp = nSnpPl(pl_info)
 		validObject(rbed_info) 
 		rbed_info
-	} else {
-		rbed_info
 	}
 }
+
 
 setGeneric("bedSizeCorrect",
 		function(rbed_info, ...) {
@@ -193,7 +227,7 @@ setMethod("readBed",
 			} else {
 				stop("snp_vec must be either numeric or character.")
 			}
-
+			
 			mat_ref = rbed_info@jbed$readBed(
 					.jarray(snp_vec))
 			res = getJArray(mat_ref = mat_ref)
@@ -417,8 +451,8 @@ shiftBed = function(rbed_info, n_shift, ff_setup = FALSE, collapse_matrix = NULL
 	}
 	invisible(
 			rbedInfo(bedstem = shiftedStem(rbed_info@pl_info@plink_stem, n_shift), 
-			ff_setup = ff_setup)
-			) 
+					ff_setup = ff_setup)
+	) 
 }
 
 #' Remove files by matching the starting part
@@ -457,13 +491,9 @@ rmFilesByStem = function(x) {
 #' @export
 gcdhDir = function(gcdh_tag) {
 	stopifnot(is.character(gcdh_tag) && length(gcdh_tag) == 1)
-	dir_names = c(gcdh_tag, "nmiss", "beta", "stat", "p")
-	d = file.path(.collapsabel_gcdh, dir_names[1])
+	d = file.path(.collapsabel_gcdh, gcdh_tag)
 	dir.create2(d)
-	ds = file.path(d, dir_names[2:5])
-	res = c(d, ds)
-	names(res) = c("root", dir_names[2:5])
-	res
+	d
 }
 
 
@@ -471,3 +501,131 @@ gcdhDir = function(gcdh_tag) {
 
 
 # TODO: test readBed with extremely large bed files (RS123 50G)
+
+
+runGcdh = function(
+		bedstem, pheno, pheno_name,
+		covar_name, gcdh_tag,
+		n_shift, 
+		filtered_stem = NULL,
+		p_threshold = NULL,
+		dist_threshold = 500e3,
+		collapse_matrix = NULL,
+		rm_shifted_files = TRUE
+) {
+	# set up for reading bed file
+	rbed_info = rbedInfo(bedstem = bedstem, ff_setup = FALSE)
+	pl_gwas = plGwas(rbed_info, 
+			pheno = pheno,
+			pheno_name = pheno_name, 
+			covar_name = covar_name, 
+			gwas_tag = paste(gcdh_tag, "_shift_0", sep = ""))
+	# filter SNPs by an initial GWAS when demanded
+	if(!is.null(filtered_stem)) {
+		stopifnot(is.numeric(p_threshold) && p_threshold > 0 && p_threshold < 1)
+		pl_gwas = assocFilter(pl_gwas, filtered_stem, p_threshold, TRUE)
+	}
+	# run the initial GWAS and store results in first column
+	runGwas(pl_gwas)
+	gwas_out = readGwasOut(pl_gwas, .linear_header_default)
+	nsnps = nSnpPl(rbed_info@pl_info)
+	for(col_name in c("nmiss", "beta", "stat", "p")) {
+		assign(
+				col_name, 
+				gcdhBmCreate(gcdh_tag, col_name, nsnps)
+		) 
+	}
+	nmiss[, 1] = gwas_out[, "NMISS"]
+	beta[, 1] = gwas_out[, "BETA"]
+	stat[, 1] = gwas_out[, "STAT"]
+	p[, 1] = gwas_out[, "P"]
+	
+	# run GWAS on shifted bed files
+	for(i in 1:n_shift) {
+		rbed_info_shifted = shiftBed(rbed_info, i, FALSE, collapse_matrix)
+		shifted_tag = paste(gcdh_tag, "_shift_", i, sep = "")
+		pl_gwas_shifted = plGwas(rbed_info_shifted, 
+				pheno = pheno, 
+				pheno_name = pheno_name, 
+				covar_name = covar_name, 
+				gwas_tag = shifted_tag, 
+		)
+		runGwas(pl_gwas_shifted)
+		gwas_out_shifted = readGwasOut(pl_gwas_shifted)
+		bmAddCol(bmFilepath(gcdh_tag, "nmiss", "bin"), gwas_out_shifted[, "NMISS"])
+		bmAddCol(bmFilepath(gcdh_tag, "beta", "bin"), gwas_out_shifted[, "BETA"])
+		bmAddCol(bmFilepath(gcdh_tag, "stat", "bin"), gwas_out_shifted[, "STAT"])
+		bmAddCol(bmFilepath(gcdh_tag, "p", "bin"), gwas_out_shifted[, "P"])
+		# remove shifted files when requested
+		if(rm_shifted_files) {
+			unlink(
+					Sys.glob(
+							paste(
+									rbed_info_shifted@pl_info@plink_stem, 
+									"*",
+									sep = ""
+									)
+							)
+					)
+			removeTag(shifted_tag, "gwas")
+		}
+	}
+	
+	# reload big matrices after modification
+	nmiss = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "nmiss", "desc"))
+	beta = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "beta", "desc"))
+	stat = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "stat", "desc"))
+	p = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "p", "desc"))
+
+	# mark SNPs that are beyond distance threshold as NA
+	bp = getQuery(sqliteFilePl(rbed_info@pl_info), "select bp from bim order by rowid")[, 1]
+	for(i in 1:n_shift) {
+		dist_i = lagDistance(bp , i)
+		idx = dist_i > dist_threshold
+		idx[is.na(idx)] = TRUE
+		idx = which(idx)
+		if(length(idx) > 0) {
+			nmiss[(idx), (i+1)] = NA
+			beta[(idx), (i+1)] = NA
+			stat[(idx), (i+1)] = NA
+			p[(idx), (i+1)] = NA
+		}
+	} 
+
+	invisible(
+			list(
+					rbed_info = rbed_info,
+					nmiss = nmiss, 
+					beta = beta, 
+					stat = stat, 
+					p = p)
+	)
+	
+	# TODO: gcdh summarized output
+    # gcdhBmCreate a result big.matrix, add columns to it
+    # TODO: save RDS, the GCDH properties
+}
+
+
+
+# TODO: assoc fileter
+assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_setup = FALSE) {
+	setOptModel(pl_gwas, "assoc")
+	runGwas(pl_gwas)
+	assoc_out = readGwasOut(pl_gwas, c("SNP", "P"))
+	assoc_out = assoc_out[which(assoc_out$P < p_threshold), ]
+	# TODO: test new pl_gwas after assoc filter, compare with before filter
+	snp_list_file = file.path(gwasDir(pl_gwas), "assoc_snp_list.txt")
+	write.table(assoc_out$SNP, quote = FALSE, col.names = FALSE, row.names = FALSE, file = snp_list_file)
+	plinkr(bfile = pl_gwas@pl_info@plink_stem, extract = snp_list_file, make_bed = "", out = plink_out_stem)
+	rbed_info1 = rbedInfo(plink_out_stem, ff_setup)
+	pl_gwas1 = plGwas(rbed_info1, 
+			pl_gwas@opts$pheno, 
+			pl_gwas@opts$pheno_name, 
+			pl_gwas@opts$covar_name, 
+			pl_gwas@gwas_tag)
+}
+
+
+
+# TODO: manhattan/qq plots
