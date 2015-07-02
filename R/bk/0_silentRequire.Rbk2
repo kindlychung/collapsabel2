@@ -1,9 +1,0 @@
-#' Require a package without startup message
-#' 
-#' @param ... passed to \code{require}
-#' 
-#' @author kaiyin
-#' @export
-silentRequire = function(...) {
-	suppressPackageStartupMessages(require(...))
-}
