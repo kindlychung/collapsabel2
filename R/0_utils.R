@@ -18,8 +18,9 @@ dir.create2 = function(dir) {
 #' @author kaiyin
 #' @export
 file.create2 = function(filename) {
+	dir.create2(dirname(filename))
 	if(!file.exists(filename)) {
-		file.create(filename, recursive = TRUE)
+		file.create(filename)
 	} else {
 		TRUE
 	}
@@ -71,3 +72,9 @@ lagDistance = function(vec, lag = 1, reverse = FALSE) {
 
 
 
+sqliteFileGcdh = function(tag, dbname) {
+	fp = file.path(tag2Dir(tag, "gcdh"), 
+			sprintf("%s.sqlite", dbname))
+	file.create2(fp)
+	fp
+}

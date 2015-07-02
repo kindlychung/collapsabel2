@@ -1,79 +1,51 @@
-#' CollapsABEL home directory
-#' @name collapsabel_dir
-#' @export 
-.collapsabel_dir = file.path(Sys.getenv("HOME"), ".collapsabel")
-
-#' CollapsABEL gwas directory
-#' @name collapsabel_dir
-#' @export 
-.collapsabel_gwas = file.path(.collapsabel_dir, "gwas")
-
-#' CollapsABEL gCDH analysis directory
-#' @name collapsabel_dir
-#' @export 
-.collapsabel_gcdh = file.path(.collapsabel_dir, "gcdh")
-
-
-#' Plink output file headers
+#' An environment for storing CollapsABEL package local variables
 #' 
-#' @name plink_out_headers
-#' @export 
-.assoc_header = c("CHR", "SNP", "BP", "A1", 
-				"F_A", "F_U", "A2", "CHISQ", "P", "OR")
-#' @rdname plink_out_headers
-#' @export 
-.qassoc_header = c("CHR", "SNP", "BP", "NMISS", "BETA", "SE", "R2", "T", "P") 
-
-#' @rdname plink_out_headers
-#' @export 
-.logistic_header = c("CHR", "SNP", "BP", "A1", "TEST", "NMISS", "BETA", "STAT", "P")
-
-#' @rdname plink_out_headers
-#' @export 
-.logistic_header_default = c("NMISS", "BETA", "STAT", "P")
-
-#' @rdname plink_out_headers
-#' @export 
-.linear_header = .logistic_header
-
-#' @rdname plink_out_headers
-#' @export 
-.linear_header_default = .logistic_header_default
-
-#' Plink output extensions
-#' @name plink_out_ext
-#' @export
-.plink_out_ext = c("assoc", "qassoc", "linear", "logistic")
-
-#' Plink stdout
-#' 
-#' Possible values are "" (to R console) / FALSE (discard) / TRUE (capture in a string)
-#' @name plink_stdout
-#' @export
-.plink_stdout = FALSE
-
-#' Plink stderr
-#' 
-#' Possible values are "" (to R console) / FALSE (discard) / TRUE (capture in a string)
-#' @name plink_stderr
-#' @export
-.plink_stderr = FALSE
+#' \describe {
+#' \item{.collapsabel_dir}{CollapsABEL home directory}
+#' \item{.collapsabel_gwas}{CollapsABEL gwas directory}
+#' \item{.collapsabel_gcdh}{CollapsABEL gCDH analysis directory}
+#' \item{.assoc_header}{Plink .assoc file headers}
+#' \item{.qassoc_header}{Plink .qassoc file headers}
+#' \item{.logistic_header}{Plink .assoc.logistic file headers}
+#' \item{.logistic_header_default}{Columns from plink .assoc.logistic file headers that are used by default}
+#' \item{.linear_header}{Plink .assoc.linear file headers}
+#' \item{.linear_header_default}{Columns from plink .assoc.linear file headers that are used by default}
+#' \item{.plink_out_ext}{Plink output extensions}
+#' \item{.plink_stdout}{Plink stdout}
+#' \item{.plink_stderr}{Plink stderr}
+#' }
+#' @name collenv
+collenv <<- new.env()
+collenv$.collapsabel_dir = file.path(Sys.getenv("HOME"), ".collapsabel")
+collenv$.collapsabel_gwas = file.path(collenv$.collapsabel_dir, "gwas")
+collenv$.collapsabel_gcdh = file.path(collenv$.collapsabel_dir, "gcdh")
+collenv$.assoc_header = c("CHR", "SNP", "BP", "A1", "F_A", "F_U", "A2", "CHISQ", "P", "OR")
+collenv$.qassoc_header = c("CHR", "SNP", "BP", "NMISS", "BETA", "SE", "R2", "T", "P")
+collenv$.logistic_header = c("CHR", "SNP", "BP", "A1", "TEST", "NMISS", "BETA", "STAT", "P")
+collenv$.logistic_header_default = c("NMISS", "BETA", "STAT", "P")
+collenv$.linear_header = collenv$.logistic_header
+collenv$.linear_header_default = collenv$.logistic_header_default
+collenv$.plink_out_ext = c("assoc", "qassoc", "linear", "logistic")
+collenv$.plink_stdout = FALSE
+collenv$.plink_stderr = FALSE
 
 
 #' Alpha-numeric characters
 #' @export
 alphaNumeric = c(letters, LETTERS, as.character(0:9))
 
-globalVariables(
-		c(
-				".assoc_header", 
-				".qassoc_header",
-				".logistic_header",
-				".linear_header",
-				".plink_out_ext", 
-				".collapsabel_dir", 
-				".collapsabel_gwas", 
-				".collapsabel_gcdh", 
-				"alphaNumeric"
-						)
-)
+#globalVariables(
+#		c(
+#				"collenv$.assoc_header",
+#				"collenv$.qassoc_header",
+#				"collenv$.logistic_header",
+#				"collenv$.linear_header",
+#				"collenv$.plink_out_ext",
+#				"collenv$.collapsabel_dir",
+#				"collenv$.collapsabel_gwas",
+#				"collenv$.collapsabel_gcdh",
+#				"alphaNumeric",
+#				"collenv$.plink_stderr",
+#				"collenv$.plink_stdout"
+#						)
+#)

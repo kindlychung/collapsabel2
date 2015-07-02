@@ -1204,8 +1204,8 @@ plinkr = function(
 	zero_cms=NULL,
 	one = NULL,
 	twothreefile = NULL,
-	stdout=.plink_stdout,
-	stderr=.plink_stderr,
+	stdout=collenv$.plink_stdout,
+	stderr=collenv$.plink_stderr,
 	wait=TRUE
 ) {
 	paramList = mget(names(formals()),sys.frame(sys.nframe()))
@@ -1218,6 +1218,8 @@ plinkr = function(
 	paramList$stdout = NULL
 	stderr = paramList$stderr
 	paramList$stderr = NULL
+	print(stdout)
+	print(stderr)
 	
 	paramVector = unlist(paramList)
 	paramVector = paramVector[!is.null(paramVector)]

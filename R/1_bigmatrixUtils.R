@@ -423,15 +423,19 @@ bmFilepath = function(tag, mat_name, type) {
 #' @author kaiyin
 #' @export
 gcdhBmCreate = function(tag, bm_name, nrow, ncol = 1) {
-	bigmemory::filebacked.big.matrix(
-			nrow = nrow, 
-			ncol = ncol, 
-			type = "double", 
-			backingfile      = bmFilename(bm_name, "bin"),
-			descriptorfile   = bmFilename(bm_name, "desc"),
-			backingpath      = tag2Dir(tag, "gcdh"),
-			binarydescriptor = TRUE
-	)	
+	backingpath = tag2Dir(tag, "gcdh")
+	dir.create2(backingpath)
+	invisible(
+			bigmemory::filebacked.big.matrix(
+					nrow = nrow, 
+					ncol = ncol, 
+					type = "double", 
+					backingfile      = bmFilename(bm_name, "bin"),
+					descriptorfile   = bmFilename(bm_name, "desc"),
+					backingpath      = backingpath,
+					binarydescriptor = TRUE
+			)	
+	)
 }
 
 

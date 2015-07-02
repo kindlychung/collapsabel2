@@ -333,7 +333,7 @@ readFam = readFactory("fam")
 
 #' @rdname readAssoc
 #' @export 
-readLogistic = function(filename, cn_select = .linear_header)  {
+readLogistic = function(filename, cn_select = collenv$.linear_header)  {
 	info = readInfo(filename)
 	dat = info@read_fun(info, cn_select)
 	correctTypes(dat, c("CHR", "BP", "NMISS", "BETA", "STAT", "P"), 
@@ -374,7 +374,7 @@ readLinear = readLogistic
 #' head(linear)
 #' }
 #' @export 
-readAssoc = function(filename, cn_select = .assoc_header) {
+readAssoc = function(filename, cn_select = collenv$.assoc_header) {
 	info = readInfo(filename)
 	dat = info@read_fun(info, cn_select)
 	correctTypes(dat, c("CHR", "BP", "F_A", "F_U", "CHISQ", "P", "OR"),
@@ -386,7 +386,7 @@ readAssoc = function(filename, cn_select = .assoc_header) {
 #' 
 #' @rdname readAssoc
 #' @export 
-readQassoc = function(filename, cn_select = .qassoc_header) {
+readQassoc = function(filename, cn_select = collenv$.qassoc_header) {
 	info = readInfo(filename)
 	dat = info@read_fun(info, cn_select)
 	correctTypes(dat, 
@@ -398,7 +398,7 @@ readQassoc = function(filename, cn_select = .qassoc_header) {
 
 #' Read plink output files
 #' 
-#' @param filename Filenames of plink output files, see \code{.plink_out_ext}
+#' @param filename Filenames of plink output files, see \code{collenv$.plink_out_ext}
 #' @param ... Dispatched to one of \code{readAssoc, readQassoc, readLinear, readLogistic}
 #' @return data.frame
 #' @examples 
@@ -425,7 +425,7 @@ readQassoc = function(filename, cn_select = .qassoc_header) {
 #' @export
 readPlinkOut = function(filename, ...) {
 	ft = tools::file_ext(filename)
-	stopifnot(ft %in% .plink_out_ext)
+	stopifnot(ft %in% collenv$.plink_out_ext)
 	func = paste("read", R.utils::capitalize(ft), sep = "")
 	get(func)(filename, ...)
 }

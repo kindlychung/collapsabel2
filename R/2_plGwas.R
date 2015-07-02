@@ -114,7 +114,6 @@ setMethod("plGwas",
 			pl_gwas@opts$covar = pheno
 			pl_gwas@opts$covar_name = covar_name
 			pl_gwas@opts$allow_no_sex = ""
-			pl_gwas@opts$stdout = opts$stderr = gwasLog(pl_gwas)
 			pl_gwas@opts$out = gwasOutStem(pl_gwas)
 			pl_gwas@opts$wait = TRUE
 			if(assoc) {
@@ -224,7 +223,7 @@ setGeneric("gwasDir",
 setMethod("gwasDir",
 		signature(pl_gwas = "PlGwas"),
 		function(pl_gwas) {
-			gwas_dir = file.path(.collapsabel_gwas, pl_gwas@gwas_tag)
+			gwas_dir = file.path(collenv$.collapsabel_gwas, pl_gwas@gwas_tag)
 			if(!file.exists(gwas_dir)) {
 				dir.create(gwas_dir, recursive = TRUE)
 			}
@@ -396,8 +395,8 @@ plTrim = function(pl_gwas, suffix="trimmed") {
 				keep = pl_gwas@opts$pheno, 
 				out = new_stem, 
 				wait = TRUE, 
-				make_bed = "", 
-				stdout = FALSE)
+				make_bed = ""
+				)
 		pl_gwas_trimmed = plGwas(rbedInfo(new_stem), 
 				pl_gwas@opts$pheno, 
 				pl_gwas@opts$pheno_name, 
@@ -432,8 +431,8 @@ gwasRDS = function(pl_gwas) {
 #' @export
 listGwasTags = function(type = "gwas") {
 	stopifnot(type %in% c("gwas", "gcdh"))
-	if(type == "gwas") list.files(.collapsabel_gwas)
-	else list.files(.collapsabel_gcdh)
+	if(type == "gwas") list.files(collenv$.collapsabel_gwas)
+	else list.files(collenv$.collapsabel_gcdh)
 }
 
 #' @rdname listGwasTags
@@ -444,7 +443,7 @@ listTags = listGwasTags
 tag2Dir = function(x, type = "gwas") {
 	if(type %in% c("gwas", "gcdh")) {
 		file.path(
-				get(paste(".collapsabel", type, sep = "_")), 
+				get(paste(".collapsabel", type, sep = "_"), envir = collenv), 
 				x)
 	} else {
 		stop("unknown tag type")

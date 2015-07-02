@@ -66,7 +66,7 @@
 rbedInfo = function(bedstem, ff_setup = FALSE) {
 	stopifnot(length(bedstem) == 1)
 	stopifnot(is.character(bedstem))
-	pl_info = plInfo(bedstem = bedstem)
+	pl_info = plInfo(bedstem = bedstem, ff_setup = FALSE)
 	bed_path = pl_info@plink_trio["bed"]
 	
 	rbed_info = .RbedInfo()
@@ -257,38 +257,6 @@ snpRowId = function(pl_info, snp_names) {
 }
 
 
-
-#' Send query to SQLite database
-#' 
-#' @param db_name character. Path to database.
-#' @param query_string character. Query string.
-#' 
-#' @author kaiyin
-#' @export
-sendQuery = function(db_name, query_string) {
-	db = RSQLite::dbConnect(RSQLite::SQLite(), db_name, synchronous = "full")
-	tryCatch({
-				RSQLite::dbSendQuery(db, query_string)
-			}, finally = {
-				RSQLite::dbDisconnect(db)
-			})
-}
-
-#' Get query results from a SQLite database
-#' 
-#' @param db_name character. Path to database.
-#' @param query_string character. Query string.
-#' 
-#' @author kaiyin
-#' @export
-getQuery = function(db_name, query_string) {
-	db = RSQLite::dbConnect(RSQLite::SQLite(), db_name)
-	tryCatch({
-				return(RSQLite::dbGetQuery(db, query_string))
-			}, finally = {
-				RSQLite::dbDisconnect(db)
-			})
-}
 
 
 
@@ -481,7 +449,7 @@ rmFilesByStem = function(x) {
 
 #' Create gCDH task directories by tag
 #' 
-#' The task folder is a subfolder of the value of \code{.collapsabel_gcdh}. 
+#' The task folder is a subfolder of the value of \code{collenv$.collapsabel_gcdh}. 
 #' It will be created if it does not yet exist.
 #' 
 #' @param gcdh_tag character. Tag for gCDH task.
@@ -491,7 +459,7 @@ rmFilesByStem = function(x) {
 #' @export
 gcdhDir = function(gcdh_tag) {
 	stopifnot(is.character(gcdh_tag) && length(gcdh_tag) == 1)
-	d = file.path(.collapsabel_gcdh, gcdh_tag)
+	d = file.path(collenv$.collapsabel_gcdh, gcdh_tag)
 	dir.create2(d)
 	d
 }
@@ -503,6 +471,24 @@ gcdhDir = function(gcdh_tag) {
 # TODO: test readBed with extremely large bed files (RS123 50G)
 
 
+#' Run GCDH analysis
+#' 
+#' @param bedstem character. Path to bed file without extension.
+#' @param pheno character. Phenotyp file.
+#' @param pheno_name character. Name of phenotype
+#' @param covar_name character. Names of covariates. A comma separated string just as in plink.
+#' @param gcdh_tag character. Tag for this GCDH task.
+#' @param n_shift integer. Maximum shift number.
+#' @param filtered_stem character. Plink output for a new bed file filted by p values from a initial GWAS scan. When set to NULL no filtering will be done. Default to NULL.
+#' @param p_threshold numeric. A number between 0 and 1. Threshold to be used for the filtering.
+#' @param dist_threshold integer. SNPs beyond this distance will be ignored.
+#' @param collapse_matrix matrix. 4 by 4 matrix used for generating collapsed genotypes. 
+#' @param rm_shifted_files logical. Whether to remove shifted bed files after analysis is done.
+#' @return x
+#' @import bigmemory 
+#' @import biganalytics 
+#' @author kaiyin
+#' @export
 runGcdh = function(
 		bedstem, pheno, pheno_name,
 		covar_name, gcdh_tag,
@@ -513,6 +499,7 @@ runGcdh = function(
 		collapse_matrix = NULL,
 		rm_shifted_files = TRUE
 ) {
+#	removeTag(gcdh_tag, "gcdh")
 	# set up for reading bed file
 	rbed_info = rbedInfo(bedstem = bedstem, ff_setup = FALSE)
 	pl_gwas = plGwas(rbed_info, 
@@ -527,8 +514,8 @@ runGcdh = function(
 	}
 	# run the initial GWAS and store results in first column
 	runGwas(pl_gwas)
-	gwas_out = readGwasOut(pl_gwas, .linear_header_default)
-	nsnps = nSnpPl(rbed_info@pl_info)
+	gwas_out = readGwasOut(pl_gwas, collenv$.linear_header_default)
+	nsnps = nSnpPl(pl_gwas@pl_info)
 	for(col_name in c("nmiss", "beta", "stat", "p")) {
 		assign(
 				col_name, 
@@ -539,10 +526,9 @@ runGcdh = function(
 	beta[, 1] = gwas_out[, "BETA"]
 	stat[, 1] = gwas_out[, "STAT"]
 	p[, 1] = gwas_out[, "P"]
-	
 	# run GWAS on shifted bed files
 	for(i in 1:n_shift) {
-		rbed_info_shifted = shiftBed(rbed_info, i, FALSE, collapse_matrix)
+		rbed_info_shifted = shiftBed(pl_gwas, i, FALSE, collapse_matrix)
 		shifted_tag = paste(gcdh_tag, "_shift_", i, sep = "")
 		pl_gwas_shifted = plGwas(rbed_info_shifted, 
 				pheno = pheno, 
@@ -551,7 +537,7 @@ runGcdh = function(
 				gwas_tag = shifted_tag, 
 		)
 		runGwas(pl_gwas_shifted)
-		gwas_out_shifted = readGwasOut(pl_gwas_shifted)
+		gwas_out_shifted = readGwasOut(pl_gwas_shifted, collenv$.linear_header_default)
 		bmAddCol(bmFilepath(gcdh_tag, "nmiss", "bin"), gwas_out_shifted[, "NMISS"])
 		bmAddCol(bmFilepath(gcdh_tag, "beta", "bin"), gwas_out_shifted[, "BETA"])
 		bmAddCol(bmFilepath(gcdh_tag, "stat", "bin"), gwas_out_shifted[, "STAT"])
@@ -564,26 +550,29 @@ runGcdh = function(
 									rbed_info_shifted@pl_info@plink_stem, 
 									"*",
 									sep = ""
-									)
 							)
 					)
+			)
 			removeTag(shifted_tag, "gwas")
 		}
 	}
-	
 	# reload big matrices after modification
 	nmiss = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "nmiss", "desc"))
 	beta = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "beta", "desc"))
 	stat = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "stat", "desc"))
 	p = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "p", "desc"))
-
-	# mark SNPs that are beyond distance threshold as NA
-	bp = getQuery(sqliteFilePl(rbed_info@pl_info), "select bp from bim order by rowid")[, 1]
+	# mark SNPs that are not in the same chr as NA
+	chr_bp = getQuery(sqliteFilePl(pl_gwas@pl_info), "select snp, chr, bp from bim order by rowid")
 	for(i in 1:n_shift) {
-		dist_i = lagDistance(bp , i)
+		dist_i = lagDistance(chr_bp[, "BP"] , i)
 		idx = dist_i > dist_threshold
 		idx[is.na(idx)] = TRUE
 		idx = which(idx)
+		chr_diff_i = lagDistance(chr_bp[, "CHR"], i)
+		idx1 = chr_diff_i != 0
+		idx1[is.na(idx1)] = TRUE
+		idx1 = which(idx1)
+		idx = unique(c(idx, idx1))
 		if(length(idx) > 0) {
 			nmiss[(idx), (i+1)] = NA
 			beta[(idx), (i+1)] = NA
@@ -591,24 +580,98 @@ runGcdh = function(
 			p[(idx), (i+1)] = NA
 		}
 	} 
-
+	# make sure there is at least one non-NA p value in each row
+	p1 = p[, 1]
+	na_idx_p1 = is.na(p1)
+	p[na_idx_p1, 1] = 1
+	# return stats
 	invisible(
 			list(
-					rbed_info = rbed_info,
+					pl_gwas = pl_gwas,
+					chr_bp = chr_bp,
 					nmiss = nmiss, 
 					beta = beta, 
 					stat = stat, 
-					p = p)
+					p = p
+			)
 	)
-	
-	# TODO: gcdh summarized output
-    # gcdhBmCreate a result big.matrix, add columns to it
-    # TODO: save RDS, the GCDH properties
+	# TODO: save RDS, the GCDH properties
+}
+
+minimalPIndices = function(p) {
+	stopifnot(is.matrix(p))
+	p[is.na(p)] = 99
+	max.col(-1 * p, "first")
+}
+
+secondSnpIndices = function(p) {
+	minimalPIndices(p) + 0:(nrow(p) - 1)
+}
+
+secondSnpIndices1 = function(x) {
+	x + 0:(length(x) -1)
 }
 
 
 
-# TODO: assoc fileter
+gcdhReport = function(run_res) {
+	# minimal p and number of tests
+	gcdh_p = biganalytics::apply(run_res$p, 1, function(i) {
+				biganalytics::min(na.omit(i))
+			})
+	gcdh_ntests = biganalytics::apply(run_res$p, 1, function(i) {length(na.omit(i))})
+	maf = getQuery(sqliteFilePl(run_res$pl_gwas@pl_info), "select maf from frq order by rowid")
+	# chr1, bp1, snp1, maf1, nmiss1, beta1, stat1, p1
+	basic_info1 = setNames(cbind(run_res$chr_bp, maf), c("SNP1", "CHR1", "BP1", "MAF1"))
+	stats1 = data.frame(
+			NMISS1 = run_res$nmiss[, 1],
+			BETA1 = run_res$beta[, 1],
+			STAT1 = run_res$stat[, 1],
+			P1 = run_res$p[, 1]
+	)
+	# chr2, bp2, snp2, maf2, nmiss2, beta2, stat2, p2
+	minimal_p_indices = minimalPIndices(run_res$p[,])
+	second_snp_indices = secondSnpIndices1(minimal_p_indices)
+	basic_info2 = setNames(basic_info1[second_snp_indices, ], c("SNP2", "CHR2", "BP2", "MAF2"))
+	stats2 = data.frame(
+			NMISS2 = stats1$NMISS1[second_snp_indices],
+			BETA2 = stats1$BETA1[second_snp_indices],
+			STAT2 = stats1$STAT1[second_snp_indices],
+			P2 = stats1$P1[second_snp_indices]
+	)
+	# gcdh_nmiss, gcdh_beta, gcdh_stat, gcdh_p
+	idx = cbind(1:nrow(run_res$nmiss), minimal_p_indices)
+	gcdh_nmiss = run_res$nmiss[,][idx]
+	gcdh_beta = run_res$beta[,][idx]
+	gcdh_stat = run_res$stat[,][idx]
+	gcdh_p1 = run_res$p[,][idx]
+	stopifnot(all(gcdh_p1 == gcdh_p))
+	# combined all stats in one data.frame
+	res = cbind(basic_info1, stats1, basic_info2, stats2, 
+			data.frame(NMISS = gcdh_nmiss, 
+					BETA = gcdh_beta, 
+					STAT = gcdh_stat,
+					P = gcdh_p, 
+					NTEST = gcdh_ntests))
+	# write report to SQLite database
+	gcdh_report_sqlite_db = sqliteFileGcdh(run_res$pl_gwas@gwas_tag, "gcdh_report")
+	db = RSQLite::dbConnect(
+			RSQLite::SQLite(), 
+			gcdh_report_sqlite_db
+	)
+	tryCatch({
+				RSQLite::dbWriteTable(db, "gcdh_report", res)
+			}, finally = {
+				RSQLite::dbDisconnect(db)
+			})
+	rm(res)
+	gcdh_report_sqlite_db
+}
+
+
+
+
+
 assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_setup = FALSE) {
 	setOptModel(pl_gwas, "assoc")
 	runGwas(pl_gwas)
@@ -619,6 +682,7 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_set
 	write.table(assoc_out$SNP, quote = FALSE, col.names = FALSE, row.names = FALSE, file = snp_list_file)
 	plinkr(bfile = pl_gwas@pl_info@plink_stem, extract = snp_list_file, make_bed = "", out = plink_out_stem)
 	rbed_info1 = rbedInfo(plink_out_stem, ff_setup)
+	removeTag(pl_gwas@gwas_tag)
 	pl_gwas1 = plGwas(rbed_info1, 
 			pl_gwas@opts$pheno, 
 			pl_gwas@opts$pheno_name, 
@@ -629,3 +693,6 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_set
 
 
 # TODO: manhattan/qq plots
+# TODO: shift size from k+1 to n 
+# TODO: permutation analysis
+# TODO: power analysis
