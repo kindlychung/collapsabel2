@@ -350,30 +350,6 @@ readGwasOut = function(pl_gwas, cn_select = "..all") {
 	readPlinkOut(gwasOut(pl_gwas), cn_select)
 }
 
-#' Remove GWAS results by tag
-#' 
-#' @param x character. Tag for GWAS or gCDH.
-#' 
-#' @author kaiyin
-#' @export
-removeGwasTag = function(x, type = "gwas") {
-	unlink(tag2Dir(x, type), recursive = TRUE, 
-			force = TRUE)
-}
-
-#' @rdname removeGwasTag
-#' @export 
-removeTag = removeGwasTag
-
-#' @rdname removeGwasTag
-#' @export 
-removeAllTags = function(type = "gwas") {
-	tags = listTags(type = type) 
-	for(tag in tags) {
-		removeTag(tag, type = type)
-	}
-}
-
 #' Trim plink files
 #' 
 #' This function calculates number of individuals in .fam file (n1)
@@ -411,6 +387,31 @@ plTrim = function(pl_gwas, suffix="trimmed") {
 	}
 }
 
+#' Remove GWAS results by tag
+#' 
+#' @param x character. Tag for GWAS or gCDH.
+#' 
+#' @author kaiyin
+#' @export
+removeGwasTag = function(x, type = "gwas") {
+	unlink(tag2Dir(x, type), recursive = TRUE, 
+			force = TRUE)
+}
+
+#' @rdname removeGwasTag
+#' @export 
+removeTag = removeGwasTag
+
+#' @rdname removeGwasTag
+#' @export 
+removeAllTags = function(type = "gwas") {
+	tags = listTags(type = type) 
+	for(tag in tags) {
+		removeTag(tag, type = type)
+	}
+}
+
+
 #' Get RDS file path of a PlGwas object
 #' 
 #' @param pl_gwas PlGwas object.
@@ -430,10 +431,9 @@ gwasRDS = function(pl_gwas) {
 #' @author kaiyin
 #' @export
 listGwasTags = function(type = "gwas") {
-	stopifnot(type %in% c("gwas", "gcdh"))
-	if(type == "gwas") list.files(collenv$.collapsabel_gwas)
-	else list.files(collenv$.collapsabel_gcdh)
+	list.files(file.path(collenv$.collapsabel_dir, type))
 }
+
 
 #' @rdname listGwasTags
 #' @export
@@ -441,13 +441,7 @@ listTags = listGwasTags
 
 
 tag2Dir = function(x, type = "gwas") {
-	if(type %in% c("gwas", "gcdh")) {
-		file.path(
-				get(paste(".collapsabel", type, sep = "_"), envir = collenv), 
-				x)
-	} else {
-		stop("unknown tag type")
-	}
+	file.path(collenv$.collapsabel_dir, type, x)
 }
 
 
@@ -606,19 +600,7 @@ fileSize = function(filename) {
 	file.info(filename)$size
 }
 
-#' Call system command with format string
-#' 
-#' @param ... passed to \code{sprintf}
-#' @examples 
-#' \donotrun{
-#' systemFormat("ls %s", R.home())
-#' }
-#' 
-#' @author kaiyin
-#' @export
-systemFormat = function(...) {
-	system(sprintf(...))
-}
+
 
 
 #' Read phenotype file

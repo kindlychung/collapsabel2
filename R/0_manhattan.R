@@ -178,6 +178,22 @@ annoContrastRegion = function(ggp, snp1, snp2) {
 	p1
 }
 
+connectSnpPair = function(cplot, snp1, snp2, linetype = 3, hjust = 0, text_size =  3) {
+	ann_dat = cplot$data[cplot$data$SNP %in% c(snp1, snp2), ]
+	top_x = left_x = ann_dat$BP[ann_dat$SNP == snp1][1] / 1e6
+	right_x        = ann_dat$BP[ann_dat$SNP == snp2][1] / 1e6
+	top_y   = ann_dat$MLOGP[ann_dat$SNP == snp1 & ann_dat$COLOR == "gCDH"]
+	left_y  = ann_dat$MLOGP[ann_dat$SNP == snp1 & ann_dat$COLOR == "Single SNP"]
+	right_y = ann_dat$MLOGP[ann_dat$SNP == snp2 & ann_dat$COLOR == "Single SNP"]
+	cplot = cplot + geom_segment(aes(x = c(top_x, top_x),
+							y = c(top_y, top_y),
+							xend = c(left_x, right_x),
+							yend = c(left_y, right_y)
+					), linetype = linetype, size = 0.1) +
+			annotate("text", top_x, top_y, 
+					label = paste(" ", snp1, "/", snp2, sep = ""), hjust = hjust, size = text_size)
+	cplot
+}
 
 
 

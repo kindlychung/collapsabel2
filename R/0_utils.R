@@ -72,9 +72,38 @@ lagDistance = function(vec, lag = 1, reverse = FALSE) {
 
 
 
+# TODO: doc test
 sqliteFileGcdh = function(tag, dbname) {
 	fp = file.path(tag2Dir(tag, "gcdh"), 
 			sprintf("%s.sqlite", dbname))
 	file.create2(fp)
 	fp
+}
+
+#' Call system command with format string
+#' 
+#' @param ... passed to \code{sprintf}
+#' @examples 
+#' \donotrun{
+#' systemFormat("ls %s", R.home())
+#' }
+#' 
+#' @author kaiyin
+#' @export
+systemFormat = function(...) {
+	system(sprintf(...))
+}
+
+#' Stop with format string
+#' 
+#' @param ... passed to \code{sprintf}
+#' @examples 
+#' \donotrun{
+#' stopFormat("You should put file here: %s", R.home())
+#' }
+#' 
+#' @author kaiyin
+#' @export
+stopFormat = function(...) {
+	stop(sprintf(...))
 }

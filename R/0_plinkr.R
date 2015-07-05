@@ -1218,8 +1218,6 @@ plinkr = function(
 	paramList$stdout = NULL
 	stderr = paramList$stderr
 	paramList$stderr = NULL
-	print(stdout)
-	print(stderr)
 	
 	paramVector = unlist(paramList)
 	paramVector = paramVector[!is.null(paramVector)]

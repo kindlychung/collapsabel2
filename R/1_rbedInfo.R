@@ -497,106 +497,41 @@ runGcdh = function(
 		p_threshold = NULL,
 		dist_threshold = 500e3,
 		collapse_matrix = NULL,
-		rm_shifted_files = TRUE
+		rm_shifted_files = TRUE,
+		gwas_col_select = collenv$.linear_header_default,
+		force = FALSE
 ) {
-#	removeTag(gcdh_tag, "gcdh")
+	if(gcdh_tag %in% listTags("gcdh")) {
+		if(!force) {
+			stop(sprintf("This tag already exists: %s. Specify `force = TRUE` if you want to overwrite previous results.", gcdh_tag))
+		} else {
+			removeTag(gcdh_tag, "gcdh")
+		}
+	}
 	# set up for reading bed file
 	rbed_info = rbedInfo(bedstem = bedstem, ff_setup = FALSE)
-	pl_gwas = plGwas(rbed_info, 
+	pl_gwas = plGwas(
+			rbed_info, 
 			pheno = pheno,
 			pheno_name = pheno_name, 
 			covar_name = covar_name, 
-			gwas_tag = paste(gcdh_tag, "_shift_0", sep = ""))
+			gwas_tag = gcdh_tag)
 	# filter SNPs by an initial GWAS when demanded
 	if(!is.null(filtered_stem)) {
-		stopifnot(is.numeric(p_threshold) && p_threshold > 0 && p_threshold < 1)
-		pl_gwas = assocFilter(pl_gwas, filtered_stem, p_threshold, TRUE)
+		pl_gwas = assocFilter(pl_gwas, filtered_stem, p_threshold, TRUE, force = force)
+	} else {
+		pl_gwas = setupRbed(pl_gwas)
 	}
-	# run the initial GWAS and store results in first column
-	runGwas(pl_gwas)
-	gwas_out = readGwasOut(pl_gwas, collenv$.linear_header_default)
-	nsnps = nSnpPl(pl_gwas@pl_info)
-	for(col_name in c("nmiss", "beta", "stat", "p")) {
-		assign(
-				col_name, 
-				gcdhBmCreate(gcdh_tag, col_name, nsnps)
-		) 
-	}
-	nmiss[, 1] = gwas_out[, "NMISS"]
-	beta[, 1] = gwas_out[, "BETA"]
-	stat[, 1] = gwas_out[, "STAT"]
-	p[, 1] = gwas_out[, "P"]
-	# run GWAS on shifted bed files
-	for(i in 1:n_shift) {
-		rbed_info_shifted = shiftBed(pl_gwas, i, FALSE, collapse_matrix)
-		shifted_tag = paste(gcdh_tag, "_shift_", i, sep = "")
-		pl_gwas_shifted = plGwas(rbed_info_shifted, 
-				pheno = pheno, 
-				pheno_name = pheno_name, 
-				covar_name = covar_name, 
-				gwas_tag = shifted_tag, 
-		)
-		runGwas(pl_gwas_shifted)
-		gwas_out_shifted = readGwasOut(pl_gwas_shifted, collenv$.linear_header_default)
-		bmAddCol(bmFilepath(gcdh_tag, "nmiss", "bin"), gwas_out_shifted[, "NMISS"])
-		bmAddCol(bmFilepath(gcdh_tag, "beta", "bin"), gwas_out_shifted[, "BETA"])
-		bmAddCol(bmFilepath(gcdh_tag, "stat", "bin"), gwas_out_shifted[, "STAT"])
-		bmAddCol(bmFilepath(gcdh_tag, "p", "bin"), gwas_out_shifted[, "P"])
-		# remove shifted files when requested
-		if(rm_shifted_files) {
-			unlink(
-					Sys.glob(
-							paste(
-									rbed_info_shifted@pl_info@plink_stem, 
-									"*",
-									sep = ""
-							)
-					)
-			)
-			removeTag(shifted_tag, "gwas")
-		}
-	}
-	# reload big matrices after modification
-	nmiss = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "nmiss", "desc"))
-	beta = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "beta", "desc"))
-	stat = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "stat", "desc"))
-	p = bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, "p", "desc"))
-	# mark SNPs that are not in the same chr as NA
-	chr_bp = getQuery(sqliteFilePl(pl_gwas@pl_info), "select snp, chr, bp from bim order by rowid")
-	for(i in 1:n_shift) {
-		dist_i = lagDistance(chr_bp[, "BP"] , i)
-		idx = dist_i > dist_threshold
-		idx[is.na(idx)] = TRUE
-		idx = which(idx)
-		chr_diff_i = lagDistance(chr_bp[, "CHR"], i)
-		idx1 = chr_diff_i != 0
-		idx1[is.na(idx1)] = TRUE
-		idx1 = which(idx1)
-		idx = unique(c(idx, idx1))
-		if(length(idx) > 0) {
-			nmiss[(idx), (i+1)] = NA
-			beta[(idx), (i+1)] = NA
-			stat[(idx), (i+1)] = NA
-			p[(idx), (i+1)] = NA
-		}
-	} 
-	# make sure there is at least one non-NA p value in each row
-	p1 = p[, 1]
-	na_idx_p1 = is.na(p1)
-	p[na_idx_p1, 1] = 1
-	# return stats
-	invisible(
-			list(
-					pl_gwas = pl_gwas,
-					chr_bp = chr_bp,
-					nmiss = nmiss, 
-					beta = beta, 
-					stat = stat, 
-					p = p
-			)
-	)
-	# TODO: save RDS, the GCDH properties
+	runGcdh1(pl_gwas = pl_gwas, 
+			gwas_col_select = gwas_col_select, 
+			gcdh_tag = gcdh_tag, 
+			n_shift = n_shift, 
+			collapse_matrix = collapse_matrix, 
+			rm_shifted_files = rm_shifted_files, 
+			dist_threshold = dist_threshold)
 }
+
+
 
 minimalPIndices = function(p) {
 	stopifnot(is.matrix(p))
@@ -613,38 +548,38 @@ secondSnpIndices1 = function(x) {
 }
 
 
-
 gcdhReport = function(run_res) {
+	stopifnot(all(collenv$.linear_header_default %in% names(run_res)))
 	# minimal p and number of tests
-	gcdh_p = biganalytics::apply(run_res$p, 1, function(i) {
+	gcdh_p = biganalytics::apply(run_res$P, 1, function(i) {
 				biganalytics::min(na.omit(i))
 			})
-	gcdh_ntests = biganalytics::apply(run_res$p, 1, function(i) {length(na.omit(i))})
+	gcdh_ntests = biganalytics::apply(run_res$P, 1, function(i) {length(na.omit(i))})
 	maf = getQuery(sqliteFilePl(run_res$pl_gwas@pl_info), "select maf from frq order by rowid")
 	# chr1, bp1, snp1, maf1, nmiss1, beta1, stat1, p1
 	basic_info1 = setNames(cbind(run_res$chr_bp, maf), c("SNP1", "CHR1", "BP1", "MAF1"))
 	stats1 = data.frame(
-			NMISS1 = run_res$nmiss[, 1],
-			BETA1 = run_res$beta[, 1],
-			STAT1 = run_res$stat[, 1],
-			P1 = run_res$p[, 1]
+			NMISS1 = run_res$NMISS[, 1],
+			BETA1 = run_res$BETA[, 1],
+			STAT1 = run_res$STAT[, 1],
+			P1 = run_res$P[, 1]
 	)
 	# chr2, bp2, snp2, maf2, nmiss2, beta2, stat2, p2
-	minimal_p_indices = minimalPIndices(run_res$p[,])
+	minimal_p_indices = minimalPIndices(run_res$P[,])
 	second_snp_indices = secondSnpIndices1(minimal_p_indices)
 	basic_info2 = setNames(basic_info1[second_snp_indices, ], c("SNP2", "CHR2", "BP2", "MAF2"))
 	stats2 = data.frame(
 			NMISS2 = stats1$NMISS1[second_snp_indices],
-			BETA2 = stats1$BETA1[second_snp_indices],
-			STAT2 = stats1$STAT1[second_snp_indices],
-			P2 = stats1$P1[second_snp_indices]
+			BETA2  = stats1$BETA1[second_snp_indices],
+			STAT2  = stats1$STAT1[second_snp_indices],
+			P2     = stats1$P1[second_snp_indices]
 	)
 	# gcdh_nmiss, gcdh_beta, gcdh_stat, gcdh_p
-	idx = cbind(1:nrow(run_res$nmiss), minimal_p_indices)
-	gcdh_nmiss = run_res$nmiss[,][idx]
-	gcdh_beta = run_res$beta[,][idx]
-	gcdh_stat = run_res$stat[,][idx]
-	gcdh_p1 = run_res$p[,][idx]
+	idx = cbind(1:nrow(run_res$NMISS), minimal_p_indices)
+	gcdh_nmiss = run_res$NMISS[,][idx]
+	gcdh_beta = run_res$BETA[,][idx]
+	gcdh_stat = run_res$STAT[,][idx]
+	gcdh_p1 = run_res$P[,][idx]
 	stopifnot(all(gcdh_p1 == gcdh_p))
 	# combined all stats in one data.frame
 	res = cbind(basic_info1, stats1, basic_info2, stats2, 
@@ -660,7 +595,7 @@ gcdhReport = function(run_res) {
 			gcdh_report_sqlite_db
 	)
 	tryCatch({
-				RSQLite::dbWriteTable(db, "gcdh_report", res)
+				RSQLite::dbWriteTable(db, "gcdh_report", res, overwrite = TRUE)
 			}, finally = {
 				RSQLite::dbDisconnect(db)
 			})
@@ -672,12 +607,14 @@ gcdhReport = function(run_res) {
 
 
 
-assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_setup = FALSE) {
+assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_setup = FALSE, force = FALSE) {
+	stopifnot(is.numeric(p_threshold) && p_threshold > 0 && p_threshold < 1)
+	target_bed = sprintf("%s.bed", plink_out_stem)
+	if(file.exists(target_bed) && !force) stopFormat("File already exists: ", target_bed)
 	setOptModel(pl_gwas, "assoc")
 	runGwas(pl_gwas)
 	assoc_out = readGwasOut(pl_gwas, c("SNP", "P"))
 	assoc_out = assoc_out[which(assoc_out$P < p_threshold), ]
-	# TODO: test new pl_gwas after assoc filter, compare with before filter
 	snp_list_file = file.path(gwasDir(pl_gwas), "assoc_snp_list.txt")
 	write.table(assoc_out$SNP, quote = FALSE, col.names = FALSE, row.names = FALSE, file = snp_list_file)
 	plinkr(bfile = pl_gwas@pl_info@plink_stem, extract = snp_list_file, make_bed = "", out = plink_out_stem)
@@ -688,6 +625,7 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_set
 			pl_gwas@opts$pheno_name, 
 			pl_gwas@opts$covar_name, 
 			pl_gwas@gwas_tag)
+	pl_gwas1
 }
 
 
@@ -696,3 +634,96 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_set
 # TODO: shift size from k+1 to n 
 # TODO: permutation analysis
 # TODO: power analysis
+
+
+runGcdh1 = function(pl_gwas, 
+		gwas_col_select, 
+		gcdh_tag, 
+		n_shift, 
+		collapse_matrix, 
+		rm_shifted_files, 
+		dist_threshold) {
+	# run the initial GWAS and store results in first column
+	runGwas(pl_gwas)
+	gwas_out = readGwasOut(pl_gwas, gwas_col_select)
+	nsnps = nSnpPl(pl_gwas@pl_info)
+	for(col_name in gwas_col_select) {
+		assign(
+				col_name, 
+				gcdhBmCreate(gcdh_tag, col_name, nsnps)
+		) 
+		do.call("[<-", list(x = get(col_name), j = 1, value = gwas_out[, col_name]))
+	}
+	# run GWAS on shifted bed files
+	for(i in 1:n_shift) {
+		rbed_info_shifted = shiftBed(pl_gwas, i, FALSE, collapse_matrix)
+		shifted_tag = paste(gcdh_tag, "_shift_", i, sep = "")
+		pl_gwas_shifted = plGwas(rbed_info_shifted, 
+				pheno = pl_gwas@opts$pheno, 
+				pheno_name = pl_gwas@opts$pheno_name, 
+				covar_name = pl_gwas@opts$covar_name, 
+				gwas_tag = shifted_tag
+		)
+		runGwas(pl_gwas_shifted)
+		gwas_out_shifted = readGwasOut(pl_gwas_shifted, gwas_col_select)
+		for(col_name in gwas_col_select) {
+			bmAddCol(bmFilepath(gcdh_tag, col_name, "bin"), gwas_out_shifted[, col_name])
+		}
+		# remove shifted files when requested
+		if(rm_shifted_files) {
+			unlink(
+					Sys.glob(
+							paste(
+									rbed_info_shifted@pl_info@plink_stem, 
+									"*",
+									sep = ""
+							)
+					)
+			)
+			removeTag(shifted_tag, "gwas")
+		}
+	}
+	# reload big matrices after modification
+	for(col_name in gwas_col_select) {
+		assign(col_name, bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, col_name, "desc")))
+	}
+	# mark SNPs that are not in the same chr as NA
+	chr_bp = getQuery(sqliteFilePl(pl_gwas@pl_info), "select snp, chr, bp from bim order by rowid")
+	for(i in 1:n_shift) {
+		dist_i = lagDistance(chr_bp[, "BP"] , i)
+		idx = dist_i > dist_threshold
+		idx[is.na(idx)] = TRUE
+		idx = which(idx)
+		chr_diff_i = lagDistance(chr_bp[, "CHR"], i)
+		idx1 = chr_diff_i != 0
+		idx1[is.na(idx1)] = TRUE
+		idx1 = which(idx1)
+		idx = unique(c(idx, idx1))
+		if(length(idx) > 0) {
+			for(col_name in gwas_col_select) {
+				do.call("[<-", list(get(col_name), i = idx, j = i + 1, value = NA))
+			}
+		}
+	} 
+	# make sure there is at least one non-NA p value in each row
+	if("P" %in% gwas_col_select) {
+		P1 = P[, 1]
+		na_idx_P1 = is.na(P1)
+		P[na_idx_P1, 1] = 1
+	}
+	# return stats
+	res = list(
+			pl_gwas = pl_gwas,
+			chr_bp = chr_bp
+	)
+	for(col_name in gwas_col_select) {
+		res = do.call("[[<-", list(res, col_name, get(col_name)))
+	}
+	# remove the 0 shift GWAS
+	removeTag(pl_gwas@gwas_tag, "gwas")
+	res
+}
+
+
+
+
