@@ -330,6 +330,7 @@ bmAddCol = function(bin_file, dat) {
 	}
 	
 	n_row = desc@description$nrow
+	n_col = desc@description$ncol
 	if(is.vector(dat)) {
 		stopifnot(length(dat) == n_row)
 		dat = convertCol(dat)
@@ -344,12 +345,15 @@ bmAddCol = function(bin_file, dat) {
 		dat = convertCol(as.vector(dat))
 	}
 	
+	# On some systems, bin file has a trailing null byte. This is a bug in the bigmemory package.
+	# I provide a temporary fix here. Bug has been reported on github.
+    n_trailing_bytes = file.info(bin_file)$size %% (n_row * n_col)
+	if(n_trailing_bytes != 0) truncateEndOfFile(bin_file, n_trailing_bytes)
 	# write dat as new column(s)
-	truncateEndOfFile(bin_file, 1)
 	fh = file(bin_file, "ab")
 	tryCatch({
 				writeBin(dat, fh)
-				writeBin(as.raw(0), fh)
+#				writeBin(as.raw(0), fh)
 			}, finally = {
 				close(fh)
 			})
@@ -376,7 +380,7 @@ correctDesc = function(desc_file) {
 	bytes_per_elem = type2Bytes(desc@description$type)
 	bytes_per_col = n_row * bytes_per_elem
 	bin_size = file.info(bin_file)$size
-	new_n_col = (bin_size - 1) / bytes_per_col
+	new_n_col = floor(bin_size / bytes_per_col)
 	if(new_n_col != old_n_col) {
 		desc@description$totalCols = 
 				desc@description$colOffset[2] = 
@@ -437,7 +441,7 @@ bmCreate = function(tag, type, bm_name, nrow, ncol = 1) {
 	dir.create2(backingpath)
 	bin_file = bmFilename(bm_name, "bin")
 	desc_file = bmFilename(bm_name, "desc")
-	bigmemory::filebacked.big.matrix(
+	res = bigmemory::filebacked.big.matrix(
 			nrow = nrow, 
 			ncol = ncol, 
 			type = "double", 
@@ -446,10 +450,14 @@ bmCreate = function(tag, type, bm_name, nrow, ncol = 1) {
 			backingpath      = backingpath,
 			binarydescriptor = TRUE
 	)	
+	res
 }
 
 
-
+bmAttachBin = function(bin_file) {
+	bm = bigmemory::attach.big.matrix(bin2DescFilename(bin_file))
+	bm
+}
 
 
 

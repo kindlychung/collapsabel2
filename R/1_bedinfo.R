@@ -213,34 +213,31 @@ setGeneric("setup",
 setMethod("setup",
 		signature(pl_info = "PlInfo"),
 		function(pl_info) {
-			if(isSetup(pl_info)) {
-				TRUE
-			} else {
-				sqlite_file = sqliteFilePl(pl_info)
-				if(file.exists(sqlite_file)) {
-					unlink(sqlite_file)
-				}
-				if(!file.exists(pl_info@plink_frq)) {
-					plinkr(bfile = pl_info@plink_stem, 
-							freq = "", 
-							out = pl_info@plink_stem, 
-							wait = TRUE)
-				}
-				frq = read.table(pl_info@plink_frq, header = TRUE, stringsAsFactors = FALSE)
-				bim = readBim(pl_info@plink_trio["bim"])
-				fam = readFam(pl_info@plink_trio["fam"])
-				fam = setNames(fam, c("FID", "IID", "PID", "MID", "SEX", "PHE"))
-				tryCatch({
-							file.create2(sqlite_file)
-							db = RSQLite::dbConnect(RSQLite::SQLite(), sqlite_file)
-							RSQLite::dbWriteTable(db, "bim", bim)
-							RSQLite::dbWriteTable(db, "fam", fam)
-							RSQLite::dbWriteTable(db, "frq", frq)
-						}, finally = {
-							RSQLite::dbDisconnect(db)
-						})			
+			sqlite_file = sqliteFilePl(pl_info)
+			if(file.exists(sqlite_file)) {
+				unlink(sqlite_file)
 			}
+			if(!file.exists(pl_info@plink_frq)) {
+				plinkr(bfile = pl_info@plink_stem, 
+						freq = "", 
+						out = pl_info@plink_stem, 
+						wait = TRUE)
+			}
+			frq = read.table(pl_info@plink_frq, header = TRUE, stringsAsFactors = FALSE)
+			bim = readBim(pl_info@plink_trio["bim"])
+			fam = readFam(pl_info@plink_trio["fam"])
+			fam = setNames(fam, c("FID", "IID", "PID", "MID", "SEX", "PHE"))
+			tryCatch({
+						file.create2(sqlite_file)
+						db = RSQLite::dbConnect(RSQLite::SQLite(), sqlite_file)
+						RSQLite::dbWriteTable(db, "bim", bim)
+						RSQLite::dbWriteTable(db, "fam", fam)
+						RSQLite::dbWriteTable(db, "frq", frq)
+					}, finally = {
+						RSQLite::dbDisconnect(db)
+					})			
 		})
+
 
 setGeneric("nIndivPl",
 		function(pl_info, ...) {

@@ -39,7 +39,7 @@
 			}
 			
 			covars = covarNames(object)
-			if(length(covars) > 0) {
+			if(covars[1] != "") {
 				covar_not_there = which(! covars %in% first_line)
 				if(length(covar_not_there) > 0) {
 					return(
@@ -73,7 +73,10 @@ setGeneric("covarNames",
 setMethod("covarNames",
 		signature(pl_gwas = "PlGwas"),
 		function(pl_gwas) {
-			strsplit(pl_gwas@opts$covar_name, ",")[[1]]
+			if("covar_name" %in% names(pl_gwas@opts)) 
+				strsplit(pl_gwas@opts$covar_name, ",")[[1]]
+			else 
+				""
 		})
 
 setGeneric("plGwas",
@@ -107,12 +110,17 @@ setMethod("plGwas",
 				gwas_tag, 
 				assoc, opts
 		) {
+			if(gwas_tag %in% listTags("gwas")) {
+				removeTag(gwas_tag, "gwas")
+			}
 			pl_gwas@gwas_tag = gwas_tag
 			pl_gwas@opts$bfile = pl_gwas@pl_info@plink_stem
 			pl_gwas@opts$pheno = pheno
 			pl_gwas@opts$pheno_name = pheno_name
-			pl_gwas@opts$covar = pheno
-			pl_gwas@opts$covar_name = covar_name
+			if(covar_name != "") {
+				pl_gwas@opts$covar = pheno
+				pl_gwas@opts$covar_name = covar_name			
+			}
 			pl_gwas@opts$allow_no_sex = ""
 			pl_gwas@opts$out = gwasOutStem(pl_gwas)
 			pl_gwas@opts$wait = TRUE
@@ -146,6 +154,11 @@ setMethod("plGwas",
 		}
 )
 
+chGwasTag = function(pl_gwas, new_tag) {
+	pl_gwas@gwas_tag = new_tag
+	pl_gwas@opts$out = gwasOutStem(pl_gwas)
+	pl_gwas
+}
 
 #' @rdname plGwas_methods
 #' @export 
@@ -203,7 +216,24 @@ setMethod("plGwas",
 		}
 )
 
-
+#' @rdname plGwas_methods
+#' @export 
+setMethod("plGwas",
+		signature(pl_gwas = "RbedInfo", pheno = "character", 
+				pheno_name = "character", covar_name = "missing", 
+				gwas_tag = "character", 
+				assoc = "missing", opts = "missing"
+		),
+		function(pl_gwas, 
+				pheno, pheno_name, covar_name, 
+				gwas_tag, 
+				assoc, opts) {
+			plGwas(pl_gwas,  
+					pheno, pheno_name, "", 
+					gwas_tag, 
+					FALSE, list())
+		}
+)
 
 setGeneric("gwasDir",
 		function(pl_gwas, ...) {

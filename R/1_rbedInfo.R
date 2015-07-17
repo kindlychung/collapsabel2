@@ -471,27 +471,10 @@ gcdhDir = function(gcdh_tag) {
 # TODO: test readBed with extremely large bed files (RS123 50G)
 
 
-#' Run GCDH analysis
-#' 
-#' @param bedstem character. Path to bed file without extension.
-#' @param pheno character. Phenotyp file.
-#' @param pheno_name character. Name of phenotype
-#' @param covar_name character. Names of covariates. A comma separated string just as in plink.
-#' @param gcdh_tag character. Tag for this GCDH task.
-#' @param n_shift integer. Maximum shift number.
-#' @param filtered_stem character. Plink output for a new bed file filted by p values from a initial GWAS scan. When set to NULL no filtering will be done. Default to NULL.
-#' @param p_threshold numeric. A number between 0 and 1. Threshold to be used for the filtering.
-#' @param dist_threshold integer. SNPs beyond this distance will be ignored.
-#' @param collapse_matrix matrix. 4 by 4 matrix used for generating collapsed genotypes. 
-#' @param rm_shifted_files logical. Whether to remove shifted bed files after analysis is done.
-#' @return x
-#' @import bigmemory 
-#' @import biganalytics 
-#' @author kaiyin
-#' @export
 runGcdh = function(
 		bedstem, pheno, pheno_name,
-		covar_name, gcdh_tag,
+		covar_name = "", 
+		gcdh_tag,
 		n_shift, 
 		filtered_stem = NULL,
 		p_threshold = NULL,
@@ -499,15 +482,8 @@ runGcdh = function(
 		collapse_matrix = NULL,
 		rm_shifted_files = TRUE,
 		gwas_col_select = collenv$.linear_header_default,
-		force = FALSE
+		force = TRUE
 ) {
-	if(gcdh_tag %in% listTags("gcdh")) {
-		if(!force) {
-			stop(sprintf("This tag already exists: %s. Specify `force = TRUE` if you want to overwrite previous results.", gcdh_tag))
-		} else {
-			removeTag(gcdh_tag, "gcdh")
-		}
-	}
 	# set up for reading bed file
 	rbed_info = rbedInfo(bedstem = bedstem, ff_setup = FALSE)
 	pl_gwas = plGwas(
@@ -607,8 +583,10 @@ gcdhReport = function(run_res) {
 
 
 
-assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_setup = FALSE, force = FALSE) {
+assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_setup = FALSE, force = TRUE) {
 	stopifnot(is.numeric(p_threshold) && p_threshold > 0 && p_threshold < 1)
+	if(is.null(plink_out_stem)) 
+		plink_out_stem = sprintf("%s_filtered", pl_gwas@pl_info@plink_stem)
 	target_bed = sprintf("%s.bed", plink_out_stem)
 	if(file.exists(target_bed) && !force) stopFormat("File already exists: ", target_bed)
 	setOptModel(pl_gwas, "assoc")
@@ -621,28 +599,47 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_set
 	rbed_info1 = rbedInfo(plink_out_stem, ff_setup)
 	removeTag(pl_gwas@gwas_tag)
 	pl_gwas1 = plGwas(rbed_info1, 
-			pl_gwas@opts$pheno, 
-			pl_gwas@opts$pheno_name, 
-			pl_gwas@opts$covar_name, 
-			pl_gwas@gwas_tag)
+			pheno = pl_gwas@opts$pheno, 
+			pheno_name = pl_gwas@opts$pheno_name, 
+			covar_name = {
+				if("covar_name" %in% pl_gwas@opts)
+					pl_gwas@opts$covar_name
+				else 
+					""
+			}, 
+			gwas_tag = pl_gwas@gwas_tag)
 	pl_gwas1
 }
 
 
-
-# TODO: manhattan/qq plots
 # TODO: shift size from k+1 to n 
 # TODO: permutation analysis
 # TODO: power analysis
 
 
-runGcdh1 = function(pl_gwas, 
-		gwas_col_select, 
-		gcdh_tag, 
+#' Run GCDH analysis
+#' 
+#' @param gcdh_tag character. Tag for this GCDH task.
+#' @param n_shift integer. Maximum shift number.
+#' @param filtered_stem character. Plink output for a new bed file filted by p values from a initial GWAS scan. When set to NULL no filtering will be done. Default to NULL.
+#' @param p_threshold numeric. A number between 0 and 1. Threshold to be used for the filtering.
+#' @param dist_threshold integer. SNPs beyond this distance will be ignored.
+#' @param collapse_matrix matrix. 4 by 4 matrix used for generating collapsed genotypes. 
+#' @param rm_shifted_files logical. Whether to remove shifted bed files after analysis is done.
+#' @return x
+#' @import bigmemory 
+#' @import biganalytics 
+#' @author kaiyin
+#' @export
+runGcdh = function(pl_gwas, 
 		n_shift, 
-		collapse_matrix, 
-		rm_shifted_files, 
-		dist_threshold) {
+		gwas_col_select = collenv$.linear_header_default, 
+		collapse_matrix = NULL, 
+		rm_shifted_files = TRUE, 
+		dist_threshold = 500e3) {
+	# a random suffix makes multiple R session conflicts impossible
+	gcdh_tag = sprintf("%s_%s", pl_gwas@gwas_tag, randomString(6))
+	pl_gwas = chGwasTag(pl_gwas, gcdh_tag)
 	# run the initial GWAS and store results in first column
 	runGwas(pl_gwas)
 	gwas_out = readGwasOut(pl_gwas, gwas_col_select)
@@ -661,7 +658,12 @@ runGcdh1 = function(pl_gwas,
 		pl_gwas_shifted = plGwas(rbed_info_shifted, 
 				pheno = pl_gwas@opts$pheno, 
 				pheno_name = pl_gwas@opts$pheno_name, 
-				covar_name = pl_gwas@opts$covar_name, 
+				covar_name = {
+					if("covar_name" %in% pl_gwas@opts)
+						pl_gwas@opts$covar_name
+					else
+						""
+				}, 
 				gwas_tag = shifted_tag
 		)
 		runGwas(pl_gwas_shifted)
@@ -680,8 +682,8 @@ runGcdh1 = function(pl_gwas,
 							)
 					)
 			)
-			removeTag(shifted_tag, "gwas")
 		}
+		removeTag(shifted_tag, "gwas")
 	}
 	# reload big matrices after modification
 	for(col_name in gwas_col_select) {
@@ -714,7 +716,8 @@ runGcdh1 = function(pl_gwas,
 	# return stats
 	res = list(
 			pl_gwas = pl_gwas,
-			chr_bp = chr_bp
+			chr_bp = chr_bp,
+			tag = gcdh_tag
 	)
 	for(col_name in gwas_col_select) {
 		res = do.call("[[<-", list(res, col_name, get(col_name)))

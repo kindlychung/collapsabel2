@@ -107,3 +107,16 @@ systemFormat = function(...) {
 stopFormat = function(...) {
 	stop(sprintf(...))
 }
+
+# like expand.grid, but reverse the columns order
+expand.grid.rev = function(...) {
+	ret = expand.grid(...)
+	ret[, rev(colnames(ret))]
+}
+
+colCors = function(dat1, dat2) {
+	stopifnot(all(dim(dat1) == dim(dat2)))
+	sapply(1:ncol(dat1), function(i) {
+				cor(dat1[, i], dat2[, i])
+			})
+}

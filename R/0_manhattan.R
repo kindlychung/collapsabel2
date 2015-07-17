@@ -160,8 +160,9 @@ contrastData = function(chr, bp, p, gcdh_p, snp) {
 	manhattanData(chr, bp, p, snp, color_vec, TRUE)
 }
 
-contrastPlot = function(chr, bp, p, gcdh_p, ...) {
-	manhattanPlot(contrastData(chr, bp, p, gcdh_p), ...)
+contrastPlot = function(chr, bp, p, gcdh_p, snp, ...) {
+	cdata = contrastData(chr, bp, p, gcdh_p, snp)
+	manhattanPlot(cdata, ...)
 }
 
 annoContrastRegion = function(ggp, snp1, snp2) {
