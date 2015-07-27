@@ -1,8 +1,4 @@
 
-setGeneric("strConcat",
-		function(ss, sep, ...) {
-			standardGeneric("strConcat")
-		})
 
 #' Concatenate a vector of strings
 #' @name strConcat
@@ -14,26 +10,12 @@ setGeneric("strConcat",
 #' strConcat(letters)
 #' strConcat(letters, " ")
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
-setMethod("strConcat",
-		signature(ss = "character", sep = "character"),
-		function(ss, sep) {
-			stopifnot(length(sep) == 1)
-			paste(ss, collapse = sep)
-		})
-
-#' @rdname strConcat
-#' @export 
-setMethod("strConcat",
-		signature(ss = "character", sep = "missing"),
-		function(ss, sep) {
-			paste(ss, collapse = "")
-		})
-setGeneric("strVectorRepr",
-		function(ss, print_out, ...) {
-			standardGeneric("strVectorRepr")
-		})
+strConcat = function(ss, sep = "") {
+	stopifnot(length(sep) == 1)
+	paste(ss, collapse = sep)
+}
 
 
 #' String Representation of a character vector
@@ -49,39 +31,39 @@ setGeneric("strVectorRepr",
 #' all(eval(parse(text = strVectorRepr(as.character(1:3)))) == 
 #'   c("1", "2", "3"))
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @name strVectorRepr_methods
 #' @export
-setMethod("strVectorRepr",
-		signature(ss = "character", print_out = "logical"),
-		function(ss, print_out) {
-			ss = strConcat(
-					c(
-							"c(", 
-							strConcat(
-									paste('"', ss, '"', sep = ""), 
-									", "),
-							")"
-					)
+strVectorRepr = function(ss, print_out = FALSE) {
+	ss = strConcat(
+			c(
+					"c(", 
+					strConcat(
+							paste('"', ss, '"', sep = ""), 
+							", "),
+					")"
 			)
-			if(print_out) {
-				message(ss)
-			}
-			ss
-		})
+	)
+	if(print_out) {
+		message(ss)
+	}
+	ss
+}
 
 
-#' @rdname strVectorRepr_methods
-#' @export 
-setMethod("strVectorRepr",
-		signature(ss = "character", print_out = "missing"), 
-		function(ss, print_out) {
-			strVectorRepr(ss, FALSE)
-		})
 
 
-#' @rdname strVectorRepr_methods
-#' @export 
+#' String representation of a character vector for SQLite consumption
+#' 
+#' Transform a character vector (e.g. \code{c("a", "b")} into a string representation 
+#' that can be used in a SQLite query (e.g. "('a', 'b')"). 
+#' 
+#' @param vec character.
+#' @param print_out logical. Print out the string representation when set to TRUE.
+#' @param single_quote logical. Whether to use single quote for each element. Use double quote if set to FALSE. Default to TRUE.
+#' 
+#' @author Kaiyin Zhong
+#' @export
 strVectorSQLRepr = function(vec, print_out = FALSE, single_quote = TRUE) {
 	if(single_quote) {
 		quoted_strings = strConcat(paste("'", vec, "'", sep = ""), ",")
@@ -95,8 +77,16 @@ strVectorSQLRepr = function(vec, print_out = FALSE, single_quote = TRUE) {
 	res
 }
 
-#' @rdname strVectorRepr_methods
-#' @export 
+#' String representation of a numeric vector for SQLite consumption
+#' 
+#' Transform a numeric vector (e.g. \code{c(1, 2)} into a string representation 
+#' that can be used in a SQLite query (e.g. "(1, 2)"). 
+#' 
+#' @param vec numeric.
+#' @param print_out logical. Whether to print out the string representation.
+#' 
+#' @author Kaiyin Zhong
+#' @export
 numVectorSQLRepr = function(vec, print_out = FALSE) {
 	res = strConcat(c(
 					"(", 

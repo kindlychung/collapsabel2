@@ -1,6 +1,7 @@
 #' Shift bed files
 #' 
 #' This is a wrapper around the \code{bedcoll} commandline tool.
+#' @import rJava
 #' 
 #' @param bfile bed filename, without the \code{.bed} extension.
 #' @param nshift_min Minimal shift number

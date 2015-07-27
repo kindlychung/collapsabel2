@@ -1,0 +1,10 @@
+* installing *source* package ‘CollapsABEL’ ...
+** R
+** preparing package for lazy loading
+Picked up _JAVA_OPTIONS: -Xms256m -Xmx5g
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded
+Picked up _JAVA_OPTIONS: -Xms256m -Xmx5g
+* DONE (CollapsABEL)

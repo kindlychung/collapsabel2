@@ -1,6 +1,5 @@
 #' Define "macros" in R
 #' 
-#' See \link{http://cran.r-project.org/doc/Rnews/Rnews_2001-3.pdf}
 #' @author Thomas Lumley
 #' @export 
 defmacro <- function(..., expr){
@@ -48,7 +47,7 @@ defmacro <- function(..., expr){
 #' @examples 
 #' ifLen(c(1, 2), { print('yes!') }, {print("no!")})
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 ifLen = defmacro(df, body1, body2 = {}, expr = {
 			if(length(df) != 0) {
@@ -75,7 +74,7 @@ ifLen = defmacro(df, body1, body2 = {}, expr = {
 #' ifLet("..temp..", TRUE, {print(paste("true.", as.character(..temp..)))}, 
 #' 		{print(paste("false.", as.character(..temp..)))})
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 ifLet = defmacro(sym_str, x, body1, body2={}, expr = {
 			stopifnot(is.character(sym_str))
@@ -112,7 +111,7 @@ ifLet = defmacro(sym_str, x, body1, body2={}, expr = {
 #' ifLetLen("..temp..", 1:3, {print(paste("true.", as.character(..temp..)))}, 
 #' 		{print(paste("false.", as.character(..temp..)))})
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 ifLetLen = defmacro(sym_str, x, body1, body2={}, expr = {
 			stopifnot(is.character(sym_str))

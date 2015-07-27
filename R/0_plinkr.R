@@ -1,6 +1,6 @@
 #' A wrapper for plink
 #' 
-#' A wrapper for plink. 
+#' @importFrom stringr str_trim
 #' 
 #' @param	D	Same as plink --D
 #' @param	K	Same as plink --K
@@ -603,8 +603,7 @@
 #' @param	wait	Logical. If FALSE, the plink process will fork into the background.
 #' @param	stdout	Passed to system2, see its documentation.
 #' @param	stderr	Passed to system2, see its documentation.
-#' @seealso \code{\link{getPlinkParam}}
-#' 
+#' @export
 plinkr = function(
 	D=NULL,
 	K=NULL,
@@ -1221,7 +1220,7 @@ plinkr = function(
 	
 	paramVector = unlist(paramList)
 	paramVector = paramVector[!is.null(paramVector)]
-	paramVector = stringr::str_trim(paramVector)
+#	paramVector = stringr::str_trim(paramVector)
 	
 	
 	paramName = names(paramVector)

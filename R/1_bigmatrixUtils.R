@@ -3,7 +3,7 @@
 #' @param filename character. Input filename.
 #' @return character
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 slurp = function(filename) {
 	f = file(filename, "r")
@@ -20,7 +20,7 @@ slurp = function(filename) {
 #' @param s character. Strings to write.
 #' @param filename character. Path to output file.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 spit = function(s, filename){
 	f = file(filename, "w") 
@@ -35,7 +35,7 @@ spit = function(s, filename){
 #' 
 #' @param filename character
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 evalFile = function(filename) {
 	eval(parse(text = slurp(filename)))
@@ -47,7 +47,7 @@ evalFile = function(filename) {
 #' @param desc_filename character. Path to .desc file
 #' @return description object
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readDesc = function(desc_filename) {
 	tryCatch({
@@ -69,7 +69,7 @@ readDesc = function(desc_filename) {
 #' @param desc_obj 
 #' @param desc_filename 
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 saveDesc = function(desc_obj, desc_filename) {
 	saveRDS(desc_obj, file = desc_filename)
@@ -80,7 +80,7 @@ saveDesc = function(desc_obj, desc_filename) {
 #' @param list1 list
 #' @param list2 list
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 listEqual = function(list1, list2) {
 	list1 = unlist(list1, recursive = TRUE)
@@ -103,6 +103,20 @@ type2Bytes = function(type = "double") {
 }
 
 
+#' Coerce an R vector/matrix/data.frame into a big.matrix
+#' 
+#' This is a patched version of as.big.matrix from the bigmemory package.
+#' The patch allows you to omit colnames/rownames even when they exist in
+#' the R object.
+#' 
+#' 
+#' @param x vector, matrix, or data.frmae
+#' @param dimnames logical. FALSE by default
+#' @return big.matrix object
+#' 
+#' @author Kaiyin Zhong, Fan Liu
+#' @docType methods
+#' @export
 setGeneric('asBigMatrix', 
 		function(x, type=NULL, separated=FALSE,
 				backingfile=NULL, backingpath=NULL,
@@ -110,21 +124,7 @@ setGeneric('asBigMatrix',
 				dimnames = FALSE) standardGeneric('asBigMatrix'))
 
 
-#' Coerce an R vector/matrix/data.frame into a big.matrix
-#' 
-#' This is a patched version of as.big.matrix from the bigmemory package.
-#' The patch allows you to omit colnames/rownames even when they exist in
-#' the R object.
-#' 
-#' @name asBigMatrix-methods
-#' 
-#' @param x vector, matrix, or data.frmae
-#' @param dimnames logical. FALSE by default
-#' @return big.matrix object
-#' 
-#' @author kaiyin
-#' @docType methods
-#' @export
+#' @rdname asBigMatrix
 setMethod('asBigMatrix', signature(x='matrix', dimnames = "logical"),
 		function(x, type, separated, backingfile, backingpath, descriptorfile,
 				binarydescriptor, shared, dimnames)
@@ -153,7 +153,7 @@ setMethod('asBigMatrix', signature(x='matrix', dimnames = "logical"),
 			return(y)
 		})
 
-#' @rdname asBigMatrix-methods
+#' @rdname asBigMatrix
 #' @export 
 setMethod('asBigMatrix', signature(x='data.frame', dimnames = "logical"),
 		function(x, type, separated, backingfile, backingpath, descriptorfile,
@@ -186,7 +186,7 @@ setMethod('asBigMatrix', signature(x='data.frame', dimnames = "logical"),
 			return(y)
 		})
 
-#' @rdname asBigMatrix-methods
+#' @rdname asBigMatrix
 #' @export 
 setMethod('asBigMatrix', signature(x='vector', dimnames = "logical"),
 		function(x, type, separated, backingfile, backingpath, descriptorfile,
@@ -217,7 +217,7 @@ bmDescFilename = function(stem) {
 #' @param bin_file character. .bin filename
 #' @return character
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 bin2DescFilename = function(bin_file) {
 	bmDescFilename(tools::file_path_sans_ext(bin_file))
@@ -228,7 +228,7 @@ bin2DescFilename = function(bin_file) {
 #' @param desc_file character. .desc filename
 #' @return character
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 desc2BinFilename = function(desc_file) {
 	bmBinFilename(tools::file_path_sans_ext(desc_file))
@@ -240,7 +240,7 @@ desc2BinFilename = function(desc_file) {
 #' @param ncols_to_read integer.
 #' @return matrix
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readBmBin = function(bin_file, ncols_to_read) {
 	desc_file = bin2DescFilename(bin_file)
@@ -269,7 +269,7 @@ readBmBin = function(bin_file, ncols_to_read) {
 #' @param desc description object
 #' @return conversion function.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 bmConvertFun = function(desc) {
 	type = desc@description$type
@@ -288,7 +288,7 @@ bmConvertFun = function(desc) {
 #' @param string_length integer.
 #' @return character.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 randomString = function(string_length = 6) {
 	strConcat(sample(alphaNumeric, string_length))
@@ -300,7 +300,7 @@ randomString = function(string_length = 6) {
 #' @param string_length integer. Length of each string.
 #' @return character.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 randomStrings = function(n, string_length = 6) {
 	sapply(1:n, function(i) randomString(string_length))
@@ -314,9 +314,10 @@ randomStrings = function(n, string_length = 6) {
 #' 
 #' @param bin_file character. Path to .bin file for file-backed big.matrix
 #' @param dat vector, matrix or data.frame. Coercion rules are the same as in big.matrix
-#' @return updated description object.
+#' @return updated description object. 
+#' @importFrom collUtils truncateEndOfFile
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 bmAddCol = function(bin_file, dat) {
 	desc_file = bin2DescFilename(bin_file)
@@ -348,7 +349,7 @@ bmAddCol = function(bin_file, dat) {
 	# On some systems, bin file has a trailing null byte. This is a bug in the bigmemory package.
 	# I provide a temporary fix here. Bug has been reported on github.
     n_trailing_bytes = file.info(bin_file)$size %% (n_row * n_col)
-	if(n_trailing_bytes != 0) truncateEndOfFile(bin_file, n_trailing_bytes)
+	if(n_trailing_bytes != 0) collUtils::truncateEndOfFile(bin_file, n_trailing_bytes)
 	# write dat as new column(s)
 	fh = file(bin_file, "ab")
 	tryCatch({
@@ -370,7 +371,7 @@ bmAddCol = function(bin_file, dat) {
 #' @param desc_file character. Path to description file
 #' @return list. Corrected description object.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 correctDesc = function(desc_file) {
 	bin_file = desc2BinFilename(desc_file)
@@ -396,7 +397,7 @@ correctDesc = function(desc_file) {
 #' @param type character. Either "bin" or "desc"
 #' @return character. big.matrix filename
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 bmFilename = function(mat_name, type) {
 	stopifnot(type %in% c("bin", "desc"))
@@ -409,7 +410,7 @@ bmFilename = function(mat_name, type) {
 #' @param mat_name character. nmiss, beta, stat, p, etc.
 #' @param type character. Either "bin" or "desc"
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 bmFilepath = function(tag, mat_name, type) {
 	file.path(
@@ -424,7 +425,7 @@ bmFilepath = function(tag, mat_name, type) {
 #' @param nrow integer. Number of rows of the big.matrix
 #' @param ncol integer. Number of columns of the big.matrix. Default to 1.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gcdhBmCreate = function(tag, bm_name, nrow, ncol = 1) {
 	bmCreate(
@@ -454,6 +455,11 @@ bmCreate = function(tag, type, bm_name, nrow, ncol = 1) {
 }
 
 
+#' Attach a big.matrix by its bin filename
+#' @param bin_file character. big.matrix bin filename
+#' 
+#' @author Kaiyin Zhong
+#' @export
 bmAttachBin = function(bin_file) {
 	bm = bigmemory::attach.big.matrix(bin2DescFilename(bin_file))
 	bm

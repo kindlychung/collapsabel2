@@ -1,3 +1,15 @@
+#' Prepare data for Manhattan plot. 
+#' 
+#' @param chr integer. Chromosome vector.
+#' @param bp integer. Position vector.
+#' @param p numeric. P-value vector.
+#' @param snp character. SNP name vector.
+#' @param color_vec character/factor. Color vector. Doesn't have to be color names, any categorical variable will be fine.
+#' @param sort_chr_bp logical. Whether to sort the whole data frame by CHR and BP before return.
+#' @return A list with the following members (1) A data frame with columns including CHR, SNP, BP, P, etc. (2) Total number of SNPs. (3) A vector of unique chromosomes.
+#' 
+#' @author Kaiyin Zhong
+#' @export
 manhattanData = function(chr, bp, p, snp, color_vec = NULL, sort_chr_bp = TRUE) {
 	# number of snps
 	nsnps = length(chr)
@@ -97,6 +109,15 @@ scaleByChr = function(achr, chr, bp, nsnps = NULL, chr_unique = NULL, zero_div_a
 	achr + all_chr_scaled_pos
 }
 
+#' Produce Manhattan plot
+#' 
+#' @param mh_dat_res list. Result from \code{manhattanData}
+#' @param hlines numeric. Horizontal lines to draw.
+#' @return ggplot object.
+#' @importFrom ggplot2 ggplot geom_point scale_x_continuous aes xlab scale_color_discrete scale_y_continuous geom_hline ylab geom_segment annotate
+#' 
+#' @author Kaiyin Zhong
+#' @export
 manhattanPlot = function(mh_dat_res, hlines = NULL) {
 	mh_data = mh_dat_res$data
 	nsnps = mh_dat_res$nsnps
@@ -148,6 +169,15 @@ manhattanPlot = function(mh_dat_res, hlines = NULL) {
 	myplot
 }
 
+#' Prepare data for \code{contrastPlot}
+#' @param chr integer. Chromosome vector.
+#' @param bp integer. Position vector.
+#' @param p numeric. P-value vector.
+#' @param gcdh_p numeric. GCDH p-value vector.
+#' @param snp character. SNP name vector.
+#' 
+#' @author Kaiyin Zhong
+#' @export
 contrastData = function(chr, bp, p, gcdh_p, snp) {
 	len = length(chr)
 	stopifnot(
@@ -156,40 +186,74 @@ contrastData = function(chr, bp, p, gcdh_p, snp) {
 	chr = rep(chr, 2)
 	bp = rep(bp, 2)
 	p = c(p, gcdh_p)
-	color_vec = rep(c("Single SNP", "gCDH"), each = len)
+	color_vec = rep(c("Single SNP", "GCDH"), each = len)
 	manhattanData(chr, bp, p, snp, color_vec, TRUE)
 }
 
+#' Produce contrast Manhattan plot
+#' 
+#' Overlays p-values from single-SNP method and GCDH. 
+#' 
+#' @param chr integer. Chromosome vector.
+#' @param bp integer. Position vector.
+#' @param p numeric. P-value vector.
+#' @param gcdh_p numeric. GCDH p-value vector.
+#' @param snp character. SNP name vector.
+#' @param ... passed to \code{manhattanPlot}
+#' @return ggplot object.
+#' 
+#' @author Kaiyin Zhong
+#' @export
 contrastPlot = function(chr, bp, p, gcdh_p, snp, ...) {
 	cdata = contrastData(chr, bp, p, gcdh_p, snp)
 	manhattanPlot(cdata, ...)
 }
 
-annoContrastRegion = function(ggp, snp1, snp2) {
-	anno_dat = p$data[p$data$SNP == snp1, ]
-	anno_dat = anno_dat[anno_dat$colorvec == "gCDH", ]
-	sbp2 = bp2 * anno_dat$sbp / anno_dat$BP
-	anno_dat2 = within(anno_dat, {BP = bp2; SNP = snp2; sbp=sbp2})
-	p1 = p + geom_point(data = anno_dat2, aes(BP/1e6, mlogp), shape=3) +
-			geom_segment(aes(x = anno_dat$BP / 1e6,
-							y = anno_dat$mlogp,
-							xend = anno_dat2$BP / 1e6,
-							yend = anno_dat2$mlogp),
-					linetype=2)
-	p1
-}
+#annoContrastRegion = function(ggp, snp1, snp2) {
+#	anno_dat = p$data[p$data$SNP == snp1, ]
+#	anno_dat = anno_dat[anno_dat$colorvec == "GCDH", ]
+#	sbp2 = bp2 * anno_dat$sbp / anno_dat$BP
+#	anno_dat2 = within(anno_dat, {BP = bp2; SNP = snp2; sbp=sbp2})
+#	p1 = p + geom_point(data = anno_dat2, aes(BP/1e6, mlogp), shape=3) +
+#			geom_segment(aes(x = anno_dat$BP / 1e6,
+#							y = anno_dat$mlogp,
+#							xend = anno_dat2$BP / 1e6,
+#							yend = anno_dat2$mlogp),
+#					linetype=2)
+#	p1
+#}
 
-connectSnpPair = function(cplot, snp1, snp2, linetype = 3, hjust = 0, text_size =  3) {
+#' Annotate a pair of SNPs in the contrast Manhattan plot
+#' 
+#' @param cplot ggplot object. The contrast Manhattan plot to be annotated.
+#' @param snp1 character. First SNP. 
+#' @param snp2 character. Second SNP.
+#' @param linetype See \code{ggplot2::geom_segment}. Default to "dotted".
+#' @param hjust  See \code{ggplot2::annotate}. Default to 0. 
+#' @param text_size  See \code{ggplot2::annotate}. Default to 3. 
+#' @return ggplot object.
+#' 
+#' @author Kaiyin Zhong
+#' @export
+connectSnpPair = function(cplot, snp1, snp2, linetype = "dotted", hjust = 0, text_size =  3) {
 	ann_dat = cplot$data[cplot$data$SNP %in% c(snp1, snp2), ]
 	top_x = left_x = ann_dat$BP[ann_dat$SNP == snp1][1] / 1e6
 	right_x        = ann_dat$BP[ann_dat$SNP == snp2][1] / 1e6
-	top_y   = ann_dat$MLOGP[ann_dat$SNP == snp1 & ann_dat$COLOR == "gCDH"]
+	top_y   = ann_dat$MLOGP[ann_dat$SNP == snp1 & ann_dat$COLOR == "GCDH"]
 	left_y  = ann_dat$MLOGP[ann_dat$SNP == snp1 & ann_dat$COLOR == "Single SNP"]
 	right_y = ann_dat$MLOGP[ann_dat$SNP == snp2 & ann_dat$COLOR == "Single SNP"]
-	cplot = cplot + geom_segment(aes(x = c(top_x, top_x),
-							y = c(top_y, top_y),
-							xend = c(left_x, right_x),
-							yend = c(left_y, right_y)
+	data = data.frame(
+			x = c(top_x, top_x), 
+			y = c(top_y, top_y), 
+			xend = c(left_x, right_x), 
+			yend = c(left_y, right_y))
+	print(data)
+	cplot = cplot + geom_segment(
+					data = data,
+					mapping = aes(x = x,
+							y = y,
+							xend = xend,
+							yend = yend
 					), linetype = linetype, size = 0.1) +
 			annotate("text", top_x, top_y, 
 					label = paste(" ", snp1, "/", snp2, sep = ""), hjust = hjust, size = text_size)

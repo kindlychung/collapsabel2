@@ -20,14 +20,7 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 #' @slot plink_trio_base character. Basenames of \code{plink_trio}.
 #' @slot plink_frq character. Path to .frq file.
 #' @slot ff_dir character. Directory for storing ff backing files.
-#' @examples 
-#' \donotrun{
-#' x = .PlInfo()
-#' x@@plink_trio = c("/tmp/a.pdf")
-#' validObject(x) # error
-#' }
 #' 
-#' @name PlInfo
 #' @export 
 .PlInfo = setClass("PlInfo", representation(
 				main_dir = "character", 
@@ -77,11 +70,6 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 		})
 
 
-setGeneric("plInfo",
-		function(pl_info, bedstem, ff_setup, ...) {
-			standardGeneric("plInfo")
-		})
-
 #' Constructor for PlInfo class
 #' 
 #' Populates an PlInfo object from a given plink bed filename stem (i.e. exclude extension name)
@@ -89,28 +77,21 @@ setGeneric("plInfo",
 #' @param pl_info a PlInfo object, possibly empty.
 #' @param bedstem path of bed file excluding extension name
 #' @return a PlInfo object
-#' @examples 
-#' \donotrun{
-#' pl_info = plInfo(.PlInfo(), "/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
-#' isSetup(pl_info) # false
-#' setup(pl_info)
-#' isSetup(pl_info) # true
-#' bim_ff = suppressMessages(loadBim(pl_info))
-#' head(bim_ff)
-#' fam_ff = loadFam(pl_info)
-#' head(fam_ff)
-#' summary(fam_ff[, "IID"])
-#' which(fam_ff[, "IID"] == "10425")
-#' frq_ff = loadFrq(pl_info)
-#' head(frq_ff)
-#' }
-#' 
-#' @author kaiyin
-#' @name PlInfo_constructor
+#' @importFrom methods validObject
+#' @author Kaiyin Zhong, Fan Liu
+#' @rdname plInfo-methods
+#' @docType methods
 #' @export 
+setGeneric("plInfo",
+		function(pl_info, bedstem, db_setup, ...) {
+			standardGeneric("plInfo")
+		})
+
+#' @rdname plInfo-methods
+#' @aliases plInfo,character,ANY-method
 setMethod("plInfo",
-		signature(pl_info = "PlInfo", bedstem = "character", ff_setup = "logical"),
-		function(pl_info, bedstem, ff_setup) { 
+		signature(pl_info = "PlInfo", bedstem = "character", db_setup = "logical"),
+		function(pl_info, bedstem, db_setup) { 
 			# plink trio
 			ext_trio = c("bed", "bim", "fam")
 			plink_trio = normalizePath(
@@ -134,39 +115,34 @@ setMethod("plInfo",
 			pl_info@plink_trio_base = plink_trio_base
 			pl_info@plink_frq = plink_frq
 			validObject(pl_info)
-			if(ff_setup) {
+			if(db_setup) {
 				setup(pl_info)
 			}
 			pl_info
 		})
 
-#' @rdname PlInfo_constructor
-#' @export 
+#' @rdname plInfo-methods
+#' @aliases plInfo,character,ANY-method
 setMethod("plInfo",
-		signature(pl_info = "PlInfo", bedstem = "character", ff_setup = "missing"),
-		function(pl_info, bedstem, ff_setup) { 
+		signature(pl_info = "PlInfo", bedstem = "character", db_setup = "missing"),
+		function(pl_info, bedstem, db_setup) { 
 			plInfo(pl_info, bedstem, FALSE)
 		})
 
-#' @rdname PlInfo_constructor
-#' @export 
+#' @rdname plInfo-methods
+#' @aliases plInfo,character,ANY-method
 setMethod("plInfo",
-		signature(pl_info = "missing", bedstem = "character", ff_setup = "logical"),
-		function(pl_info, bedstem, ff_setup) {
-			plInfo(.PlInfo(), bedstem, ff_setup)
+		signature(pl_info = "missing", bedstem = "character", db_setup = "logical"),
+		function(pl_info, bedstem, db_setup) {
+			plInfo(.PlInfo(), bedstem, db_setup)
 		})
 
-#' @rdname PlInfo_constructor
-#' @export 
+#' @rdname plInfo-methods
+#' @aliases plInfo,character,ANY-method
 setMethod("plInfo",
-		signature(pl_info = "missing", bedstem = "character", ff_setup = "missing"),
-		function(pl_info, bedstem, ff_setup) {
+		signature(pl_info = "missing", bedstem = "character", db_setup = "missing"),
+		function(pl_info, bedstem, db_setup) {
 			plInfo(.PlInfo(), bedstem, FALSE)
-		})
-
-setGeneric("isSetup",
-		function(pl_info, ...) {
-			standardGeneric("isSetup")
 		})
 
 #' SQLite file of a PlInfo object
@@ -174,130 +150,102 @@ setGeneric("isSetup",
 #' @param pl_info PlInfo object
 #' @return character. Path to SQLite database file.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-sqliteFilePl = function(pl_info) {
-	sprintf("%s.sqlite", pl_info@plink_stem)
+sqliteFilePl = function(x) {
+	if(isS4Class(x, "PlInfo")) {
+		filename = sprintf("%s.sqlite", x@plink_stem)
+	} else if(isS4Class(x, "PlGwas")) {
+		filename = sprintf("%s.sqlite", x@pl_info@plink_stem)
+	}
 }
 
 #' Check if a directory containing .bed .fam and .bim files is properly setup
 #'  
 #' @param pl_info PlInfo object
 #' @return TRUE or FALSE
-#' @examples 
-#' # see examples in plInfo
 #' 
-#' @author kaiyin
-#' @docType methods
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-setMethod("isSetup",
-		signature(pl_info = "PlInfo"),
-		function(pl_info) {
-			isSQLite3(sqliteFilePl(pl_info))
-		})
-
-setGeneric("setup",
-		function(pl_info, ...) {
-			standardGeneric("setup")
-		})
+isSetup = function(pl_info) {
+	stopifnot(isS4Class(pl_info, "PlInfo"))
+	sql_file = sqliteFilePl(pl_info)
+	isSQLite3(sql_file) && dbUpToDate(sql_file)
+}
 
 #' Setup up a directory containing plink files 
 #' 
 #' @param pl_info 
-#' @examples 
-#' # see examples in plInfo
 #' 
-#' @author kaiyin
-#' @docType methods
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-setMethod("setup",
-		signature(pl_info = "PlInfo"),
-		function(pl_info) {
-			sqlite_file = sqliteFilePl(pl_info)
-			if(file.exists(sqlite_file)) {
-				unlink(sqlite_file)
-			}
-			if(!file.exists(pl_info@plink_frq)) {
-				plinkr(bfile = pl_info@plink_stem, 
-						freq = "", 
-						out = pl_info@plink_stem, 
-						wait = TRUE)
-			}
-			frq = read.table(pl_info@plink_frq, header = TRUE, stringsAsFactors = FALSE)
-			bim = readBim(pl_info@plink_trio["bim"])
-			fam = readFam(pl_info@plink_trio["fam"])
-			fam = setNames(fam, c("FID", "IID", "PID", "MID", "SEX", "PHE"))
-			tryCatch({
-						file.create2(sqlite_file)
-						db = RSQLite::dbConnect(RSQLite::SQLite(), sqlite_file)
-						RSQLite::dbWriteTable(db, "bim", bim)
-						RSQLite::dbWriteTable(db, "fam", fam)
-						RSQLite::dbWriteTable(db, "frq", frq)
-					}, finally = {
-						RSQLite::dbDisconnect(db)
-					})			
-		})
+setup = function(pl_info) {
+	stopifnot(isS4Class(pl_info, "PlInfo"))
+	if(isSetup(pl_info)) {
+		TRUE
+	} else {
+		sqlite_file = sqliteFilePl(pl_info)
+		if(file.exists(sqlite_file)) {
+			unlink(sqlite_file)
+		}
+		if(!file.exists(pl_info@plink_frq)) {
+			plinkr(bfile = pl_info@plink_stem, 
+					freq = "", 
+					out = pl_info@plink_stem, 
+					wait = TRUE)
+		}
+		frq = read.table(pl_info@plink_frq, header = TRUE, stringsAsFactors = FALSE)
+		bim = readBim(pl_info@plink_trio["bim"])
+		fam = readFam(pl_info@plink_trio["fam"])
+		fam = setNames(fam, c("FID", "IID", "PID", "MID", "SEX", "PHE"))
+		tryCatch({
+					file.create2(sqlite_file)
+					db = RSQLite::dbConnect(RSQLite::SQLite(), sqlite_file)
+					RSQLite::dbWriteTable(db, "bim", bim)
+					RSQLite::dbWriteTable(db, "fam", fam)
+					RSQLite::dbWriteTable(db, "frq", frq)
+				}, finally = {
+					RSQLite::dbDisconnect(db)
+				})			
+	}
+}
 
-
-setGeneric("nIndivPl",
-		function(pl_info, ...) {
-			standardGeneric("nIndivPl")
-		})
 
 #' Get number of individuals
 #' 
 #' @param pl_info PlInfo object
 #' @export 
-setMethod("nIndivPl",
-		signature(pl_info = "PlInfo"),
-		function(pl_info) {
-			getQuery(sqliteFilePl(pl_info), "select count(iid) from fam")[1, 1]
-		})
-
-setGeneric("nSnpPl",
-		function(pl_info, ...) {
-			standardGeneric("nSnpPl")
-		})
+nIndivPl = function(pl_info) {
+	stopifnot(isS4Class(pl_info, "PlInfo"))
+	getQuery(sqliteFilePl(pl_info), "select count(iid) from fam")[1, 1]
+}
 
 #' Get number of SNPs.
 #' 
 #' @param pl_info PlInfo object
 #' @export 
-setMethod("nSnpPl",
-		signature(pl_info = "PlInfo"),
-		function(pl_info) {
-			getQuery(sqliteFilePl(pl_info), "select count(snp) from bim")[1, 1]
-		})
-
-setGeneric("bytesSnp",
-		function(pl_info, ...) {
-			standardGeneric("bytesSnp")
-		})
+nSnpPl = function(pl_info) {
+	stopifnot(isS4Class(pl_info, "PlInfo"))
+	getQuery(sqliteFilePl(pl_info), "select count(snp) from bim")[1, 1]
+}
 
 #' Get number of bytes used by each SNP.
 #' 
 #' @param pl_info PlInfo object
 #' @export 
-setMethod("bytesSnp",
-		signature(pl_info = "PlInfo"),
-		function(pl_info) {
-			as.numeric(ceiling(nIndivPl(pl_info) / 4))
-		})
-
-setGeneric("nIndivApprPl",
-		function(pl_info, ...) {
-			standardGeneric("nIndivApprPl")
-		})
+bytesSnp = function(pl_info) {
+	stopifnot(isS4Class(pl_info, "PlInfo"))
+	as.numeric(ceiling(nIndivPl(pl_info) / 4))
+}
 
 #' Get apparent number of individuals
 #' 
 #' @param pl_info PlInfo object
 #' @export 
-setMethod("nIndivApprPl",
-		signature(pl_info = "PlInfo"),
-		function(pl_info) {
-			as.numeric(bytesSnp(pl_info) * 4)
-		})
+nIndivApprPl = function(pl_info) {
+	stopifnot(isS4Class(pl_info, "PlInfo"))
+	as.numeric(bytesSnp(pl_info) * 4)
+}
 
 
 #' FID and IID columns from fam file
@@ -305,8 +253,9 @@ setMethod("nIndivApprPl",
 #' @param rbed_info RbedInfo object
 #' @return data.frame of two columns "FID" and "IID"
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 fidIid = function(pl_info) {
+	setup(pl_info)
 	getQuery(sqliteFilePl(pl_info), "select fid, iid from fam order by rowid")
 }

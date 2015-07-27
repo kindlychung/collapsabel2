@@ -1,3 +1,12 @@
+#' Head and tail in two dimensions 
+#' 
+#' Restrict not only the number of rows, but also the number of columns.
+#' @param x data.frame or matrix
+#' @param m integer. Number of rows to keep.
+#' @param n integer. Number of columns to keep.
+#' 
+#' @author kaiyin
+#' @export
 head2 = function(x, m=6, n=NULL) {
     if(is.null(n)) {
         n = m
@@ -5,6 +14,8 @@ head2 = function(x, m=6, n=NULL) {
     x[1:m, 1:n]
 }
 
+#' @rdname head2
+#' @export 
 tail2 = function(x, m = 6, n = NULL) {
     if(is.null(n)) {
         n = m

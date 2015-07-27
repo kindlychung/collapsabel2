@@ -5,7 +5,7 @@
 #' 
 #' @slot path character, file or dir path
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 .FilePath = setClass("FilePath", representation(path = "character"), 
 		validity = function(object) {
 			missing_files = nonExistentFiles(object@path)
@@ -19,16 +19,11 @@
 #' @param s character, path to file or dir
 #' @return FilePath object
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 filePath = function(s) {
 	new("FilePath", path = s)
 }
-
-setGeneric("dirName",
-		function(fp, ...) {
-			standardGeneric("dirName")
-		})
 
 #' Directory name of a file path
 #'  
@@ -40,7 +35,14 @@ setGeneric("dirName",
 #' fp = filePath(R.home())
 #' dirName(fp)
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
+#' @export
+setGeneric("dirName",
+		function(fp, ...) {
+			standardGeneric("dirName")
+		})
+
+#' @rdname dirName
 #' @docType methods
 #' @export
 setMethod("dirName",
@@ -48,12 +50,6 @@ setMethod("dirName",
 		function(fp) {
 			dirname(fp@path)
 		})
-
-setGeneric("baseName",
-		function(fp, ...) {
-			standardGeneric("baseName")
-		})
-
 
 #' Basename of a FilePath object
 #' 
@@ -66,9 +62,16 @@ setGeneric("baseName",
 #' baseName(fp)
 #' 
 #' 
-#' @author kaiyin
-#' @docType methods
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
+setGeneric("baseName",
+		function(fp, ...) {
+			standardGeneric("baseName")
+		})
+
+
+#' @rdname baseName 
+#' @export 
 setMethod("baseName",
 		signature(fp = "FilePath"),
 		function(fp) {

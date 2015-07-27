@@ -2,6 +2,8 @@
 #' 
 #' @slot gwas_tag character. Tag for this GWAS.
 #' @slot opts list. Plink options.
+#' @importFrom stringr str_match 
+#' @importFrom dplyr left_join
 #' 
 #' @name PlGwas
 #' @export 
@@ -67,7 +69,7 @@ setGeneric("covarNames",
 #' @param pl_gwas PlGwas object.
 #' @return character. Vector of covariate names.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("covarNames",
@@ -96,7 +98,7 @@ setGeneric("plGwas",
 #' @param gwas_tag character. Tag for this GWAS.
 #' @return PlGwas object
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("plGwas",
@@ -155,6 +157,7 @@ setMethod("plGwas",
 )
 
 chGwasTag = function(pl_gwas, new_tag) {
+	removeTag(pl_gwas@gwas_tag, "gwas")
 	pl_gwas@gwas_tag = new_tag
 	pl_gwas@opts$out = gwasOutStem(pl_gwas)
 	pl_gwas
@@ -247,7 +250,7 @@ setGeneric("gwasDir",
 #' @param pl_gwas PlGwas object
 #' @return character. 
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("gwasDir",
@@ -275,7 +278,7 @@ setGeneric("gwasOutStem",
 #' @param pl_gwas PlGwas object.
 #' @return character. Plink output filename, without extension
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("gwasOutStem",
@@ -290,7 +293,7 @@ setMethod("gwasOutStem",
 #' @param c Class name
 #' @return  logical
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 isS4Class = function(obj, c) {
 	isS4(obj) && is(obj, c)
@@ -301,7 +304,7 @@ isS4Class = function(obj, c) {
 #' @param pl_gwas PlGwas object.
 #' @return character
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasOut = function(pl_gwas) {
 	stem = gwasOutStem(pl_gwas)
@@ -327,7 +330,7 @@ gwasOut = function(pl_gwas) {
 #' @param mod character. One of "linear", "logistic" or "assoc", default to "linear". 
 #' @return PlGwas object
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 setOptModel = function(pl_gwas, mod = "linear") {
 	poss_mods = c("linear", "logistic", "assoc")
@@ -342,6 +345,7 @@ setOptModel = function(pl_gwas, mod = "linear") {
 		pl_gwas@opts[[mod]] = "hide-covar"
 	} else {
 		pl_gwas@opts[[mod]] = ""
+		pl_gwas@opts$covar_name = NULL
 	}
 	pl_gwas
 }
@@ -352,7 +356,7 @@ setOptModel = function(pl_gwas, mod = "linear") {
 #' @param pl_gwas PlGwas object
 #' @param wait logical. Wait until GWAS is finished if this is set to TRUE. Default to FALSE.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = TRUE) {
 	dir.create2(gwasDir(pl_gwas))
@@ -374,7 +378,7 @@ runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = TRUE) {
 #' @param cn_select Colnames to select. Default to "..all"
 #' @return data.frame 
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readGwasOut = function(pl_gwas, cn_select = "..all") {
 	readPlinkOut(gwasOut(pl_gwas), cn_select)
@@ -390,8 +394,9 @@ readGwasOut = function(pl_gwas, cn_select = "..all") {
 #' @param pl_gwas PlGwas object.
 #' @param suffix character. Suffix to the new plink file names.
 #' @return PlGwas object
+#' @importFrom collUtils countlines
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 plTrim = function(pl_gwas, suffix="trimmed") {
 	old_stem = pl_gwas@pl_info@plink_stem
@@ -419,9 +424,9 @@ plTrim = function(pl_gwas, suffix="trimmed") {
 
 #' Remove GWAS results by tag
 #' 
-#' @param x character. Tag for GWAS or gCDH.
+#' @param x character. Tag for GWAS or GCDH.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 removeGwasTag = function(x, type = "gwas") {
 	unlink(tag2Dir(x, type), recursive = TRUE, 
@@ -447,18 +452,18 @@ removeAllTags = function(type = "gwas") {
 #' @param pl_gwas PlGwas object.
 #' @return character. path of a PlGwas object
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasRDS = function(pl_gwas) {
 	tag2RDSPath(pl_gwas@gwas_tag)
 }
 
 
-#' List GWAS or gCDH tags
+#' List GWAS or GCDH tags
 #' 
 #' @param type character. Either "gwas" or "gcdh".
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 listGwasTags = function(type = "gwas") {
 	list.files(file.path(collenv$.collapsabel_dir, type))
@@ -502,7 +507,7 @@ dir2Tag = function(x) {
 #' @param gwas_tag character. Tag of a GWAS run.
 #' @return PlGwas object.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 loadGwas = function(gwas_tag) {
 	stopifnot(is.character(gwas_tag))
@@ -527,7 +532,7 @@ loadGwas = function(gwas_tag) {
 #' @param pl_gwas PlGwas object.
 #' @return numeric. Percentage of progress.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasPercentApprox = function(pl_gwas) {
 	out_file = gwasOut(pl_gwas)
@@ -543,7 +548,7 @@ gwasPercentApprox = function(pl_gwas) {
 #' @param pl_gwas PlGwas object.
 #' @return character
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readGwasLogLines = function(pl_gwas) {
 	log_file = gwasLog(pl_gwas)
@@ -560,7 +565,7 @@ readGwasLogLines = function(pl_gwas) {
 #' @param pl_gwas PlGwas object.
 #' @return character.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readGwasLogStr = function(pl_gwas) {
 	s = readGwasLogLines(pl_gwas)
@@ -574,7 +579,7 @@ readGwasLogStr = function(pl_gwas) {
 #' @param pl_gwas PlGwas object.
 #' @return numeric. Percentage finished.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasPercent = function(pl_gwas) {
 	if(!file.exists(gwasLog(pl_gwas))) return(0)
@@ -599,7 +604,7 @@ gwasPercent = function(pl_gwas) {
 #' @param pl_gwas PlGwas object.
 #' @return logical.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasFinished = function(pl_gwas) {
 	gwasPercent(pl_gwas) == 100
@@ -610,7 +615,7 @@ gwasFinished = function(pl_gwas) {
 #' @param pl_gwas PlGwas object.
 #' @return integer.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 theoPlinkOutSize = function(pl_gwas) {
 	100 * pl_gwas@nsnp
@@ -621,7 +626,7 @@ theoPlinkOutSize = function(pl_gwas) {
 #' @param filename character. Path to file.
 #' @return integer. Size of file.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 fileSize = function(filename) {
 	stopifnot(is.character(filename))
@@ -639,7 +644,7 @@ fileSize = function(filename) {
 #' @param cn_select Colnames to select. Default to "..all", which means all columns are read in.
 #' @return data.frame
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readPhe = function(pl_gwas, cn_select = "..all") {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
@@ -661,14 +666,12 @@ readPhe = function(pl_gwas, cn_select = "..all") {
 #' @param cols character. Names of columns to be converted.
 #' @return  data.frame
 #' @examples 
-#' \donotrun{
 #' x = data.frame(x = 1:3, y= 2:4)
 #' all(colClasses(x) == c("integer", "integer"))
 #' x = charify(x, "x")
 #' all(colClasses(x) == c("character", "integer"))
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 charify = function(dat, cols) {
 	cnames = colnames(dat)
@@ -686,7 +689,7 @@ charify = function(dat, cols) {
 #' @param nrows number of lines to read
 #' @return data.frame
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 headPhe = function(pl_gwas, nrows = 5L) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
@@ -701,15 +704,13 @@ headPhe = function(pl_gwas, nrows = 5L) {
 #' @param na_value a vector of numeric values which should be seen as NA.
 #' @return logical
 #' @examples
-#' \donotrun{
 #' !isBinary(c(1, 1.1, 1, 1.1, NA))
 #' isBinary(c(1, 2, 1, 2, NA))
 #' !isBinary(c(-9, 2.3, 4.1, -9, -9), -9)
 #' isBinary(c(-9, 2, 4, -9, -9), -9)
 #' isBinary(c(1, 2, 2, 1, -9, -9.9), c(-9, -9.9))
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 isBinary = function(v, na_value = NULL) {
 	stopifnot(is.numeric(v))
@@ -729,7 +730,7 @@ isBinary = function(v, na_value = NULL) {
 #' @param pl_gwas PlGwas object.
 #' @return logical
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 binPhe = function(pl_gwas) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
@@ -745,7 +746,7 @@ binPhe = function(pl_gwas) {
 #' @param pl_gwas PlGwas object.
 #' @return character. Path to log file.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasLog = function(pl_gwas) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))
@@ -759,7 +760,7 @@ gwasLog = function(pl_gwas) {
 #' @param snp_vec numeric or character. Vector of SNPs.
 #' @return matrix. Coefficient matrix. One row for each SNP.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasR = function(pl_gwas, snp_vec) {
 	pheno_name = pl_gwas@opts$pheno_name
@@ -784,7 +785,7 @@ gwasR = function(pl_gwas, snp_vec) {
 #' @param snp_vec numeric or character. Vector of SNPs.
 #' @return data.frame
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gwasDat = function(pl_gwas, snp_vec) {
 	stopifnot(isS4Class(pl_gwas, "PlGwas"))

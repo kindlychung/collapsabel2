@@ -1,0 +1,694 @@
+* using log directory ‘/Users/kaiyin/EclipseWorkspace/CollapsABEL/..Rcheck’
+* using R version 3.1.3 (2015-03-09)
+* using platform: x86_64-apple-darwin13.4.0 (64-bit)
+* using session charset: UTF-8
+* using option ‘--as-cran’
+* checking for file ‘./DESCRIPTION’ ... OK
+* checking extension type ... Package
+* this is package ‘CollapsABEL’ version ‘0.10.1’
+* checking CRAN incoming feasibility ... NOTE
+Maintainer: ‘Kaiyin Zhong <kindlychung@gmail.com>’
+New submission
+* checking package namespace information ... OK
+* checking package dependencies ... NOTE
+  No repository set, so cyclic dependency check skipped
+
+Depends: includes the non-default packages:
+  ‘ggplot2’ ‘collUtils’ ‘rJava’ ‘Rcpp’ ‘stringr’ ‘bigmemory’
+  ‘biganalytics’ ‘tools’ ‘R.utils’ ‘RSQLite’ ‘dplyr’
+Adding so many packages to the search path is excessive and importing
+selectively is preferable.
+* checking if this is a source package ... NOTE
+Found the following apparent object files/libraries:
+  tmp/src/CollapsABEL.so tmp/src/RcppExports.o tmp/src/countlines.o
+  tmp/src/fileExists.o tmp/src/fileSize.o tmp/src/ncols.o
+  tmp/src/printlines.o tmp/src/readcol.o tmp/src/readcols.o
+Object files/libraries should not be included in a source package.
+* checking if there is a namespace ... OK
+* checking for executable files ... WARNING
+Found the following executable files:
+  .git/objects/00/26cc287f4c96d7c78ac1459ffa3ac4739a302e
+  .git/objects/00/5409bc2ecccf7c9c6d867987b8694ac0c7d694
+  .git/objects/00/9a2a4995ca10470ccf15595e8fe8af6a8205f1
+  .git/objects/00/e9d0c675b86860708f1f151868b8abc80c7949
+  .git/objects/02/cc2d49291a0c9b5ed200c1154adfd0c0d48d46
+  .git/objects/05/c045fffbecdc8fdbd68a9715ef0987fc19082d
+  .git/objects/07/3b972757af3bbd643e41c7752810456a30b9f2
+  .git/objects/07/875d71e9ee049db1511d5b5e41e842223632ad
+  .git/objects/08/21892a48233329ebf9f64b72b9d5f3e44e8a6a
+  .git/objects/09/76df9a886da0f1c409f716b17f5f0b87a8295c
+  .git/objects/0a/d5fdc48d89e63abd2f2595b92429dbc0cc471f
+  .git/objects/0d/2cbf49c035eeb1303ab8643b75f942dd14ee20
+  .git/objects/0d/7dc37697c00772ce7d76ac6582e6535ef99405
+  .git/objects/0d/bc548044e44f9a8f3aef8ecdf40cb6abc85a6e
+  .git/objects/0e/48a96eb0d3e533a339207a1ae879e81c109f03
+  .git/objects/0e/6bae6f49a67ce329a3c5885becc4e69824bfaa
+  .git/objects/0f/a701b84ea0cfc4e0e4a4bad8ebd12530150b39
+  .git/objects/11/33b15bb49cb56dce9477fbbde755d54fac7ff7
+  .git/objects/11/c26f364e3d310c27b189c8eab154e16c19f98a
+  .git/objects/13/b7bd0cb613f1c535142696dba1b9d4826cee0f
+  .git/objects/13/cbb383b005646e511e7cee895d99359893faca
+  .git/objects/16/19eaeb3fba89d1aaf9344b7c3d434bb048aa26
+  .git/objects/16/37941674c2daa8c0fda5ccb6ab220c3b72f3c6
+  .git/objects/17/561a3ff8ecfee6ec8476c71fb02552fb57bc42
+  .git/objects/17/9603e056e42871fd4de14f0a9083ec6213ece0
+  .git/objects/18/05598fdfca828f47abdb334025c001e0edaf22
+  .git/objects/18/33b56f1753887e2f433ac36b8403782b000aa5
+  .git/objects/18/3790c29396c44170c24ae1539672c9e782ee54
+  .git/objects/18/6a340dd9af7556193879bbbe3ba7e805f44a83
+  .git/objects/1a/e0fd938b581f11078c7981ac2b39d1e0f42896
+  .git/objects/1b/287461963cf0a3478ac754ed0eec776301fe2e
+  .git/objects/1c/8002b0508db30a5373c15881f77a1caab11dd5
+  .git/objects/1c/96eb706642366e587c3943f7bf24782bfc0ede
+  .git/objects/1c/b5b50135b7701637b3eff9e32a56fd0d39c14d
+  .git/objects/1e/9a324b5e883242372db2ce8bb98accafc657d4
+  .git/objects/20/34a8c0615124827dcd30f4ce4ed9f40f9829a0
+  .git/objects/21/7bb25272b4d754b00e2dbff5904fff1c4b2262
+  .git/objects/23/0d150842e6a4e41139fba6bce15c85d9172396
+  .git/objects/23/b9ae83959be09a3e43bc994824b41888afbcd9
+  .git/objects/24/4d1d1c8fd2dec4f60f7d9ce08b2fde24769bc3
+  .git/objects/24/6bbd8240d6fc0938f6ec037ff2a94ab7c9c141
+  .git/objects/24/c0a6b2b84ca377a10d2256077503003cd95926
+  .git/objects/24/e41359ed27b0a39e792a548a50ffaadfa03ea5
+  .git/objects/25/1b5b10a72809f9c0125c7a33b3c36b79351cba
+  .git/objects/26/0d08c6dd1422011aea806d04b32eec673ee1d9
+  .git/objects/26/876b148467e5631ffe2b4361cb97054e716711
+  .git/objects/26/abd1c5b2141aa771a81c6f2f409aeb2992ff7f
+  .git/objects/27/a90f66095aeef43b1dbdeb57c55fed0e3ac28c
+  .git/objects/29/3bf4aa1764b7d43521d6d4bb6ea7bdeb6676b9
+  .git/objects/29/bc1cc7ea12550f90f05d45ad02e8eab2bea1b1
+  .git/objects/2b/7a8bf32c9e68e2553adf8e14278bf2cd049eac
+  .git/objects/2b/7bfbb3f8a8a5c4d28045b4d6098a34f01c2eb8
+  .git/objects/2b/8662d15dd1128656f8f72bc0cf45f56cf4d032
+  .git/objects/2b/b91fa1bb50f51c0c6ae65c2889196248b2b9fa
+  .git/objects/2c/13abb7dec8d24f9f177fbb8e5d87074655604b
+  .git/objects/2c/664d08e2b0027673abf156da10a2d1d5676833
+  .git/objects/2d/198d4fb595442522fab6bf55c7d50ab94a1097
+  .git/objects/2d/25a84847e77749f717f7293006d3ef3fd2844a
+  .git/objects/2d/a8c7f46d026a9c10cb85678ad4f9a2823450a4
+  .git/objects/2d/f19827ec37ccd2d32d01d5aebd56446f3c0a3e
+  .git/objects/2e/2bf299a2b7b1e9c1043f7b9754244b7aaf6a91
+  .git/objects/2e/61f5fba45f060753e4355ec63bac57bf54598b
+  .git/objects/2f/a9d8bbffaf3308ed47e80520ef87e49237f8e5
+  .git/objects/2f/f27763bfcbf00754d11737d129cfce22d0e336
+  .git/objects/30/257e55b4d06c3220346b416983746803e135ac
+  .git/objects/30/c2dedcbb2ef4fccf9f4b6717c0878615038828
+  .git/objects/31/90c1a500be1a0baf6d5e8848f6f20a01e7cefe
+  .git/objects/33/3880ffe213368b2fa032487def48274938a392
+  .git/objects/34/4e855780021de975f8e40009dad3034264b97b
+  .git/objects/34/565c67fe1dc5afbefa86fbeca1ebce828fcf86
+  .git/objects/35/a4701019ae70e8b6b410831f3da1bc439d9aa6
+  .git/objects/36/056083125febe116b4ed54060ddb1148a81bb3
+  .git/objects/36/852cf3afd9c5b941d8f62f1b4de07c94eed27f
+  .git/objects/36/8848809cb3f0b7fd927157804d9a5efecb0b80
+  .git/objects/37/3e3f1a8d398f4e2409b22f8ebe4512a3f6ebee
+  .git/objects/37/d7c0c42daab622c64f53ee1524a8445edcf38d
+  .git/objects/38/099e1f57268ae8529d5867cca853ba345e991c
+  .git/objects/38/3a3eba707ac04574e9fa8845f1de8db87d4067
+  .git/objects/38/8fb3137c567f19a17d9b3b5106e4db3ba09785
+  .git/objects/38/debc0faeec1b1edc66294361e0bf27bb04c4ab
+  .git/objects/39/60032277377e3193aaf12cb554113688ef75a0
+  .git/objects/3a/923d4d57fe0800f46931cbc3a37dc7d1900356
+  .git/objects/3a/e9d7d6b3781532edb0bf0b87d0d0e03f6ce954
+  .git/objects/3d/4e54f8edd0e0e8b07eb821e5d3f4f42988a378
+  .git/objects/3d/bfecafb562a427f9dc250a9320d28d47b07391
+  .git/objects/3e/c5c67b93c345469c0b921fa0a263d0820abe26
+  .git/objects/40/7f76cac5c84e093a447a8a451c51dcb5e4f433
+  .git/objects/41/2f7859483025a5c6662b3743101cb8893c5d8b
+  .git/objects/41/e6b7ecde96ea3994f88335fc35fe9185506c83
+  .git/objects/42/a060ddcda1722163bdda66e7cf0ab5c8965600
+  .git/objects/42/cf09082e3b4cbded070a8ae7d7a3d91ed424af
+  .git/objects/43/33e99708a2d543d1730b6c9de9503e02e4e7ce
+  .git/objects/45/1246d14cc214604684dbc9c225fe8fb2a9735a
+  .git/objects/46/4f9cfa2e1563beab66bceb0b1a1304b3bfed58
+  .git/objects/47/9a057be48359c57b7b7279a1d8a6b7727007a1
+  .git/objects/4b/292c39ffed06079b663adb5d9170db6cc22b87
+  .git/objects/4d/9512dcd15bc5af1970e672338e2f31f3ae5c08
+  .git/objects/4d/b4bbf1ed4c5c11530e03e81aab618cf9cdf5e8
+  .git/objects/4e/05c9f6d8f98d5c7e4f981d44a3ff14f92469e6
+  .git/objects/4e/30a8255de1109286d7894ea10b38267f1887f4
+  .git/objects/50/9b75c1d8a1282f2fb892e038497639b9f46cb6
+  .git/objects/50/b3a7e0e00b2d3bcdde1792b6e9a522e5b6e641
+  .git/objects/51/7300729adb2a17a8eb50ec891d1df040082a46
+  .git/objects/51/9be66e9ba164a3f7bdf381ae457aa40256ede3
+  .git/objects/51/f9b70027266ee61fbfb0871f1161ff28e5a975
+  .git/objects/52/2faa762bfc7a230f87e51e0446268d2232588f
+  .git/objects/52/9f55598f5b55df8d51eb974e34914994b87731
+  .git/objects/53/b72cac852d555d75f17a1ca863737ca118be12
+  .git/objects/54/7d2ab5f925f2bcc9c296846b5957706f833a4e
+  .git/objects/55/b2588c10364de46964827d90c28133ee8b9afb
+  .git/objects/56/a60800c32c273a97c7f165425682d40ed8b2b7
+  .git/objects/57/0b249702c2339789dbedde674b4fffca856b4c
+  .git/objects/59/18b9ef8c1e0d904603fbde61b4e25ebd7a79ea
+  .git/objects/5a/0a237e03d96a5039a7f796889fe5dc207ebe3f
+  .git/objects/5a/9c05c78bb35c3263b0764484a2a516b653c824
+  .git/objects/5b/81aceb22f60dd0e147ec587e6870d1aa3d0c1b
+  .git/objects/5c/0f8468ac9e2e030effb9efd5716d81f0cf5abb
+  .git/objects/5c/7163b78c1b9392b211e085a68b3a891a7848e6
+  .git/objects/5d/9faea85121c4b63d35da92275af6e0e5a89ea9
+  .git/objects/5f/61db0f08103729032e2189a93ea4146b9e3c98
+  .git/objects/60/a17421664c08f34e9dd0c8390cdcf24e26b1cf
+  .git/objects/60/b20a9fd10098c1781e3c02216af23c8679df35
+  .git/objects/61/2891b8d72cff64745514356451e2dc28442572
+  .git/objects/61/9243bee7cc301102c012d31fed369e3b427f2e
+  .git/objects/62/74ccdef3c04129760f2f8892d4fe5495ff3b2a
+  .git/objects/62/e6abfe6552b443a6d838d49a86375217efaed9
+  .git/objects/63/fa461081342cc43522380eef8bccfb62127cba
+  .git/objects/64/0664ce951a33d85393461bad568a00e685e5ff
+  .git/objects/64/c02abfd92aade7e3edbc0764b718536a751bd9
+  .git/objects/65/ca5031edffe5160b9c96f3b82e53d060df94e3
+  .git/objects/66/dceeade2f7a4c7dc88908f67f4d64ce6ef89df
+  .git/objects/6a/f22be95f7149e858d7f9bf0d559b40e3e728b6
+  .git/objects/6b/3accdeddd37abc3734597cba6761015429abc0
+  .git/objects/6b/40b5c5d6c76b7f39ff49bf8a684e8ef9d8bf53
+  .git/objects/6f/93f355623a4e19fb249086585c5e566b625e53
+  .git/objects/6f/d0af7f6d17daefa050e0da5b27039de2fdb0f0
+  .git/objects/70/da0ea63b2cbbd382f1800e7613fac9f36b6fa3
+  .git/objects/72/30d31ecb4c7df6def488953aedfbd258d7ee06
+  .git/objects/73/087363b09b72efdf74688b73e11b7d2c34a5dc
+  .git/objects/73/3a5dfa4bd64bce54b114de1c00b2dc688793a5
+  .git/objects/73/4acafd7d51a8da6e25db411263db0f89d080ec
+  .git/objects/75/5a0516c778745b0d0630c9e6f7b9dee1219394
+  .git/objects/77/64383ab50a8c2dd2b4c82242d9e171ba609edb
+  .git/objects/77/6741eb24f1ae11bd6f7cffb4b70c989367b6fc
+  .git/objects/77/9e5f2f67ec39a51da6e66e643b49353254ec9d
+  .git/objects/79/08024865b200782bec3e0a51fec92613cc97be
+  .git/objects/79/36c9fe863ea1814e74ee4d217e16ebbdb5d135
+  .git/objects/79/955a240b7483193417067d4fb1daa5c50667a4
+  .git/objects/7b/6ff31c8be9d09d4e33731bca7bc7a9082a8ed6
+  .git/objects/7c/057e0887204ec962be95837df9ff6a9d8aad2d
+  .git/objects/7c/325c4487b9e34fcaeac0008a80cd99a1dfd9ca
+  .git/objects/7e/d798b8fdfc799f3ff722a982eb612ddab59234
+  .git/objects/7f/0cee03fff217f0bb52f13c7095845ba8aff3ca
+  .git/objects/7f/ba5ed2bed7d94471d7494e1dc99cafa9196bbe
+  .git/objects/7f/e54a58a1a1a1d057c73b0dd6721eb7f39fc437
+  .git/objects/7f/f731a2c46b08f65c86c3742d1131891ba9b9df
+  .git/objects/81/47cdf782357b81f987d4324a425bc86b1012d6
+  .git/objects/82/d65252f0a2f6e880cea51245644e2b41b29a84
+  .git/objects/83/cfd92511ba83a23e58425c45fd3bcd15c8285f
+  .git/objects/86/0b2600b7ac311bd322098255b2f920f9dac390
+  .git/objects/86/267f5bb5e532df4890e56948155777035d0bdf
+  .git/objects/86/6413db57f65f1089ae1217eadae1d67586b40f
+  .git/objects/86/703df5e2b78ab6e57213f6b2eb61a1f54b11a8
+  .git/objects/87/d215f8ee653d44fc90931eb0664a36abcf477d
+  .git/objects/88/7879f00d3caad327acfd5067fa9394d193a483
+  .git/objects/89/6e17592cbd71f66cacac6f208f0efd8e5487ed
+  .git/objects/89/d7aed6f911e1174d9c999fa704ad02ffc3d3e2
+  .git/objects/8a/35f4259c36b090c2cf5d8505b126541c542e16
+  .git/objects/8a/5ecff5b4dc9a155bbacaceee411d6f277393bc
+  .git/objects/8a/6a940241253b51756eabdbc86ff29f88b28613
+  .git/objects/8b/7edbbe64ec4c44dbb4d16ed9c5d6fb410f2fa7
+  .git/objects/8b/86eed12d019484c917f85ac069b59c56c2e5e5
+  .git/objects/8c/32bf6144d27ab66a88eb53522829d13cd2afb1
+  .git/objects/8c/37f9d5c66be9ea5fc063d0cd556ee7f3c475d8
+  .git/objects/8c/64154cef44b42fda7bce62308dba036b2b72aa
+  .git/objects/8c/72d1d768f8c1a1db3bbbac2340a855a4279df0
+  .git/objects/8f/b65ca41385989b316ad6801384f1b9ea3a79fd
+  .git/objects/90/c236de7d818e577072cf8c83924aa3be4bca3b
+  .git/objects/90/ffc3048879e86cfe41ea4482b5fd06840260b3
+  .git/objects/92/dc99afc24b83a6e327fa86f1f3f017772793df
+  .git/objects/92/ef0dbe93e336f3e6284c6a2f13e90ea4107db7
+  .git/objects/93/a496e19b53711566a155910a444a279dac8258
+  .git/objects/93/c028f802ab4d196ad5937ac365e9bbac7ecca8
+  .git/objects/93/fc046105d05b3b044cb27062b65b2b4445908c
+  .git/objects/94/411545c8606b09147382b169451e8d4ca32851
+  .git/objects/95/7d0118a652814e359f9230e316fae27928c7c4
+  .git/objects/97/878554d097c428182f08fe209643af9c18bafd
+  .git/objects/98/57e1ca01f5354187683ac29c85b61e91395d1e
+  .git/objects/9a/08dc98a05a4bf082989ccca21a4f5e5ce070ce
+  .git/objects/9a/cb233ca8c9058c1ceaf622b00d48336b539c21
+  .git/objects/9b/2ea0ba028cdd797b9dcfdcec113ee282c86e1c
+  .git/objects/9b/880735ec6b12410d5f6865e102fb1de1a7767f
+  .git/objects/9c/b94381ade0a09802f69119547b264c8198c298
+  .git/objects/9c/efd32336870acfd27cc94229cc9d01d988147c
+  .git/objects/9e/d72b1ae5b6bce20e83fbf4ab957d19d1bdf39f
+  .git/objects/a0/061f61041b8844135057b2c0841614a976d624
+  .git/objects/a0/a0ae9fc0beb48ed68034477dd5b3485d5466ba
+  .git/objects/a0/c35f6b001837b9d079f88037459e195c37ae0e
+  .git/objects/a0/c8aa429c10a7f5deab25130f9af876f484fbfa
+  .git/objects/a1/10f5e6aa62bbe584edb8c3c93181d35d932670
+  .git/objects/a1/d8e9c696c99207f9113f138bb05b331e273192
+  .git/objects/a2/134fdde457f87825bad805bd1a5ea2a0152585
+  .git/objects/a4/c835b17974c7d05d0835b638b73c8b50653ca0
+  .git/objects/a6/ef4ef18c021f76570b6208cf72656c51aea855
+  .git/objects/a7/4c0d17a71472d717f85d4f298c8dd9d72c479e
+  .git/objects/a9/0523b24acdb02aba42beccf2b993144b5a8267
+  .git/objects/a9/749b05c6e5ef008a8bb58eb380190d63d7675e
+  .git/objects/a9/a36e499e8338d151bb2b75b5fb212bf6a0f15a
+  .git/objects/aa/9ec4b72b2fbb6d383d0d37c14931b312869046
+  .git/objects/aa/bbd7e18b47d3c3741b52a586486cf0f5d370d4
+  .git/objects/aa/c3770d44938e1127582e538a4e4a3d8de8e2cf
+  .git/objects/ab/135bd57f5ed7127a2c609c3376af2c0f88c0ac
+  .git/objects/ab/a609a2adb58f1bf0d0ac287e13f55c0808aa5b
+  .git/objects/ad/5ec6f642ad3a0c1ea8da38b64f57b2572b1a20
+  .git/objects/ae/09ee8dd06301e12c35f9cabf06e2bea0565fef
+  .git/objects/ae/29b196494a54dffa1c22e4b7960481d334c47f
+  .git/objects/b0/ab3b2ed190156c9a93c5706eff7e34a611408a
+  .git/objects/b0/b241027b4609674e66de1c4080cbd710dbe803
+  .git/objects/b1/58d7401836326306f93a6d3dac8866c8055917
+  .git/objects/b1/97eb85ed5582dc1ef2de18e81b31059874d553
+  .git/objects/b3/cce0f2d1d6d11132a492e5de054636f865dcf8
+  .git/objects/b5/32e50a59b5d8ac64bece408f738f67366cdfae
+  .git/objects/b5/8ad6c347726e34bed9f1c23657e8efa5e17fbd
+  .git/objects/b7/0ac3cd0ba01114f5817262e65f11adb34a9d3e
+  .git/objects/b8/6fb79abd90216ff46f1f1e65c1ec306872531a
+  .git/objects/b9/6934e9d7436df45ba1042f244328b76bd2d610
+  .git/objects/ba/c9b3c6c1fa73fd144007b14ee4236da8d2768d
+  .git/objects/bb/84d0a020831e30932603a99a712ca0679ae1af
+  .git/objects/bc/b2a2a0b9a6ea86e257c2720113ebab3818c764
+  .git/objects/bd/58e318d603665caa6d586064aa4623936ce720
+  .git/objects/be/dc7024869b348d2fcc75a247e42371de159013
+  .git/objects/be/f93614381f21b263f57c2e01f1fe80c934861c
+  .git/objects/bf/1818a8ca1f70300d399a5b6f65c51fec5386eb
+  .git/objects/bf/aff6b3e3ed02c4ec70659fc377b649bb50f6a1
+  .git/objects/c2/17f3b149d3841b5b04357290304e4fcccc59a2
+  .git/objects/c2/2cb2dc2976df7703fbdd56bf05f0e7e9abca41
+  .git/objects/c2/4d591f5357689c75141035d4a26b63bdcffdef
+  .git/objects/c2/4fba895583f9f7ad62a943ba1582779f7f87dd
+  .git/objects/c2/b447b98feca552a02150b69bd03cb8f34f5d74
+  .git/objects/c2/c227b063dd6bd940a6419d3de3db44648edf30
+  .git/objects/c6/6bdd6bf541aa4d7b7ad827adf8569ed85f5bb0
+  .git/objects/c7/3ba9d0488c03dfac1ab3c9bfbff723b7ddefbb
+  .git/objects/c7/cf906da8690f677da1cfa8f659be616a523228
+  .git/objects/c8/2f6528db8e19d95df3384698f5af5ac937e6df
+  .git/objects/ca/1d4d56e7a1125447abfd8469c9d37e5d5ba788
+  .git/objects/ca/cd6e28663494340bff60515a45b74beb5646a2
+  .git/objects/cb/19086d1bcf87dea308c3e99c27cb56a530bd14
+  .git/objects/cb/f1fbeb6286ef35869c78f2ae72c229c4b80d39
+  .git/objects/cc/85b84d426819fe41fcfb301b04736b0f229ddc
+  .git/objects/cd/0a4805a926fb22407eb47712fd1ca6efc3a07b
+  .git/objects/cd/a3b1a8b70b0f8880076e20c7e573bdbe38f4c2
+  .git/objects/cd/b82a5b45b3310d128cfc9d7239c375b1dfd823
+  .git/objects/ce/30140f6a93a86bce11593a6c08cb17b66a7c28
+  .git/objects/ce/7b1f70db2467ab2d9585c4abac76b55dd45a88
+  .git/objects/cf/dad4984933add7f8a9bf337528c0387baab2ea
+  .git/objects/d0/240e35dc37f9462d516d3582da08b071b498a8
+  .git/objects/d0/bfda7ef652388ea19d0dadb8b6e7b1346014ed
+  .git/objects/d1/868a5a084523f2729cf8c8b16eac08685a15a8
+  .git/objects/d1/922e9785ff26d90a55066bc6d7114217503728
+  .git/objects/d2/0ce19c4ee3d385f3727082610aad16f702bfae
+  .git/objects/d2/10809a773abc79ad6ec5c24e0a3afb98f4fffe
+  .git/objects/d2/94ef9346ecaff1b79197ff14adf0aba0128585
+  .git/objects/d3/b1ad52680c5563e8fa50c855bf49f29cf1df69
+  .git/objects/d6/006354b41303609d82493f553cc342226620a0
+  .git/objects/d7/2045a1110e0f2ee505ef975509eee2e5935d32
+  .git/objects/d7/b7977d619a16c2538d7262b1d56cdd99883d67
+  .git/objects/d8/d6020a5b1d69fc9ce67a88cb8071e9d061e1e8
+  .git/objects/d8/e27616f6da9c8e67364bdb4972d7c6889a2cea
+  .git/objects/d8/eefcb19c90b30c4f33b83f2e4e537adc493a6d
+  .git/objects/d9/625e6b8177acc225d4890566086c6445029e44
+  .git/objects/d9/afe844b59b3d79457714c1f3b5dd3543632ad7
+  .git/objects/d9/ed11916ff8cd9d5ec64905abaf5d08f4999b74
+  .git/objects/da/a4b8738bb3e865fd0378d77665808630c09fe6
+  .git/objects/da/b9df9cc807dabd265cf4b7c0532383491623dc
+  .git/objects/db/077a7b7f83f568245e684de86a4788587d588c
+  .git/objects/db/8686c4cfd1b8558c9d5d956d10e5f24b59b8ae
+  .git/objects/dc/1cec9bf95981b254ff4c1ba9dc756c9f95bde6
+  .git/objects/dc/2f588a4773633df074d6756b9cac2a1c56b407
+  .git/objects/dc/96933123f73b2d90b69a3410de2de46a577b99
+  .git/objects/dd/226c975be0a1b668f6aae99ba7fa85c6178b2a
+  .git/objects/dd/94a639f30e0469d8991090e2231aab4f72cf17
+  .git/objects/dd/a5060815df3a2c14745d25dded554e337cccc9
+  .git/objects/df/03979044752ae68b1aaf8b616a7485d7d7d065
+  .git/objects/df/739542ce48bee85303133cdd0abe2775c48be0
+  .git/objects/df/8fc317af5cbb1f85ebbbaadef684858ac10f0d
+  .git/objects/df/984a49fa8aecfe20de34271a8a4e55bf44e76f
+  .git/objects/e0/a7b843e8e3f199e766db738fbed896602e0066
+  .git/objects/e0/bf30f62ae80d6cb716e0930d52d82bf4d03515
+  .git/objects/e2/30a6aa9a2a5e1696bfac495671ea0e487669a7
+  .git/objects/e2/98ea8d1d2e48e37567e517ad13ef80978e668a
+  .git/objects/e2/9cbc07a81f2f0ff2655277ecca57b0a52faad1
+  .git/objects/e3/647f582ef0495ae166d1a7b4d50c0314d786e2
+  .git/objects/e3/b64aebac5c8d2ca4c0c8cc76f8fd1a0df3c64a
+  .git/objects/e4/a67dd7e5963e87a332327f59effdfef15aed45
+  .git/objects/e4/ca8b28a6e0015b4ca077573cfdaaf918b75992
+  .git/objects/e5/80aee86b7fef644b0af5c467c405cf8f5d599f
+  .git/objects/e5/f8f484cba292d662dedc9f219360de5e67c8d4
+  .git/objects/e6/05f33b5a213a6985f892ec6c9f45c80467f98f
+  .git/objects/e6/9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+  .git/objects/e6/c6e9767e3409bf20a50dd1071ba6ada784bd8f
+  .git/objects/e7/19713a071c76ca70486920281abff76e169376
+  .git/objects/e7/75c8bd2a7f75d0ec1ffd54b1c5d2e6ec71bfee
+  .git/objects/e7/fff2383989ee355607c8f1943590ed030809cb
+  .git/objects/e8/6f3d8745c08510caca37f53e4c6b0f77ed2e06
+  .git/objects/e9/208e8ad45f807f0e11babf0a517ce7ce89f253
+  .git/objects/e9/60c35882635e240910631853eebe438a0f4f47
+  .git/objects/e9/a8e12c0a20b9591008670b06382917b39e3848
+  .git/objects/ea/57a6d942dc6ff2266ab14f101168e7fddf80c8
+  .git/objects/ea/c9bbf6eab67ca7f49ac801b7ac3b28258cb015
+  .git/objects/eb/7279e73e4808232f02664c5303a7a49103c8dd
+  .git/objects/ec/50cb25bd3f36c1d83cf1d3c7595048205c52ee
+  .git/objects/ec/d8961a3981ac2e2ba8d608e17abcf7cdc31c3f
+  .git/objects/ec/ecb63fbd8d29177cc8b26553961b83804a88f7
+  .git/objects/ec/f75c0fb80fe6be71712ab1fb0aa94ea3bdb286
+  .git/objects/ed/aa7143ce4801bb87ace2c612854d57c6ec7395
+  .git/objects/ee/6876b90c583ac2ce03cdf98f39ad232202ecd9
+  .git/objects/f0/1b244ca1d34e342df961838837e7114bd663ad
+  .git/objects/f0/3ae7dda7a5243b3cb997824b65ee9957e3a522
+  .git/objects/f0/691b6dd0643b2f3c9401f9591e0bd6de488b19
+  .git/objects/f1/73a276cacc5a0ddc297e484d52fcf953ee9fbe
+  .git/objects/f1/e7d64298143db53e6ae4930ec5e574f27aebff
+  .git/objects/f2/911a5afff38ca83c59991e22592c1500d779f0
+  .git/objects/f2/9bba7aea84ebb48ccfa47a578cf61676077c50
+  .git/objects/f3/b98c9b8736611c45b2fb288b5575a2ccd9afda
+  .git/objects/f4/8709f4bf6c29350d84859c933a88a2ae7c798c
+  .git/objects/f4/c41d3626571c5b47e95c527243665ed31274fd
+  .git/objects/f5/662e85cf3df328ff2741e30ef3a9263e94f80f
+  .git/objects/f8/0dd8d7f050ef22f9f93752cc8ebc228c02fae6
+  .git/objects/f8/499461dbc009f686d29103051f57f5f76998ad
+  .git/objects/f9/69c30b095cde36ec4cd6537a790399d9543093
+  .git/objects/f9/d07e5beac8b23b1c9b38f80e9fcde18211bd5d
+  .git/objects/fb/0ba68519967b2629868cc5f847bffb6b368577
+  .git/objects/fb/b9bc57e9d9bfeb5e11b72151dd6650acff80ba
+  .git/objects/fc/2fdd82ec17b7e9e20a22a0e5ec4b314c7a43b6
+  .git/objects/fd/bcdc0fc28ccb15dd84ef4eb1e639918d942865
+  .git/objects/fe/86d9133161da5dd03073ba621426f669f2c118
+  .git/objects/fe/ca6527577a66c9a5047322e3c7ec83e2250cbe
+  .git/objects/ff/713f0313077cbda591cb4dd64da50a2e500612
+  .git/objects/ff/91ad700800d81c361cd7dcc1f65cdaa0819edd
+  tests/testthat/.ff_test/test.bim/df.ff$AL1.ff
+  tests/testthat/.ff_test/test.frq/df.ff$A1.ff
+Source packages should not contain undeclared executable files.
+See section ‘Package structure’ in the ‘Writing R Extensions’ manual.
+* checking for hidden files and directories ... NOTE
+Found the following hidden files and directories:
+  .DS_Store
+  .gitignore
+  .project
+  R/.contrastPlot.R.swp
+  tests/testthat/.ff_mmp13/mmp13.bim/.RData
+  tests/testthat/.ff_mmp13/mmp13.bim/.Rprofile
+  tests/testthat/.ff_mmp13/mmp13.fam/.RData
+  tests/testthat/.ff_mmp13/mmp13.fam/.Rprofile
+  tests/testthat/.ff_mmp13/mmp13.frq/.RData
+  tests/testthat/.ff_mmp13/mmp13.frq/.Rprofile
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.bim/.RData
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.bim/.Rprofile
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.fam/.RData
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.fam/.Rprofile
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.frq/.RData
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.frq/.Rprofile
+  tests/testthat/.ff_test/test.bim/.RData
+  tests/testthat/.ff_test/test.bim/.Rprofile
+  tests/testthat/.ff_test/test.fam/.RData
+  tests/testthat/.ff_test/test.fam/.Rprofile
+  tests/testthat/.ff_test/test.frq/.RData
+  tests/testthat/.ff_test/test.frq/.Rprofile
+  ..Rcheck
+  .git
+  .settings
+  tests/testthat/.ff_mmp13
+  tests/testthat/.ff_mmp13_trimmed
+  tests/testthat/.ff_test
+These were most likely included in error. See section ‘Package
+structure’ in the ‘Writing R Extensions’ manual.
+
+CRAN-pack does not know about
+  .DS_Store
+  R/.contrastPlot.R.swp
+  tests/testthat/.ff_mmp13/mmp13.bim/.RData
+  tests/testthat/.ff_mmp13/mmp13.fam/.RData
+  tests/testthat/.ff_mmp13/mmp13.frq/.RData
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.bim/.RData
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.fam/.RData
+  tests/testthat/.ff_mmp13_trimmed/mmp13_trimmed.frq/.RData
+  tests/testthat/.ff_test/test.bim/.RData
+  tests/testthat/.ff_test/test.fam/.RData
+  tests/testthat/.ff_test/test.frq/.RData
+  ..Rcheck
+  .git
+  tests/testthat/.ff_mmp13
+  tests/testthat/.ff_mmp13_trimmed
+  tests/testthat/.ff_test
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘CollapsABEL’ can be installed ... OK
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking DESCRIPTION meta-information ... NOTE
+Non-standard license specification:
+  GPL v3
+Standardizable: TRUE
+Standardized license specification:
+  GPL-3
+* checking top-level files ... NOTE
+Non-standard files/directories found at top level:
+  ‘CollapsABEL.pdf’ ‘generate_manual.sh’ ‘tmp’
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... WARNING
+Found the following directory with the name of a check directory:
+  ./..Rcheck
+Most likely, these were included erroneously.
+Found the following directory with the name of a version control directory:
+  ./.git
+These should not be in a package tarball.
+* checking R files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... WARNING
+Error: .onLoad failed in loadNamespace() for 'collUtils', details:
+  call: fun(libname, pkgname)
+  error: could not find function ".jpackage"
+Execution halted
+
+A namespace must be able to be loaded with just the base namespace
+loaded: otherwise if the namespace gets loaded by a saved object, the
+session will be unable to start.
+
+Probably some imports need to be declared in the NAMESPACE file.
+* checking whether the namespace can be unloaded cleanly ... WARNING
+Error: .onLoad failed in loadNamespace() for 'collUtils', details:
+  call: fun(libname, pkgname)
+  error: could not find function ".jpackage"
+Execution halted
+* checking loading without being on the library search path ... OK
+* checking dependencies in R code ... NOTE
+Package in Depends field not imported from: ‘Rcpp’
+  These packages need to be imported from (in the NAMESPACE file)
+  for when this namespace is loaded but not attached.
+package 'methods' is used but not declared
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+Error: .onLoad failed in loadNamespace() for 'collUtils', details:
+  call: fun(libname, pkgname)
+  error: could not find function ".jpackage"
+Execution halted
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... NOTE
+Rd file 'PlInfo_constructor.Rd':
+  \examples lines wider than 100 characters:
+     pl_info = plInfo(.PlInfo(), "/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/mmp13")
+
+Rd file 'rbedInfo.Rd':
+  \examples lines wider than 100 characters:
+     rbed_info = rbedInfo(bedstem = "/users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/test", TRUE)
+
+Rd file 'readAssoc.Rd':
+  \examples lines wider than 100 characters:
+     dat = readAssoc("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc")
+     dat = readQassoc("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc")
+     linear = readLinear("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc.linear")
+
+Rd file 'readBim.Rd':
+  \examples lines wider than 100 characters:
+     bim_info = bimInfo("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.bim")
+
+Rd file 'readFam.Rd':
+  \examples lines wider than 100 characters:
+     fam = readFam("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.fam", cn_select = "..all")
+     fam_info = famInfo("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.fam")
+
+Rd file 'readPlinkOut.Rd':
+  \examples lines wider than 100 characters:
+     dat1 = readPlinkOut("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc")
+     dat2 = readAssoc("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc")
+     dat1 = readPlinkOut("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc",
+     dat2 = readAssoc("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc",
+     dat1 = readPlinkOut("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc")
+     dat2 = readQassoc("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc")
+     dat1 = readPlinkOut("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc",
+     dat2 = readQassoc("/Users/Kaiyin Zhong, Fan Liu/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc",
+
+These lines will be truncated in the PDF manual.
+* checking Rd cross-references ... WARNING
+Missing link or links in documentation object 'defmacro.Rd':
+  ‘http://cran.r-project.org/doc/Rnews/Rnews_2001-3.pdf’
+
+Missing link or links in documentation object 'plinkr.Rd':
+  ‘getPlinkParam’
+
+See section 'Cross-references' in the 'Writing R Extensions' manual.
+
+* checking for missing documentation entries ... WARNING
+Undocumented code objects:
+  ‘asBigMatrix’ ‘bytesSnp’ ‘correctTypes’ ‘gwasDir’ ‘isSetup’
+  ‘nIndivApprPl’ ‘nIndivPl’ ‘nSnpPl’ ‘nonExistentFiles’ ‘plGwas’
+  ‘plInfo’ ‘setup’ ‘strVectorRepr’
+Undocumented S4 classes:
+  ‘PlGwas’ ‘PlInfo’
+Undocumented S4 methods:
+  generic 'asBigMatrix' and siglist
+    'matrix,ANY,ANY,ANY,ANY,ANY,ANY,ANY,logical'
+  generic 'baseName' and siglist 'FilePath'
+  generic 'bedSizeCorrect' and siglist 'RbedInfo'
+  generic 'correctTypes' and siglist 'data.frame,character,character'
+  generic 'covarNames' and siglist 'PlGwas'
+  generic 'dirName' and siglist 'FilePath'
+  generic 'gwasDir' and siglist 'PlGwas'
+  generic 'gwasOutStem' and siglist 'PlGwas'
+  generic 'lenCheck' and siglist 'list,numeric'
+  generic 'plGwas' and siglist
+    'PlGwas,character,character,character,character,logical,list'
+  generic 'plInfo' and siglist 'PlInfo,character,logical'
+  generic 'readBed' and siglist 'RbedInfo,ANY,logical,logical'
+  generic 'readInfo' and siglist 'character,missing'
+  generic 'realBedSize' and siglist 'RbedInfo'
+  generic 'strConcat' and siglist 'character,character'
+  generic 'strVectorRepr' and siglist 'character,logical'
+  generic 'theoBedSize' and siglist 'RbedInfo'
+All user-level objects in a package (including S4 classes and methods)
+should have documentation entries.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... WARNING
+Undocumented arguments in documentation object 'PlInfo_constructor'
+  ‘db_setup’
+Objects in \usage without \alias in documentation object 'PlInfo_constructor':
+  ‘\S4method{plInfo}{PlInfo,character,logical}’
+
+Undocumented arguments in documentation object 'asBigMatrix-methods'
+  ‘type’ ‘separated’ ‘backingfile’ ‘backingpath’ ‘descriptorfile’
+  ‘binarydescriptor’ ‘shared’
+Objects in \usage without \alias in documentation object 'asBigMatrix-methods':
+  ‘\S4method{asBigMatrix}{matrix,ANY,ANY,ANY,ANY,ANY,ANY,ANY,logical}’
+
+Objects in \usage without \alias in documentation object 'baseName':
+  ‘\S4method{baseName}{FilePath}’
+
+Objects in \usage without \alias in documentation object 'bedSizeCorrect':
+  ‘\S4method{bedSizeCorrect}{RbedInfo}’
+
+Undocumented arguments in documentation object 'bim_fam_info'
+  ‘filename’
+
+Objects in \usage without \alias in documentation object 'correctTypes_methods':
+  ‘\S4method{correctTypes}{data.frame,character,character}’
+
+Objects in \usage without \alias in documentation object 'covarNames':
+  ‘\S4method{covarNames}{PlGwas}’
+
+Undocumented arguments in documentation object 'defmacro'
+  ‘...’ ‘expr’
+
+Objects in \usage without \alias in documentation object 'dirName':
+  ‘\S4method{dirName}{FilePath}’
+
+Undocumented arguments in documentation object 'fidIid'
+  ‘pl_info’
+Documented arguments not in \usage in documentation object 'fidIid':
+  ‘rbed_info’
+
+Objects in \usage without \alias in documentation object 'gwasDir_methods':
+  ‘\S4method{gwasDir}{PlGwas}’
+
+Objects in \usage without \alias in documentation object 'gwasOutStem':
+  ‘\S4method{gwasOutStem}{PlGwas}’
+
+Undocumented arguments in documentation object 'ifLetLen'
+  ‘sym_str’
+
+Objects in \usage without \alias in documentation object 'lenCheck':
+  ‘\S4method{lenCheck}{list,numeric}’
+
+Undocumented arguments in documentation object 'plGwas_methods'
+  ‘assoc’ ‘opts’
+Objects in \usage without \alias in documentation object 'plGwas_methods':
+  ‘\S4method{plGwas}{PlGwas,character,character,character,character,logical,list}’
+
+Undocumented arguments in documentation object 'rbedInfo'
+  ‘db_setup’
+
+Undocumented arguments in documentation object 'readLogistic'
+  ‘filename’ ‘cn_select’
+
+Objects in \usage without \alias in documentation object 'readBed':
+  ‘\S4method{readBed}{RbedInfo,ANY,logical,logical}’
+
+Undocumented arguments in documentation object 'readInfo'
+  ‘cnames’
+Objects in \usage without \alias in documentation object 'readInfo':
+  ‘\S4method{readInfo}{character,missing}’
+
+Objects in \usage without \alias in documentation object 'realBedSize':
+  ‘\S4method{realBedSize}{RbedInfo}’
+
+Undocumented arguments in documentation object 'removeGwasTag'
+  ‘type’
+
+Undocumented arguments in documentation object 'runGwas'
+  ‘save_pl_gwas’
+
+Undocumented arguments in documentation object 'shiftBed'
+  ‘db_setup’
+
+Undocumented arguments in documentation object 'sqliteFilePl'
+  ‘x’
+Documented arguments not in \usage in documentation object 'sqliteFilePl':
+  ‘pl_info’
+
+Objects in \usage without \alias in documentation object 'strConcat':
+  ‘\S4method{strConcat}{character,character}’
+
+Undocumented arguments in documentation object 'strVectorRepr_methods'
+  ‘vec’ ‘single_quote’
+Objects in \usage without \alias in documentation object 'strVectorRepr_methods':
+  ‘\S4method{strVectorRepr}{character,logical}’
+
+Objects in \usage without \alias in documentation object 'theoBedSize':
+  ‘\S4method{theoBedSize}{RbedInfo}’
+
+Functions with \usage entries need to have the appropriate \alias
+entries, and all their arguments documented.
+The \usage entries must correspond to syntactically valid R code.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking Rd contents ... WARNING
+Argument items with no description in Rd object 'baseName':
+  ‘fp’
+
+Argument items with no description in Rd object 'randNormDat':
+  ‘m’ ‘n’
+
+Argument items with no description in Rd object 'saveDesc':
+  ‘desc_obj’ ‘desc_filename’
+
+Argument items with no description in Rd object 'setup,PlInfo-method':
+  ‘pl_info’
+
+* checking for unstated dependencies in examples ... WARNING
+Warning: parse error in file 'CollapsABEL-Ex.R':
+19:1: unexpected input
+18: 
+19: \
+    ^
+* checking examples ... ERROR
+Running examples in ‘CollapsABEL-Ex.R’ failed
+The error most likely occurred in:
+
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: PlInfo
+> ### Title: An S4 class representing info about plink files
+> ### Aliases: .PlInfo PlInfo
+> 
+> ### ** Examples
+> 
+> \donotrun{
+Error: unexpected input in "\"
+Execution halted

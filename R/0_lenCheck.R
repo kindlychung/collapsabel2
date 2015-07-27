@@ -1,8 +1,3 @@
-setGeneric("lenCheck",
-		function(ilist, ilengths, ...) {
-			standardGeneric("lenCheck")
-		})
-
 #' Check each element of a list has expected length
 #'  
 #' Give a \code{list(a, b, ...)} and \code{vector(l1, l2, ...)}, 
@@ -18,32 +13,28 @@ setGeneric("lenCheck",
 #' str(x[c(1, 3)])
 #' lenCheck(list(1, 2, 3), c(1, 1, 0))
 #' 
-#' @author kaiyin
-#' @docType methods
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-setMethod("lenCheck",
-		signature(ilist = "list", ilengths = "numeric"),
-		function(ilist, ilengths) {
-			stopifnot(length(ilist) == length(ilengths))
-			
-			list_form = deparse(substitute(ilist))
-			lens = sapply(ilist, length)
-			bad_idx = which(lens != ilengths)
-
-			if(all(bad_idx == FALSE)) {
-				TRUE
-			} else {
-				strConcat(c("\nGiven: \n", 
-								list_form, 
-								"\nExpected lengths: \n", 
-								as.character(ilengths), 
-								"\nObserved length: \n", 
-								as.character(lens), 
-								"\n Differ at these indices: \n", 
-								as.character(bad_idx), 
-								"\n Or at these fields: \n", 
-								names(ilist)[bad_idx],
-								"\n"), " ")
-			}
-
-		})
+lenCheck = function(ilist, ilengths) {
+	stopifnot(length(ilist) == length(ilengths))
+	
+	list_form = deparse(substitute(ilist))
+	lens = sapply(ilist, length)
+	bad_idx = which(lens != ilengths)
+	
+	if(all(bad_idx == FALSE)) {
+		TRUE
+	} else {
+		strConcat(c("\nGiven: \n", 
+						list_form, 
+						"\nExpected lengths: \n", 
+						as.character(ilengths), 
+						"\nObserved length: \n", 
+						as.character(lens), 
+						"\n Differ at these indices: \n", 
+						as.character(bad_idx), 
+						"\n Or at these fields: \n", 
+						names(ilist)[bad_idx],
+						"\n"), " ")
+	}
+}

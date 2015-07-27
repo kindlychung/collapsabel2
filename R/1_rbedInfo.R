@@ -1,8 +1,5 @@
-
-
 #' S4 class for necessary info to read a bed file into R
 #' 
-#' @import rJava
 #' @slot pl_info PlInfo object
 #' @slot jbed jobjRef object, of Bed class in java
 #' @slot nsnp numeric. Number of SNPs.
@@ -38,41 +35,20 @@
 #' 
 #' @param bedstem character. Path to bed file without extension.
 #' @return An RbedInfo object.
-#' @examples 
-#' \donotrun{
-#' debugonce(rbedInfo)
-#' rbed_info = rbedInfo(bedstem = "/users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/test")
-#' rbed_info@@nsnp
-#' rbed_info@@nindiv
-#' rbed_info@@bytes_snp
-#' theoBedSize(rbed_info)
-#' realBedSize(rbed_info)
-#' bedSizeCorrect(rbed_info)
-#' bed_full = readBed(rbed_info)
-#' dim(bed_full)
-#' class(bed_full)
-#' print(bed_full)
-#' bed1 = readBed(rbed_info, 1:4)
-#' print(bed1)
-#' bed1a = readBed(rbed_info, paste("snp", 1:4, sep=""))
-#' all(na.omit(bed1a == bed1))
-#' bed2 = readBed(rbed_info, 3:6)
-#' bed2a = readBed(rbed_info, paste("snp", 3:6, sep = ""))
-#' all(na.omit(bed2 == bed2a))
-#' }
+#' @importFrom collUtils rBed 
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-rbedInfo = function(bedstem, ff_setup = FALSE) {
+rbedInfo = function(bedstem, db_setup = FALSE) {
 	stopifnot(length(bedstem) == 1)
 	stopifnot(is.character(bedstem))
-	pl_info = plInfo(bedstem = bedstem, ff_setup = FALSE)
+	pl_info = plInfo(bedstem = bedstem, db_setup = FALSE)
 	bed_path = pl_info@plink_trio["bed"]
 	
 	rbed_info = .RbedInfo()
 	rbed_info@pl_info = pl_info
 	rbed_info@jbed = collUtils::rBed(bed_path)
-	if(ff_setup) {
+	if(db_setup) {
 		setupRbed(rbed_info)
 	} else {
 		rbed_info
@@ -83,7 +59,7 @@ rbedInfo = function(bedstem, ff_setup = FALSE) {
 #' @param rbed_info RbedInfo object
 #' @return logical.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 isSetupRbed = function(rbed_info) {
 	res = isSetup(rbed_info@pl_info) && 
@@ -98,10 +74,15 @@ isSetupRbed = function(rbed_info) {
 }
 
 #' Setup an RbedInfo object
+#' 
+#' The setup job includes the following tasks: 1. Set up the PlInfo object. 
+#' 2. Calculate number of bytes used by each SNP. 3. Calculate the Number of individuals. 
+#' 4. Calculate total number of SNPs. 5. Validate the RbedInfo object.
+#' 
 #' @param rbed_info RbedInfo object
 #' @return RbedInfo object
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 setupRbed = function(rbed_info) {
 	if(isSetupRbed(rbed_info)) {
@@ -133,7 +114,7 @@ setGeneric("bedSizeCorrect",
 #' @param rbed_info RbedInfo object
 #' @return logical.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("bedSizeCorrect",
@@ -154,7 +135,7 @@ setGeneric("realBedSize",
 #' @param rbed_info RbedInfo object
 #' @return numeric. Size of bed file.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("realBedSize",
@@ -178,7 +159,7 @@ setGeneric("theoBedSize",
 #' @param rbed_info RbedInfo object
 #' @return numeric. Theoretical size of bed file.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("theoBedSize",
@@ -195,15 +176,18 @@ setGeneric("readBed",
 			standardGeneric("readBed")
 		})
 
-#' Read the whole bed file into R
+#' Read genotypes from PLINK bed file into R
 #' 
 #' @name readBed
 #' 
 #' @param rbed_info RbedInfo object
-#' @param snp_vec numeric. Vector of SNP index, from 1 to total number of SNPs.
+#' @param snp_vec numeric. Vector of SNP index. Either row numbers in the bim file or a vector of SNP names.
+#' @param fid_iid logical. Whether the FID and IID columns should be included.
+#' @param snp_names_as_colnames logical. Whether SNP names should be used as colnames in the returned data frame
 #' @return data.frame Genotype data from bed file.
+#' @importFrom collUtils getJArray 
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
 setMethod("readBed",
@@ -248,7 +232,7 @@ setMethod("readBed",
 #' @param snp_names character. Vector of SNP names.
 #' @return integer. Vector of row numbers.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 snpRowId = function(pl_info, snp_names) {
 	stopifnot(isSetup(pl_info))
@@ -345,13 +329,6 @@ setMethod("readBed",
 			readBed(rbed_info, 1:nsnp, fid_iid, snp_names_as_colnames)
 		})
 
-getJArray <- function(mat_ref, na_vals = -9) {
-	res = .jevalArray(mat_ref, simplify = TRUE)
-	res[res %in% na_vals] = NA
-	res = as.data.frame(res)
-	res
-}
-
 #' Add a "shift" suffix to a stem
 #' 
 #' @param stem character.
@@ -365,7 +342,7 @@ getJArray <- function(mat_ref, na_vals = -9) {
 #' shiftedStem(c("/home/a", "/home/b"), 100) == c("/home/a_shift_0100", 
 #' 		"/home/b_shift_0100")
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 shiftedStem = function(stem, n_shift) {
 	sprintf("%s_shift_%04d", stem, n_shift)
@@ -405,9 +382,9 @@ shiftedStem = function(stem, n_shift) {
 #' 
 #' @return RbedInfo object, with the shifted bed file path in it. 
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-shiftBed = function(rbed_info, n_shift, ff_setup = FALSE, collapse_matrix = NULL) {
+shiftBed = function(rbed_info, n_shift, db_setup = FALSE, collapse_matrix = NULL) {
 	stopifnot(isS4Class(rbed_info, "RbedInfo"))
 	n_shift = as.integer(n_shift)
 	if(!is.null(collapse_matrix)) {
@@ -419,7 +396,7 @@ shiftBed = function(rbed_info, n_shift, ff_setup = FALSE, collapse_matrix = NULL
 	}
 	invisible(
 			rbedInfo(bedstem = shiftedStem(rbed_info@pl_info@plink_stem, n_shift), 
-					ff_setup = ff_setup)
+					db_setup = db_setup)
 	) 
 }
 
@@ -433,7 +410,7 @@ shiftBed = function(rbed_info, n_shift, ff_setup = FALSE, collapse_matrix = NULL
 #' 
 #' @param x character, PlInfo, or RbedInfo object.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 rmFilesByStem = function(x) {
 	if(is.character(x)) {
@@ -447,15 +424,15 @@ rmFilesByStem = function(x) {
 	}
 }
 
-#' Create gCDH task directories by tag
+#' Create GCDH task directories by tag
 #' 
 #' The task folder is a subfolder of the value of \code{collenv$.collapsabel_gcdh}. 
 #' It will be created if it does not yet exist.
 #' 
-#' @param gcdh_tag character. Tag for gCDH task.
+#' @param gcdh_tag character. Tag for GCDH task.
 #' @return character. Directory of the task.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 gcdhDir = function(gcdh_tag) {
 	stopifnot(is.character(gcdh_tag) && length(gcdh_tag) == 1)
@@ -466,46 +443,6 @@ gcdhDir = function(gcdh_tag) {
 
 
 
-
-
-# TODO: test readBed with extremely large bed files (RS123 50G)
-
-
-runGcdh = function(
-		bedstem, pheno, pheno_name,
-		covar_name = "", 
-		gcdh_tag,
-		n_shift, 
-		filtered_stem = NULL,
-		p_threshold = NULL,
-		dist_threshold = 500e3,
-		collapse_matrix = NULL,
-		rm_shifted_files = TRUE,
-		gwas_col_select = collenv$.linear_header_default,
-		force = TRUE
-) {
-	# set up for reading bed file
-	rbed_info = rbedInfo(bedstem = bedstem, ff_setup = FALSE)
-	pl_gwas = plGwas(
-			rbed_info, 
-			pheno = pheno,
-			pheno_name = pheno_name, 
-			covar_name = covar_name, 
-			gwas_tag = gcdh_tag)
-	# filter SNPs by an initial GWAS when demanded
-	if(!is.null(filtered_stem)) {
-		pl_gwas = assocFilter(pl_gwas, filtered_stem, p_threshold, TRUE, force = force)
-	} else {
-		pl_gwas = setupRbed(pl_gwas)
-	}
-	runGcdh1(pl_gwas = pl_gwas, 
-			gwas_col_select = gwas_col_select, 
-			gcdh_tag = gcdh_tag, 
-			n_shift = n_shift, 
-			collapse_matrix = collapse_matrix, 
-			rm_shifted_files = rm_shifted_files, 
-			dist_threshold = dist_threshold)
-}
 
 
 
@@ -524,6 +461,16 @@ secondSnpIndices1 = function(x) {
 }
 
 
+#' Generate a report from a GCDH run
+#' 
+#' For each p-value from a GCDH run, search for indices of the corresponding SNP pair. 
+#' Combine statistics from single-SNP approach with GCDH statistics.
+#' 
+#' @param run_res Result from \code{runGcdh}
+#' @return path to SQLite database
+#' 
+#' @author Kaiyin Zhong, Fan Liu
+#' @export
 gcdhReport = function(run_res) {
 	stopifnot(all(collenv$.linear_header_default %in% names(run_res)))
 	# minimal p and number of tests
@@ -531,7 +478,8 @@ gcdhReport = function(run_res) {
 				biganalytics::min(na.omit(i))
 			})
 	gcdh_ntests = biganalytics::apply(run_res$P, 1, function(i) {length(na.omit(i))})
-	maf = getQuery(sqliteFilePl(run_res$pl_gwas@pl_info), "select maf from frq order by rowid")
+	pl_gwas = setupRbed(run_res$pl_gwas)
+	maf = getQuery(sqliteFilePl(pl_gwas@pl_info), "select maf from frq order by rowid")
 	# chr1, bp1, snp1, maf1, nmiss1, beta1, stat1, p1
 	basic_info1 = setNames(cbind(run_res$chr_bp, maf), c("SNP1", "CHR1", "BP1", "MAF1"))
 	stats1 = data.frame(
@@ -565,7 +513,7 @@ gcdhReport = function(run_res) {
 					P = gcdh_p, 
 					NTEST = gcdh_ntests))
 	# write report to SQLite database
-	gcdh_report_sqlite_db = sqliteFileGcdh(run_res$pl_gwas@gwas_tag, "gcdh_report")
+	gcdh_report_sqlite_db = sqliteFileGcdh(pl_gwas@gwas_tag, "gcdh_report")
 	db = RSQLite::dbConnect(
 			RSQLite::SQLite(), 
 			gcdh_report_sqlite_db
@@ -583,66 +531,81 @@ gcdhReport = function(run_res) {
 
 
 
-assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, ff_setup = FALSE, force = TRUE) {
+#' Filter a PlGwas object by the results of a \code{plink --assoc} run
+#' 
+#' This is meant for reduction in computational burden. The \code{plink --assoc} does not 
+#' accept covariates makes some assumptions accordingly, and thus runs faster than \code{--linear} and 
+#' \code{--logistic}. SNPs that does not produce a p-value more significant than a user-set threshold will
+#' be filtered out. A new PLINK file is made and a corresponding new PlGwas object is returned. 
+#' 
+#' @param pl_gwas PlGwas object
+#' @param plink_out_stem character. Output plink file stem (without .bed extension). The default is to add a "_filtered_{RANDOM_ID}" suffix to the original.
+#' @param p_threshold numeric. P-value threshold.
+#' @param db_setup logical. Whether to setup the PlGwas object.
+#' @param force logical. Overwrite existing PLINK files.
+#' @return a new PlGwas object.
+#' 
+#' @author Kaiyin Zhong, Fan Liu
+#' @export
+assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, db_setup = FALSE, force = TRUE) {
 	stopifnot(is.numeric(p_threshold) && p_threshold > 0 && p_threshold < 1)
+	rand_id = randomString(6)
 	if(is.null(plink_out_stem)) 
-		plink_out_stem = sprintf("%s_filtered", pl_gwas@pl_info@plink_stem)
+		plink_out_stem = sprintf("%s_filtered_%s", pl_gwas@pl_info@plink_stem, rand_id)
 	target_bed = sprintf("%s.bed", plink_out_stem)
 	if(file.exists(target_bed) && !force) stopFormat("File already exists: ", target_bed)
-	setOptModel(pl_gwas, "assoc")
-	runGwas(pl_gwas)
-	assoc_out = readGwasOut(pl_gwas, c("SNP", "P"))
+	pl_gwas1 = chGwasTag(pl_gwas, paste0(pl_gwas@gwas_tag, "_", rand_id))
+	pl_gwas1 = setOptModel(pl_gwas1, "assoc")
+	runGwas(pl_gwas1)
+	assoc_out = readGwasOut(pl_gwas1, c("SNP", "P"))
 	assoc_out = assoc_out[which(assoc_out$P < p_threshold), ]
-	snp_list_file = file.path(gwasDir(pl_gwas), "assoc_snp_list.txt")
+	if(nrow(assoc_out) == 0) {
+		stop("No SNPs left after filtering. p_threshold too stringent?")
+	}
+	snp_list_file = file.path(gwasDir(pl_gwas1), "assoc_snp_list.txt")
 	write.table(assoc_out$SNP, quote = FALSE, col.names = FALSE, row.names = FALSE, file = snp_list_file)
-	plinkr(bfile = pl_gwas@pl_info@plink_stem, extract = snp_list_file, make_bed = "", out = plink_out_stem)
-	rbed_info1 = rbedInfo(plink_out_stem, ff_setup)
-	removeTag(pl_gwas@gwas_tag)
-	pl_gwas1 = plGwas(rbed_info1, 
+	plinkr(bfile = pl_gwas1@pl_info@plink_stem, extract = snp_list_file, make_bed = "", out = plink_out_stem)
+	rbed_info = rbedInfo(plink_out_stem, db_setup)
+	removeTag(pl_gwas1@gwas_tag)
+	pl_gwas2 = plGwas(rbed_info, 
 			pheno = pl_gwas@opts$pheno, 
 			pheno_name = pl_gwas@opts$pheno_name, 
-			covar_name = {
-				if("covar_name" %in% pl_gwas@opts)
-					pl_gwas@opts$covar_name
-				else 
-					""
-			}, 
+			covar_name = pl_gwas@opts$covar_name %||% "", 
 			gwas_tag = pl_gwas@gwas_tag)
-	pl_gwas1
+	pl_gwas2
 }
-
-
-# TODO: shift size from k+1 to n 
-# TODO: permutation analysis
-# TODO: power analysis
 
 
 #' Run GCDH analysis
 #' 
-#' @param gcdh_tag character. Tag for this GCDH task.
+#' @param pl_gwas PlGwas object
 #' @param n_shift integer. Maximum shift number.
-#' @param filtered_stem character. Plink output for a new bed file filted by p values from a initial GWAS scan. When set to NULL no filtering will be done. Default to NULL.
-#' @param p_threshold numeric. A number between 0 and 1. Threshold to be used for the filtering.
-#' @param dist_threshold integer. SNPs beyond this distance will be ignored.
+#' @param gwas_col_select character. Columns to read from a GWAS output file. Default to \code{collenv$.linear_header_default}
 #' @param collapse_matrix matrix. 4 by 4 matrix used for generating collapsed genotypes. 
 #' @param rm_shifted_files logical. Whether to remove shifted bed files after analysis is done.
-#' @return x
-#' @import bigmemory 
-#' @import biganalytics 
-#' @author kaiyin
+#' @param dist_threshold integer. SNPs beyond this distance will be ignored. Default to 500kb.
+#' @return A list with the following members: (1) the input PlGwas object. (2) an info data frame with CHR, BP and SNP columns. (3) One big.matrix object for each of the names in \code{gwas_col_select}
+#' @importFrom bigmemory big.matrix attach.big.matrix filebacked.big.matrix
+#' @importFrom biganalytics apply min
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-runGcdh = function(pl_gwas, 
+runGcdh = function(
+		pl_gwas, 
 		n_shift, 
-		gwas_col_select = collenv$.linear_header_default, 
+		gwas_col_select = NULL, 
 		collapse_matrix = NULL, 
 		rm_shifted_files = TRUE, 
 		dist_threshold = 500e3) {
+	if(is.null(gwas_col_select)) {
+		gwas_col_select = collenv$.linear_header_default
+	}
 	# a random suffix makes multiple R session conflicts impossible
 	gcdh_tag = sprintf("%s_%s", pl_gwas@gwas_tag, randomString(6))
 	pl_gwas = chGwasTag(pl_gwas, gcdh_tag)
 	# run the initial GWAS and store results in first column
 	runGwas(pl_gwas)
 	gwas_out = readGwasOut(pl_gwas, gwas_col_select)
+	pl_gwas = setupRbed(pl_gwas)
 	nsnps = nSnpPl(pl_gwas@pl_info)
 	for(col_name in gwas_col_select) {
 		assign(
@@ -652,9 +615,9 @@ runGcdh = function(pl_gwas,
 		do.call("[<-", list(x = get(col_name), j = 1, value = gwas_out[, col_name]))
 	}
 	# run GWAS on shifted bed files
-	for(i in 1:n_shift) {
-		rbed_info_shifted = shiftBed(pl_gwas, i, FALSE, collapse_matrix)
-		shifted_tag = paste(gcdh_tag, "_shift_", i, sep = "")
+	for(shift_i in 1:n_shift) {
+		rbed_info_shifted = shiftBed(pl_gwas, shift_i, FALSE, collapse_matrix)
+		shifted_tag = paste(gcdh_tag, "_shift_", shift_i, sep = "")
 		pl_gwas_shifted = plGwas(rbed_info_shifted, 
 				pheno = pl_gwas@opts$pheno, 
 				pheno_name = pl_gwas@opts$pheno_name, 
@@ -691,19 +654,19 @@ runGcdh = function(pl_gwas,
 	}
 	# mark SNPs that are not in the same chr as NA
 	chr_bp = getQuery(sqliteFilePl(pl_gwas@pl_info), "select snp, chr, bp from bim order by rowid")
-	for(i in 1:n_shift) {
-		dist_i = lagDistance(chr_bp[, "BP"] , i)
+	for(shift_i in 1:n_shift) {
+		dist_i = lagDistance(chr_bp[, "BP"] , shift_i)
 		idx = dist_i > dist_threshold
 		idx[is.na(idx)] = TRUE
 		idx = which(idx)
-		chr_diff_i = lagDistance(chr_bp[, "CHR"], i)
+		chr_diff_i = lagDistance(chr_bp[, "CHR"], shift_i)
 		idx1 = chr_diff_i != 0
 		idx1[is.na(idx1)] = TRUE
 		idx1 = which(idx1)
 		idx = unique(c(idx, idx1))
 		if(length(idx) > 0) {
 			for(col_name in gwas_col_select) {
-				do.call("[<-", list(get(col_name), i = idx, j = i + 1, value = NA))
+				do.call("[<-", list(get(col_name), i = idx, j = shift_i + 1, value = NA))
 			}
 		}
 	} 
@@ -729,4 +692,54 @@ runGcdh = function(pl_gwas,
 
 
 
-
+#' Run GCDH over a region 
+#' 
+#' A region around some SNP is extracted and GCDH analysis is conducted over that region.
+#' 
+#' @param pl_gwas PlGwas object
+#' @param n_shift integer. Maximum shift number.
+#' @param snp character. SNP name
+#' @param window numeric. All variants with physical position no more than half the specified kb distance (decimal permitted) from the named variant are loaded. 
+#' @param out character. Path to the regional bed file (without .bed extension).
+#' @param gwas_col_select character. See \code{runGcdh}
+#' @param collapse_matrix See \code{runGcdh}
+#' @param rm_shifted_files See \code{runGcdh} 
+#' @param dist_threshold  See \code{runGcdh}
+#' @return  See \code{runGcdh}
+#' 
+#' @author Kaiyin Zhong, Fan Liu
+#' @export
+gcdhRegion = function(pl_gwas, 
+		n_shift = NULL, 
+		snp, 
+		window = 500, 
+		out = NULL,
+		gwas_col_select = collenv$.linear_header_default, 
+		collapse_matrix = NULL, 
+		rm_shifted_files = TRUE, 
+		dist_threshold = 500e3
+) {
+	suffix = paste0("_", randomString(6), "_window_", window)
+	if(is.null(out)) {
+		out = paste0(pl_gwas@pl_info@plink_stem, suffix)
+	}
+	new_tag = paste0(pl_gwas@gwas_tag, suffix)
+	plinkr(bfile = pl_gwas@pl_info@plink_stem, 
+			keep = pl_gwas@opts$pheno, 
+			snp = snp, 
+			window = window, 
+			make_bed = "",
+			out = out)
+	rbed_info = rbedInfo(out, TRUE)
+	pl_gwas = plGwas(rbed_info, 
+			pheno = pl_gwas@opts$pheno, 
+			pheno_name = pl_gwas@opts$pheno_name, 
+			covar_name = pl_gwas@opts$covar_name %||% "", 
+			gwas_tag = new_tag
+	)
+	nsnps = nSnpPl(pl_gwas@pl_info)
+	if(n_shift >= nsnps || is.null(n_shift)) {
+		n_shift = nsnps - 1
+	}
+	runGcdh(pl_gwas, n_shift, gwas_col_select, collapse_matrix, rm_shifted_files, dist_threshold) 
+}

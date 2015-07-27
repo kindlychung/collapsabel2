@@ -3,7 +3,7 @@
 #' 
 #' @param dir character. Path of directory to be created.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 dir.create2 = function(dir) {
 	if(!file.exists(dir)) {
@@ -15,7 +15,7 @@ dir.create2 = function(dir) {
 
 #' Create file if it does not already exist
 #' @param filename character. Path of file to be created.
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 file.create2 = function(filename) {
 	dir.create2(dirname(filename))
@@ -29,7 +29,7 @@ file.create2 = function(filename) {
 #' Check whether a file is a SQLite3 database.
 #' 
 #' @param filename character. Path to file to be checked.
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 isSQLite3 = function(filename) {
 	if(!file.exists(filename)) {
@@ -60,19 +60,21 @@ isSQLite3 = function(filename) {
 #' @param reverse logical. Default to FALSE, i.e. calculate \code{vec[i+lag] - vec[i]}. When set to TRUE, calculate \code{vec[i] - vec[i+lag]}
 #' @return numeric.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 lagDistance = function(vec, lag = 1, reverse = FALSE) {
 	new_vec = c(vec[(1+lag):length(vec)], rep(NA, lag))
 	stopifnot(length(new_vec) == length(vec))
-	if(reverse) vec - new_vec
-	else        new_vec - vec
+	res = new_vec - vec
+	if(reverse) 
+		(-1 * res)
+	else
+		res
 }
 
 
 
 
-# TODO: doc test
 sqliteFileGcdh = function(tag, dbname) {
 	fp = file.path(tag2Dir(tag, "gcdh"), 
 			sprintf("%s.sqlite", dbname))
@@ -83,12 +85,8 @@ sqliteFileGcdh = function(tag, dbname) {
 #' Call system command with format string
 #' 
 #' @param ... passed to \code{sprintf}
-#' @examples 
-#' \donotrun{
-#' systemFormat("ls %s", R.home())
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 systemFormat = function(...) {
 	system(sprintf(...))
@@ -97,12 +95,8 @@ systemFormat = function(...) {
 #' Stop with format string
 #' 
 #' @param ... passed to \code{sprintf}
-#' @examples 
-#' \donotrun{
-#' stopFormat("You should put file here: %s", R.home())
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 stopFormat = function(...) {
 	stop(sprintf(...))
@@ -114,9 +108,82 @@ expand.grid.rev = function(...) {
 	ret[, rev(colnames(ret))]
 }
 
+#' Correlation coefficient of column-pairs of two data frames
+#' 
+#' @param dat1 first data.frame
+#' @param dat2 second data.frame
+#' @return A vector of correlation coefficients.
+#' 
+#' @author Kaiyin Zhong
+#' @export
 colCors = function(dat1, dat2) {
 	stopifnot(all(dim(dat1) == dim(dat2)))
 	sapply(1:ncol(dat1), function(i) {
 				cor(dat1[, i], dat2[, i])
 			})
 }
+
+#' Default value for expression. 
+#' 
+#' When an expression evals to NULL, take the default value instead. Copied from dplyr source.
+#' @usage x \%||\% y
+#' @param x expression to be evaled. 
+#' @param y default value.
+#' @name getOrElse-operator
+#' @author Hadley Wickham
+#' @export
+"%||%" <- function(x, y) if(is.null(x)) y else x
+
+
+#' Change extension names
+#' 
+#' @param filename character. File path 
+#' @param ext_name character. New extension name
+#' @importFrom tools file_path_sans_ext
+#' 
+#' @author Kaiyin Zhong
+#' @export
+chExt = function(filename, ext_name) {
+	base_name = tools::file_path_sans_ext(filename)
+	paste0(base_name, ".", ext_name)
+}
+
+# ctime of db must be later than mtime of plink files
+dbUpToDate = function(dbname) {
+	fam_file = chExt(dbname, "fam")
+	bim_file = chExt(dbname, "bim")
+	db_ctime = as.integer(file.info(dbname)$ctime)
+	fam_mtime = as.integer(file.info(fam_file)$mtime)
+	bim_mtime = as.integer(file.info(bim_file)$mtime)
+	(db_ctime > fam_mtime) && (db_ctime > bim_mtime)
+}
+
+
+rmPlinkFiles = function(plink_stem) {
+	unlink(
+			paste0(plink_stem, 
+					c(".bed", 
+							".bim", 
+							".fam", 
+							".frq", 
+							".nosex", 
+							".log", 
+							".assoc",
+							".qassoc",
+							".assoc.linear", 
+							".assoc.logistic", 
+							".sqlite" 
+					))
+	)
+}
+
+#' Clear up CollapsABEL workspace
+#' 
+#' The workspace folder is defined in \code{collenv$.collapsabel_dir}.
+#' 
+#' @author Kaiyin Zhong, Fan Liu
+#' @export
+collClear = function() {
+	unlink(Sys.glob(file.path(collenv$.collapsabel_dir, "*", "*")), recursive = TRUE)
+}
+

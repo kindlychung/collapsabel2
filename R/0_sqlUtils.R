@@ -2,8 +2,9 @@
 #' 
 #' @param db_name character. Path to database.
 #' @param query_string character. Query string.
+#' @importFrom RSQLite SQLite dbConnect dbDisconnect dbSendQuery dbGetQuery dbWriteTable
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 sendQuery = function(db_name, query_string) {
 	db = RSQLite::dbConnect(RSQLite::SQLite(), db_name)
@@ -19,7 +20,7 @@ sendQuery = function(db_name, query_string) {
 #' @param db_name character. Path to database.
 #' @param query_string character. Query string.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 getQuery = function(db_name, query_string) {
 	db = RSQLite::dbConnect(RSQLite::SQLite(), db_name)

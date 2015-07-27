@@ -1,8 +1,3 @@
-setGeneric("nonExistentFiles",
-		function(filenames, ...) {
-			standardGeneric("nonExistentFiles")
-		})
-
 #' Non-existent files from a vector of filenames
 #' 
 #' This function receives a vector of filenames as parameter, 
@@ -11,32 +6,22 @@ setGeneric("nonExistentFiles",
 #' @param filenames character A vector of filenames
 #' @return A character vector of file paths that do not exist.
 #' @examples 
-#' \donotrun{
 #' nonExistentFiles(R.home())
 #' nonExistentFiles(sapply(1:5, function(i) tempfile()))
 #' nonExistentFiles(sapply(1:5, function(i) tempdir()))
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
-setMethod("nonExistentFiles",
-		signature(filenames = "character"),
-		function(filenames) {
-			filenames[!file.exists(filenames)]
-		})
+nonExistentFiles = function(filenames) {
+	filenames[!file.exists(filenames)]
+}
 
 
 #' Stop when any file does not exist 
 #' 
 #' @param files character vector. File paths you want to check.
-#' @examples 
-#' \donotrun{
-#' checkFileExist(R.home())
-#' checkFileExist(sapply(1:5, function(i) tempfile()))
-#' checkFileExist(sapply(1:5, function(i) tempdir()))
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 checkFileExist = function(files) {
                 miss_files = nonExistentFiles(files)

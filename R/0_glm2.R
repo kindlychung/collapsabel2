@@ -3,13 +3,13 @@
 #' Substitute column names that are unsuitable for formulas
 #' and substitute back when returning results.
 #' 
-#' @param dat data.frame
+#' @param dat data.frame. Souce data to build GLM upon.
 #' @param y character. Column name of dependent variable.
 #' @param xs character. Column names of independent variable.
 #' @param ... passed to glm.
 #' @return data.frame of coefficients.
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 glm2 = function(dat, y, xs, ...) {
 	name_orig = colnames(dat)
@@ -57,7 +57,7 @@ glm2 = function(dat, y, xs, ...) {
 #' @param ... passed to glm.
 #' @return matrix of coefficients
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 glmIter = function(dat, y, xs, covars, ...) {
 	t(sapply(xs, function(x) {
@@ -79,9 +79,9 @@ glmIter = function(dat, y, xs, covars, ...) {
 #' changeByMap(c("a", "a", "b"), names_dat) == c("d", "d", "e")
 #' x = changeByMap(c(NA, "a", "b"), names_dat)
 #' is.na(x[1])
-#' @return vector
+#' @return The new vector (mapped from the old one).
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 changeByMap = function(old_vector, mapping_dat, reverse = FALSE) {
 	if(reverse) {

@@ -9,58 +9,42 @@ setGeneric("correctTypes",
 #' @param col_names character. Names of columns, the types of which you want to change.
 #' @param types character. Names of new types. Should be the same length as \code{col_names}
 #' @return data.frame. With specified classes.
-#' @import collUtils
 #' @examples 
-#' \donotrun{
 #' dat = randNormDat(3, 3)
 #' dat[, 2] = as.character(dat$V2)
 #' dat1 = correctTypes(dat, types = rep("numeric", 3))
 #' all(colClasses(dat1) == rep("numeric", 3))
 #' dat2 = correctTypes(dat, 2, "numeric")
 #' all(colClasses(dat2) == rep("numeric", 3))
-#' } 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @name correctTypes_methods
 #' @export
-setMethod("correctTypes",
-		signature(dat = "data.frame", col_names = "character", types = "character"),
-		function(dat, col_names, types) {
-			stopifnot(length(col_names) == length(types))
-			dat_colns = colnames(dat)
-			for(i in 1:length(col_names)) {
-				if(col_names[i] %in% dat_colns) {
-					dat[, col_names[i]] = suppressWarnings(
-							as(dat[, col_names[i]], types[i]))
-				}
-			}
-			dat
-		})
-
-#' @rdname correctTypes_methods
-#' @export 
-setMethod("correctTypes",
-		signature(dat = "data.frame", col_names = "numeric", types = "character"),
-		function(dat, col_names, types) {
-			col_names = colnames(dat)[col_names]
-			correctTypes(dat, col_names, types)
-		})
-
-#' @rdname correctTypes_methods
-#' @export 
-setMethod("correctTypes",
-		signature(dat = "data.frame", col_names = "missing", types = "character"),
-		function(dat, col_names, types) {
-			col_names = colnames(dat)
-			correctTypes(dat, col_names, types)
-		})
-
+correctTypes = function(dat, col_names = NULL, types) {
+	stopifnot(is.data.frame(dat) && is.character(types))
+	if(is.numeric(col_names)) {
+		col_names = colnames(dat)[col_names]
+	}
+	if(is.null(col_names)) {
+		col_names = colnames(dat)
+	}
+	stopifnot(length(col_names) == length(types))
+	dat_colns = colnames(dat)
+	for(i in 1:length(col_names)) {
+		if(col_names[i] %in% dat_colns) {
+			dat[, col_names[i]] = suppressWarnings(
+					as(dat[, col_names[i]], types[i]))
+		}
+	}
+	dat
+}
 
 #' Generate read_fun for ReadInfo class
 #' 
 #' @param header logical. Whether the input file has a header line.
 #' @return function.
+#' @importFrom collUtils readcols
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readFunFactory = function(header) {
 	function(object, cn_select = "..all") {
@@ -115,11 +99,6 @@ readFunFactory = function(header) {
 
 
 
-setGeneric("readInfo",
-		function(filename, cnames, ...) {
-			standardGeneric("readInfo")
-		})
-
 #' ReadInfo constructor
 #' 
 #' This function takes a file path as parameter, assuming the file is whitspace delimited, 
@@ -129,22 +108,16 @@ setGeneric("readInfo",
 #' 
 #' @param filename Path of the file to read
 #' @return ReadInfo object
-#' @examples 
-#' \donotrun{
-#' ri = readInfo("/Users/kaiyin/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.frq")
-#' getSlots("ReadInfo")
-#' ri@@cnames
-#' ri@@filename
-#' ri@@header
-#' frq = ri@@read_fun(ri, cn_select = "..all")
-#' head(frq)
-#' print(ri@@cnames)
-#' frq1 = ri@@read_fun(ri, ri@@cnames[1:4])
-#' head(frq1)
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
+setGeneric("readInfo",
+		function(filename, cnames, ...) {
+			standardGeneric("readInfo")
+		})
+
+#' @rdname readInfo 
+#' @export 
 setMethod("readInfo",
 		signature(filename = "character", cnames = "missing"),
 		function(filename) {
@@ -160,38 +133,6 @@ setMethod("readInfo",
 					read_fun = read_fun)
 		})
 
-#' Read a file literally (all columns as character)
-#' 
-#' @param filename Path of file to be read
-#' @param ... Passed to \code{read.table}
-#' @return data.frame
-#' @examples 
-#' \donotrun{
-#' df = data.frame(x = c("T", "%T", "10341"), 
-#' 		y = c("F", "f%t", "431"), 
-#' 		z = c("T", "TRUE", "FALSE"))
-#' tmpf = tempfile()
-#' write.table(df, file = tmpf, quote = FALSE, 
-#' 		row.names = FALSE, col.names = FALSE)
-#' system(sprintf("head %s", tmpf))
-#' df1 = readLiteral(file = tmpf)
-#' all(df1 == df)
-#' }
-#' 
-#' @author kaiyin
-#' @export
-readLiteral = function(filename, ...) {
-	filename = filePath(filename)@path
-	first_line = read.table(filename, nrows = 1)
-	read.table( 
-			filename,
-			stringsAsFactors = FALSE, 
-			colClasses = rep("character", 
-					length(first_line)), 
-			comment.char = "", 
-			header = FALSE,
-			...)
-}
 
 
 
@@ -217,6 +158,35 @@ setMethod("readInfo",
 					read_fun = read_fun)
 		})
 
+#' Read a file literally (all columns as character)
+#' 
+#' @param filename Path of file to be read
+#' @param ... Passed to \code{read.table}
+#' @return data.frame
+#' @examples 
+#' df = data.frame(x = c("T", "%T", "10341"), 
+#' 		y = c("F", "f%t", "431"), 
+#' 		z = c("T", "TRUE", "FALSE"))
+#' tmpf = tempfile()
+#' write.table(df, file = tmpf, quote = FALSE, 
+#' 		row.names = FALSE, col.names = FALSE)
+#' df1 = readLiteral(file = tmpf)
+#' all(df1 == df)
+#' 
+#' @author Kaiyin Zhong, Fan Liu
+#' @export
+readLiteral = function(filename, ...) {
+	filename = filePath(filename)@path
+	first_line = read.table(filename, nrows = 1)
+	read.table( 
+			filename,
+			stringsAsFactors = FALSE, 
+			colClasses = rep("character", 
+					length(first_line)), 
+			comment.char = "", 
+			header = FALSE,
+			...)
+}
 
 #' Correct types of bim data.frame
 #' 
@@ -225,15 +195,11 @@ setMethod("readInfo",
 #' @param bim_dat data.frame read from a .bim file
 #' @return data.frame
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 bimCorrectTypes = function(bim_dat)  {
 	correctTypes(bim_dat, c("CHR", "BP", "GDIST"), rep("integer", 3))
 }
-
-
-
-
 
 # generate xInfo functions, with colnames set. 
 # this is only useful for files without a header
@@ -249,6 +215,9 @@ infoFactory = function(cnames) {
 #' These functions \code{bimInfo, famInfo, assocLinearInfo} are generated by a 
 #' factory function. They are similar to readInfo, only with 
 #' pre-determined colnames (since they are really known).
+#' 
+#' @importFrom tools file_ext
+#' @importFrom R.utils capitalize
 #'  
 #' @name bim_fam_info
 NULL
@@ -278,19 +247,8 @@ readFactory = function(ext) {
 #' @param filename .bim file path
 #' @param cn_select a character vector for selected colnames
 #' @return a data.frame
-#' @examples 
-#' \donotrun{
-#' bim = readBim("/Users/kaiyin/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.bim", 
-#' 		cn_select = "..all")
-#' head(bim)
-#' summary(bim)
-#' bim_info = bimInfo("/Users/kaiyin/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.bim")
-#' bim_info@@cnames
-#' bim1 = bim_info@@read_fun(bim_info, c("CHR", "SNP", "BP"))
-#' head(bim1)
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readBim = readFactory("bim")
 
@@ -302,7 +260,7 @@ readBim = readFactory("bim")
 #' @param fam_dat data.frame read from a .fam file
 #' @return data.frame
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 famCorrectTypes = function(fam_dat)  {
 	fam_dat = correctTypes(fam_dat, c("SEX", "PHE"), c("integer", "numeric"))
@@ -316,18 +274,8 @@ famCorrectTypes = function(fam_dat)  {
 #' @param filename .fam file path
 #' @param cn_select a character vector for selected colnames
 #' @return a data.frame
-#' @examples 
-#' \donotrun{
-#' fam = readFam("/Users/kaiyin/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.fam", cn_select = "..all")
-#' head(fam)
-#' summary(fam)
-#' fam_info = famInfo("/Users/kaiyin/EclipseWorkspace/collapsabel2/tests/testthat/mmp13.fam")
-#' fam_info@@cnames
-#' fam1 = fam_info@@read_fun(fam_info, c("FID", "IID"))
-#' head(fam1)
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readFam = readFactory("fam")
 
@@ -345,34 +293,7 @@ readLogistic = function(filename, cn_select = collenv$.linear_header)  {
 readLinear = readLogistic
 
 
-#' @examples 
-#' \donotrun{
-#' dat = readAssoc("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc")
-#' head(dat)
-#' all(c(dat[1, 1] == 11,
-#' 				dat[2, 2] == "rs7127954",
-#' 				dat[3, 3] == 101943700,
-#' 				dat[4, 4] == "A",
-#' 				dat[5, 5] == 0.4369))
-#' all(colClasses(dat) == c("integer", "character", "integer", 
-#' 		"character", "numeric", "numeric", 
-#' 		"character", "numeric", "numeric", "numeric"))
-#' dat = readQassoc("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc")
-#' head(dat)
-#' all(c(dat[1, 1] == 11,
-#' 				dat[2, 2] == "rs7127954",
-#' 				dat[3, 3] == 101943700,
-#' 				dat[4, 4] == 831,
-#' 				dat[5, 5] == 0.12400, 
-#' 				dat[6, 6] == 0.4211))
-#' all(
-#' 		colClasses(qassoc) == c("integer", "character",  
-#' 		"integer", "integer", 
-#' 		"numeric", "numeric", 
-#' 		"numeric", "numeric", "numeric"))
-#' linear = readLinear("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc.linear")
-#' head(linear)
-#' }
+#' @rdname readAssoc
 #' @export 
 readAssoc = function(filename, cn_select = collenv$.assoc_header) {
 	info = readInfo(filename)
@@ -401,27 +322,8 @@ readQassoc = function(filename, cn_select = collenv$.qassoc_header) {
 #' @param filename Filenames of plink output files, see \code{collenv$.plink_out_ext}
 #' @param ... Dispatched to one of \code{readAssoc, readQassoc, readLinear, readLogistic}
 #' @return data.frame
-#' @examples 
-#' \donotrun{
-#' dat1 = readPlinkOut("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc")
-#' dat2 = readAssoc("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc")
-#' all(na.omit(dat1 == dat2))
-#' dat1 = readPlinkOut("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc", 
-#' 		c("CHR", "SNP", "P", "OR"))
-#' dat2 = readAssoc("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.assoc", 
-#' 		c("CHR", "SNP", "P", "OR"))
-#' all(na.omit(dat1 == dat2))
-#' dat1 = readPlinkOut("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc")
-#' dat2 = readQassoc("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc")
-#' all(na.omit(dat1 == dat2))
-#' dat1 = readPlinkOut("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc", 
-#' 		c("CHR", "SNP", "P", "R2"))
-#' dat2 = readQassoc("/Users/kaiyin/EclipseWorkspace/CollapsABEL/tests/testthat/assoc/mmp13.qassoc", 
-#' 		c("CHR", "SNP", "P", "R2"))
-#' all(na.omit(dat1 == dat2))
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 readPlinkOut = function(filename, ...) {
 	ft = tools::file_ext(filename)
@@ -445,7 +347,7 @@ readPlinkOut = function(filename, ...) {
 #' 				c("integer", "numeric", 
 #' 						"character", "logical"))
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 colClasses = function(dat) {
 	sapply(1:ncol(dat), function(i) class(dat[, i]))
@@ -456,14 +358,12 @@ colClasses = function(dat) {
 #' @param dat data.frame 
 #' @return character vector
 #' @examples 
-#' \donotrun{
 #' dat = randNormDat(4, 2)
 #' x = capture.output(reprClasses(dat), file = NULL)
 #' x = eval(parse(text = x))
 #' all(x == colClasses(dat))
-#' }
 #' 
-#' @author kaiyin
+#' @author Kaiyin Zhong, Fan Liu
 #' @export
 reprClasses = function(dat) {
 	res = strVectorRepr(colClasses(dat))
@@ -471,8 +371,13 @@ reprClasses = function(dat) {
 }
 
 
-# generate a m by n data.frame from normal distribution
-# randNormDat(3, 4)
+#' Generate a m by n data.frame from normal distribution
+#' 
+#' @param m 
+#' @param n 
+#' 
+#' @author Kaiyin Zhong
+#' @export
 randNormDat = function(m, n) {
 	as.data.frame(matrix(rnorm(m * n), m, n))
 }
