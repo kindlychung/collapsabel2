@@ -45,15 +45,26 @@ permutePhe = function(phe_file, out_file, force = FALSE, valid = TRUE) {
 
 #' Run simulations to control type-I error
 #' 
-#' @param pl_gwas PlGwas object
+#' Simulate a new phenotype N times and run GCDH with each. 
+#' The \code{phe_fun} function is used to generate new phenotype file. 
+#' When this function is not given, the phenotype file from the PlGwasC object will be
+#' permuted and used as the new phenotype file (permutation analysis). Thus when no \code{phe_fun} 
+#' is supplied, this function can be used to survey p-values under the null distribution. 
+#' A threshold for Genome-wide significance can be calculated from these p-values by 5% (or
+#' any other alpha-level) quantile.
+#' 
+#' @param pl_gwas PlGwasC object
 #' @param n_shift integer. \code{n_shift} for each GCDH run.
 #' @param n_simu integer. Number of simulations to run.
 #' @param phe_fun function. Used to generate new phenotype file.
 #' @param dist_threshold See runGcdh.
-#' @param p_threshold numeric or NULL. When it's not NULL, the PlGwas object is filtered by \code{assocFilter} first.
+#' @param p_threshold numeric or NULL. When it's not NULL, the PlGwasC object is filtered by \code{assocFilter} first.
 #' @param collapse_matrix See runGcdh.
 #' @param rm_shifted_files  See runGcdh.
-#' @return list 
+#' @return A list with the following members: (1) tag of this simulation, can be used to remove related files. (2) 
+#' a list of SNP pairs. If "snp_pair" is a member of the result from \code{phe_fun}, then this list will be non-empty, 
+#' otherwise it will be empty. (3) a list of reports from all the GCDH analysis. (4) global minimal p-values of the single-SNP
+#' approach. (4) global minimal p-values of GCDH.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -158,7 +169,29 @@ dummyTypeI <- function(rbed_info,
 
 #' GCDH power analysis
 #' 
-#' @param rbed_info RbedInfo object
+#' This function makes use of \code{runTypeI}. 
+#' Random phenotypes are used to survey p-values under the null hypothesis (SNPs are not associated phenotype), 
+#' and genome-wide significance thresholds for single-SNP approach and GCDH are calculated by a user given 
+#' alpha-level.
+#' A custom \code{phe_fun} is supplied 
+#' for simulating a phenotype associated with a certain pair of SNPs. 
+#' Total number of such simulations is set by the n_simu parameter. In each simulation 4 p-values are generated: 
+#' 
+#' P_single: p-values from single-SNP approach.
+#' 
+#' P_GCDH:  p-values from GCDH.
+#' 
+#' P_(single,no causal): p-values from single-SNP approach when causal SNPs are untyped.
+#' 
+#' P_(GCDH,no causal): p-values from GCDH when causal SNPs are untyped.
+#' 
+#' When all simulations are finished, 
+#' 4 vectors of p-values are obtained: P_single_vec, P_GCDH_vec, P_(single,no causal)_vec, P_(GCDH,no causal)_vec.
+#' The power for each of the category (single-SNP, single-SNP without causal genotypes, GCDH, GCDH without causal genotypes)
+#' are proportions of these vectors that are more significant than the genome-wide significance thresholds 
+#' we have obtained.
+#' 
+#' @param rbed_info RbedInfoC object
 #' @param n_shift integer. \code{n_shift} for each GCDH run.
 #' @param n_simu integer. Number of simulations to run.
 #' @param maf_min numeric. Lower limit of MAF interval. 

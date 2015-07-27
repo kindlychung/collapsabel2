@@ -75,10 +75,12 @@ glmIter = function(dat, y, xs, covars, ...) {
 #' @param mapping_dat data.frame, first column must be the same type as the \code{old_vector}
 #' @param reverse logical. Reverse domain and range if set to TRUE
 #' @examples 
+#' \dontrun{
 #' names_dat = data.frame(c("a", "b", "c"), c("d", "e", "f"), stringsAsFactors=FALSE)
 #' changeByMap(c("a", "a", "b"), names_dat) == c("d", "d", "e")
 #' x = changeByMap(c(NA, "a", "b"), names_dat)
 #' is.na(x[1])
+#' }
 #' @return The new vector (mapped from the old one).
 #' 
 #' @author Kaiyin Zhong, Fan Liu

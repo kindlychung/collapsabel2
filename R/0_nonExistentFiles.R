@@ -6,9 +6,11 @@
 #' @param filenames character A vector of filenames
 #' @return A character vector of file paths that do not exist.
 #' @examples 
+#' \dontrun{
 #' nonExistentFiles(R.home())
 #' nonExistentFiles(sapply(1:5, function(i) tempfile()))
 #' nonExistentFiles(sapply(1:5, function(i) tempdir()))
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -24,8 +26,8 @@ nonExistentFiles = function(filenames) {
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 checkFileExist = function(files) {
-                miss_files = nonExistentFiles(files)
-				ifLen(miss_files, {
-					stop(paste("Non-existent files:", paste(miss_files, collapse=", ")))
-				})
+	miss_files = nonExistentFiles(files)
+	if(length(miss_files) > 0) {
+		stop(paste("Non-existent files:", paste(miss_files, collapse=", ")))
+	}
 }

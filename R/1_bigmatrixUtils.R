@@ -66,8 +66,8 @@ readDesc = function(desc_filename) {
 #' 
 #' Binary format is used exclusively. 
 #' 
-#' @param desc_obj 
-#' @param desc_filename 
+#' @param desc_obj big.matrix description object
+#' @param desc_filename character. Output file description file path.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -112,6 +112,14 @@ type2Bytes = function(type = "double") {
 #' 
 #' @param x vector, matrix, or data.frmae
 #' @param dimnames logical. FALSE by default
+#' @param type See \code{bigmemory::as.big.matrix}
+#' @param separated  See \code{bigmemory::as.big.matrix}
+#' @param backingfile   See \code{bigmemory::as.big.matrix}
+#' @param backingpath   See \code{bigmemory::as.big.matrix}
+#' @param descriptorfile   See \code{bigmemory::as.big.matrix}
+#' @param binarydescriptor   See \code{bigmemory::as.big.matrix}
+#' @param shared   See \code{bigmemory::as.big.matrix}
+#' 
 #' @return big.matrix object
 #' 
 #' @author Kaiyin Zhong, Fan Liu
@@ -125,6 +133,7 @@ setGeneric('asBigMatrix',
 
 
 #' @rdname asBigMatrix
+#' @export 
 setMethod('asBigMatrix', signature(x='matrix', dimnames = "logical"),
 		function(x, type, separated, backingfile, backingpath, descriptorfile,
 				binarydescriptor, shared, dimnames)

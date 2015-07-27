@@ -25,9 +25,9 @@
 #' (4) easy interface with graphical utilities
 
 #' @docType package
+#' @name CollapsABEL
 #' @aliases collapsabel collapsabel-package CollapsABEL-package
 #' @param phe_file character. Phenotype file.
 #' @return FALSE when the file is invalid, or a data.frame when it is. 
-#' 
 #' @author Kaiyin Zhong, Fan Liu
-#' @export
+NULL

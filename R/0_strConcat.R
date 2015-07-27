@@ -7,8 +7,10 @@
 #' @param sep a length-1 string used as separator, default to ""
 #' @return a string
 #' @examples
+#' \dontrun{
 #' strConcat(letters)
 #' strConcat(letters, " ")
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
@@ -25,11 +27,13 @@ strConcat = function(ss, sep = "") {
 #' @param print_out logical. Whether to print out the string representation.
 #' @return character.
 #' @examples 
+#' \dontrun{
 #' strVectorRepr(letters[1:3]) == 'c("a", "b", "c")'
 #' strVectorRepr(
 #'   as.character(1:3)) == 'c("1", "2", "3")'
 #' all(eval(parse(text = strVectorRepr(as.character(1:3)))) == 
 #'   c("1", "2", "3"))
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @name strVectorRepr_methods

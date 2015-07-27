@@ -9,9 +9,11 @@
 .FilePath = setClass("FilePath", representation(path = "character"), 
 		validity = function(object) {
 			missing_files = nonExistentFiles(object@path)
-			ifLen(missing_files, {
-						paste("Missing file", missing_files)
-					}, TRUE) 
+			if(length(missing_files) > 0) {
+				paste("Missing file", missing_files)
+			} else {
+				TRUE
+			}
 		})
 
 #' Constructor for FilePath class 
@@ -32,13 +34,15 @@ filePath = function(s) {
 #' @param fp FilePath object
 #' @return character vector of directories 
 #' @examples 
+#' \dontrun{
 #' fp = filePath(R.home())
 #' dirName(fp)
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 setGeneric("dirName",
-		function(fp, ...) {
+		function(fp) {
 			standardGeneric("dirName")
 		})
 
@@ -55,17 +59,19 @@ setMethod("dirName",
 #' 
 #' @name baseName
 #' 
-#' @param fp 
+#' @param fp character, file paths.
 #' @return character vector of basenames
 #' @examples
+#' \dontrun{
 #' fp = filePath(R.home())
 #' baseName(fp)
+#' }
 #' 
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 setGeneric("baseName",
-		function(fp, ...) {
+		function(fp) {
 			standardGeneric("baseName")
 		})
 

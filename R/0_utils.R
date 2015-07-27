@@ -187,3 +187,24 @@ collClear = function() {
 	unlink(Sys.glob(file.path(collenv$.collapsabel_dir, "*", "*")), recursive = TRUE)
 }
 
+
+#' Print quoted expression then its value
+#' 
+#' @param expr expression to be evaluated.
+#' @export 
+eprint = function(expr) {
+	message(substitute(expr))
+	print(expr)
+}
+
+#' Generate a m by n data.frame from normal distribution
+#' 
+#' @param m integer. Number of rows.
+#' @param n integer. Number of columns.
+#' 
+#' @author Kaiyin Zhong
+#' @export
+randNormDat = function(m, n) {
+	as.data.frame(matrix(rnorm(m * n), m, n))
+}
+

@@ -19,10 +19,9 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 #' @slot plink_trio character of length 3. Paths to .bed, .bim and .fam files (in that order).
 #' @slot plink_trio_base character. Basenames of \code{plink_trio}.
 #' @slot plink_frq character. Path to .frq file.
-#' @slot ff_dir character. Directory for storing ff backing files.
 #' 
 #' @export 
-.PlInfo = setClass("PlInfo", representation(
+.PlInfoC = setClass("PlInfoC", representation(
 				main_dir = "character", 
 				plink_stem = "character",
 				plink_trio = "character", 
@@ -70,27 +69,26 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 		})
 
 
-#' Constructor for PlInfo class
+#' Constructor for PlInfoC class
 #' 
-#' Populates an PlInfo object from a given plink bed filename stem (i.e. exclude extension name)
+#' Populates an PlInfoC object from a given plink bed filename stem (i.e. exclude extension name)
 #' 
-#' @param pl_info a PlInfo object, possibly empty.
+#' @param pl_info a PlInfoC object, possibly empty.
 #' @param bedstem path of bed file excluding extension name
-#' @return a PlInfo object
+#' @param db_setup logical. Whether to setup SQLite database for .bim, .fam and .frq files.
+#' @return a PlInfoC object
 #' @importFrom methods validObject
 #' @author Kaiyin Zhong, Fan Liu
-#' @rdname plInfo-methods
-#' @docType methods
 #' @export 
 setGeneric("plInfo",
-		function(pl_info, bedstem, db_setup, ...) {
+		function(pl_info, bedstem, db_setup) {
 			standardGeneric("plInfo")
 		})
 
-#' @rdname plInfo-methods
-#' @aliases plInfo,character,ANY-method
+#' @rdname plInfo
+#' @export 
 setMethod("plInfo",
-		signature(pl_info = "PlInfo", bedstem = "character", db_setup = "logical"),
+		signature(pl_info = "PlInfoC", bedstem = "character", db_setup = "logical"),
 		function(pl_info, bedstem, db_setup) { 
 			# plink trio
 			ext_trio = c("bed", "bim", "fam")
@@ -108,7 +106,7 @@ setMethod("plInfo",
 			# frq file
 			plink_frq = paste(bedstem, ".frq", sep="")
 			
-			# return a PlInfo obj
+			# return a PlInfoC obj
 			pl_info@main_dir = main_dir
 			pl_info@plink_stem = plink_stem
 			pl_info@plink_trio = plink_trio
@@ -121,66 +119,66 @@ setMethod("plInfo",
 			pl_info
 		})
 
-#' @rdname plInfo-methods
-#' @aliases plInfo,character,ANY-method
+#' @rdname plInfo
+#' @export 
 setMethod("plInfo",
-		signature(pl_info = "PlInfo", bedstem = "character", db_setup = "missing"),
+		signature(pl_info = "PlInfoC", bedstem = "character", db_setup = "missing"),
 		function(pl_info, bedstem, db_setup) { 
 			plInfo(pl_info, bedstem, FALSE)
 		})
 
-#' @rdname plInfo-methods
-#' @aliases plInfo,character,ANY-method
+#' @rdname plInfo
+#' @export 
 setMethod("plInfo",
 		signature(pl_info = "missing", bedstem = "character", db_setup = "logical"),
 		function(pl_info, bedstem, db_setup) {
-			plInfo(.PlInfo(), bedstem, db_setup)
+			plInfo(.PlInfoC(), bedstem, db_setup)
 		})
 
-#' @rdname plInfo-methods
-#' @aliases plInfo,character,ANY-method
+#' @rdname plInfo
+#' @export 
 setMethod("plInfo",
 		signature(pl_info = "missing", bedstem = "character", db_setup = "missing"),
 		function(pl_info, bedstem, db_setup) {
-			plInfo(.PlInfo(), bedstem, FALSE)
+			plInfo(.PlInfoC(), bedstem, FALSE)
 		})
 
-#' SQLite file of a PlInfo object
+#' SQLite file of a PlInfoC object
 #' 
-#' @param pl_info PlInfo object
+#' @param x PlInfoC or PlGwasC object
 #' @return character. Path to SQLite database file.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 sqliteFilePl = function(x) {
-	if(isS4Class(x, "PlInfo")) {
+	if(isS4Class(x, "PlInfoC")) {
 		filename = sprintf("%s.sqlite", x@plink_stem)
-	} else if(isS4Class(x, "PlGwas")) {
+	} else if(isS4Class(x, "PlGwasC")) {
 		filename = sprintf("%s.sqlite", x@pl_info@plink_stem)
 	}
 }
 
 #' Check if a directory containing .bed .fam and .bim files is properly setup
 #'  
-#' @param pl_info PlInfo object
+#' @param pl_info PlInfoC object
 #' @return TRUE or FALSE
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 isSetup = function(pl_info) {
-	stopifnot(isS4Class(pl_info, "PlInfo"))
+	stopifnot(isS4Class(pl_info, "PlInfoC"))
 	sql_file = sqliteFilePl(pl_info)
 	isSQLite3(sql_file) && dbUpToDate(sql_file)
 }
 
 #' Setup up a directory containing plink files 
 #' 
-#' @param pl_info 
+#' @param pl_info PlInfoC object
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 setup = function(pl_info) {
-	stopifnot(isS4Class(pl_info, "PlInfo"))
+	stopifnot(isS4Class(pl_info, "PlInfoC"))
 	if(isSetup(pl_info)) {
 		TRUE
 	} else {
@@ -213,44 +211,44 @@ setup = function(pl_info) {
 
 #' Get number of individuals
 #' 
-#' @param pl_info PlInfo object
+#' @param pl_info PlInfoC object
 #' @export 
 nIndivPl = function(pl_info) {
-	stopifnot(isS4Class(pl_info, "PlInfo"))
+	stopifnot(isS4Class(pl_info, "PlInfoC"))
 	getQuery(sqliteFilePl(pl_info), "select count(iid) from fam")[1, 1]
 }
 
 #' Get number of SNPs.
 #' 
-#' @param pl_info PlInfo object
+#' @param pl_info PlInfoC object
 #' @export 
 nSnpPl = function(pl_info) {
-	stopifnot(isS4Class(pl_info, "PlInfo"))
+	stopifnot(isS4Class(pl_info, "PlInfoC"))
 	getQuery(sqliteFilePl(pl_info), "select count(snp) from bim")[1, 1]
 }
 
 #' Get number of bytes used by each SNP.
 #' 
-#' @param pl_info PlInfo object
+#' @param pl_info PlInfoC object
 #' @export 
 bytesSnp = function(pl_info) {
-	stopifnot(isS4Class(pl_info, "PlInfo"))
+	stopifnot(isS4Class(pl_info, "PlInfoC"))
 	as.numeric(ceiling(nIndivPl(pl_info) / 4))
 }
 
 #' Get apparent number of individuals
 #' 
-#' @param pl_info PlInfo object
+#' @param pl_info PlInfoC object
 #' @export 
 nIndivApprPl = function(pl_info) {
-	stopifnot(isS4Class(pl_info, "PlInfo"))
+	stopifnot(isS4Class(pl_info, "PlInfoC"))
 	as.numeric(bytesSnp(pl_info) * 4)
 }
 
 
 #' FID and IID columns from fam file
 #' 
-#' @param rbed_info RbedInfo object
+#' @param pl_info PlInfoC object
 #' @return data.frame of two columns "FID" and "IID"
 #' 
 #' @author Kaiyin Zhong, Fan Liu

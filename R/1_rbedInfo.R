@@ -1,15 +1,15 @@
 #' S4 class for necessary info to read a bed file into R
 #' 
-#' @slot pl_info PlInfo object
+#' @slot pl_info PlInfoC object
 #' @slot jbed jobjRef object, of Bed class in java
 #' @slot nsnp numeric. Number of SNPs.
 #' @slot nindiv numeric. Number of individuals.
 #' @slot nindiv_appr numeric. Apparent number of individuals.
 #' @slot bytes_snp numeric. Number of bytes used for each SNP.
 #' @export 
-.RbedInfo = setClass("RbedInfo", 
+.RbedInfoC = setClass("RbedInfoC", 
 		representation(
-				pl_info = "PlInfo", 
+				pl_info = "PlInfoC", 
 				jbed = "jobjRef", 
 				nsnp = "numeric", 
 				nindiv = "numeric", 
@@ -17,7 +17,7 @@
 				bytes_snp = "numeric"
 		), 
 		prototype(
-				pl_info = .PlInfo(), 
+				pl_info = .PlInfoC(), 
 				jbed = .jnew("java/lang/Integer", 0L), 
 				nsnp = 0, 
 				nindiv = 0, 
@@ -31,10 +31,11 @@
 			TRUE
 		})
 
-#' Constructor of RbedInfo class
+#' Constructor of RbedInfoC class
 #' 
 #' @param bedstem character. Path to bed file without extension.
-#' @return An RbedInfo object.
+#' @param db_setup logical. Whether to setup SQLite database for .bim, .fam and .frq files.
+#' @return An RbedInfoC object.
 #' @importFrom collUtils rBed 
 #' 
 #' @author Kaiyin Zhong, Fan Liu
@@ -45,7 +46,7 @@ rbedInfo = function(bedstem, db_setup = FALSE) {
 	pl_info = plInfo(bedstem = bedstem, db_setup = FALSE)
 	bed_path = pl_info@plink_trio["bed"]
 	
-	rbed_info = .RbedInfo()
+	rbed_info = .RbedInfoC()
 	rbed_info@pl_info = pl_info
 	rbed_info@jbed = collUtils::rBed(bed_path)
 	if(db_setup) {
@@ -55,8 +56,8 @@ rbedInfo = function(bedstem, db_setup = FALSE) {
 	}
 }
 
-#' Check if an RbedInfo object is properly set up
-#' @param rbed_info RbedInfo object
+#' Check if an RbedInfoC object is properly set up
+#' @param rbed_info RbedInfoC object
 #' @return logical.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
@@ -73,14 +74,14 @@ isSetupRbed = function(rbed_info) {
 	res
 }
 
-#' Setup an RbedInfo object
+#' Setup an RbedInfoC object
 #' 
-#' The setup job includes the following tasks: 1. Set up the PlInfo object. 
+#' The setup job includes the following tasks: 1. Set up the PlInfoC object. 
 #' 2. Calculate number of bytes used by each SNP. 3. Calculate the Number of individuals. 
-#' 4. Calculate total number of SNPs. 5. Validate the RbedInfo object.
+#' 4. Calculate total number of SNPs. 5. Validate the RbedInfoC object.
 #' 
-#' @param rbed_info RbedInfo object
-#' @return RbedInfo object
+#' @param rbed_info RbedInfoC object
+#' @return RbedInfoC object
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -100,55 +101,38 @@ setupRbed = function(rbed_info) {
 }
 
 
-setGeneric("bedSizeCorrect",
-		function(rbed_info, ...) {
-			standardGeneric("bedSizeCorrect")
-		})
-
 #' Check whether bed file is of correct size
 #' 
 #' It is correct if its real size is the equal to its theoretical size.
 #' 
 #' @name bedSizeCorrect
 #' 
-#' @param rbed_info RbedInfo object
+#' @param rbed_info RbedInfoC object
 #' @return logical.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
-#' @docType methods
 #' @export
-setMethod("bedSizeCorrect",
-		signature(rbed_info = "RbedInfo"),
-		function(rbed_info) {
-			realBedSize(rbed_info) == theoBedSize(rbed_info)
-		})
+bedSizeCorrect = function(rbed_info) {
+	stopifnot(isS4Class(rbed_info, "RbedInfoC"))
+	realBedSize(rbed_info) == theoBedSize(rbed_info)
+}
 
-setGeneric("realBedSize",
-		function(rbed_info, ...) {
-			standardGeneric("realBedSize")
-		})
 
 #' File size of bed file 
 #' 
 #' @name realBedSize
 #' 
-#' @param rbed_info RbedInfo object
+#' @param rbed_info RbedInfoC object
 #' @return numeric. Size of bed file.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
-#' @docType methods
 #' @export
-setMethod("realBedSize",
-		signature(rbed_info = "RbedInfo"),
-		function(rbed_info) {
-			as.numeric(file.info(rbed_info@pl_info@plink_trio["bed"])$size)
-		})
+realBedSize = function(rbed_info) {
+	stopifnot(isS4Class(rbed_info, "RbedInfoC"))
+	as.numeric(file.info(rbed_info@pl_info@plink_trio["bed"])$size)
+}
 
 
-setGeneric("theoBedSize",
-		function(rbed_info, ...) {
-			standardGeneric("theoBedSize")
-		})
 
 #' Theoretical size of bed file
 #' 
@@ -156,31 +140,23 @@ setGeneric("theoBedSize",
 #' 
 #' @name theoBedSize
 #' 
-#' @param rbed_info RbedInfo object
+#' @param rbed_info RbedInfoC object
 #' @return numeric. Theoretical size of bed file.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
-#' @docType methods
 #' @export
-setMethod("theoBedSize",
-		signature(rbed_info = "RbedInfo"),
-		function(rbed_info) {
-			(as.numeric(rbed_info@nindiv_appr) * 
-						as.numeric(rbed_info@nsnp) / 4) + 3
-		})
+theoBedSize = function(rbed_info) {
+	stopifnot(isS4Class(rbed_info, "RbedInfoC"))
+	(as.numeric(rbed_info@nindiv_appr) * 
+				as.numeric(rbed_info@nsnp) / 4) + 3
+}
 
-
-setGeneric("readBed",
-		function(rbed_info, snp_vec, 
-				fid_iid = TRUE, snp_names_as_colnames = TRUE, ...) {
-			standardGeneric("readBed")
-		})
 
 #' Read genotypes from PLINK bed file into R
 #' 
 #' @name readBed
 #' 
-#' @param rbed_info RbedInfo object
+#' @param rbed_info RbedInfoC object
 #' @param snp_vec numeric. Vector of SNP index. Either row numbers in the bim file or a vector of SNP names.
 #' @param fid_iid logical. Whether the FID and IID columns should be included.
 #' @param snp_names_as_colnames logical. Whether SNP names should be used as colnames in the returned data frame
@@ -190,8 +166,16 @@ setGeneric("readBed",
 #' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
 #' @export
+setGeneric("readBed",
+		function(rbed_info, snp_vec, 
+				fid_iid = TRUE, snp_names_as_colnames = TRUE) {
+			standardGeneric("readBed")
+		})
+
+#' @rdname readBed
+#' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
+		signature(rbed_info = "RbedInfoC", snp_vec = "ANY",
 				fid_iid = "logical", snp_names_as_colnames = "logical"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -226,20 +210,6 @@ setMethod("readBed",
 			res
 		})
 
-#' Get row number of SNPs from their names
-#' 
-#' @param pl_info PlInfo object.
-#' @param snp_names character. Vector of SNP names.
-#' @return integer. Vector of row numbers.
-#' 
-#' @author Kaiyin Zhong, Fan Liu
-#' @export
-snpRowId = function(pl_info, snp_names) {
-	stopifnot(isSetup(pl_info))
-	getQuery(sqliteFilePl(pl_info), 
-			sprintf("select rowid from bim where snp in %s order by rowid", strVectorSQLRepr(snp_names)))[, 1]
-}
-
 
 
 
@@ -247,7 +217,7 @@ snpRowId = function(pl_info, snp_names) {
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+		signature(rbed_info = "RbedInfoC", snp_vec = "missing",
 				fid_iid = "missing", snp_names_as_colnames = "missing"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -259,7 +229,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
+		signature(rbed_info = "RbedInfoC", snp_vec = "ANY",
 				fid_iid = "missing", snp_names_as_colnames = "missing"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -270,7 +240,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+		signature(rbed_info = "RbedInfoC", snp_vec = "missing",
 				fid_iid = "logical", snp_names_as_colnames = "missing"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -285,7 +255,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
+		signature(rbed_info = "RbedInfoC", snp_vec = "ANY",
 				fid_iid = "logical", snp_names_as_colnames = "missing"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -296,7 +266,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+		signature(rbed_info = "RbedInfoC", snp_vec = "missing",
 				fid_iid = "missing", snp_names_as_colnames = "logical"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -309,7 +279,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "ANY",
+		signature(rbed_info = "RbedInfoC", snp_vec = "ANY",
 				fid_iid = "missing", snp_names_as_colnames = "logical"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -320,7 +290,7 @@ setMethod("readBed",
 #' @rdname readBed
 #' @export 
 setMethod("readBed",
-		signature(rbed_info = "RbedInfo", snp_vec = "missing",
+		signature(rbed_info = "RbedInfoC", snp_vec = "missing",
 				fid_iid = "logical", snp_names_as_colnames = "logical"),
 		function(rbed_info, snp_vec, 
 				fid_iid, snp_names_as_colnames
@@ -335,12 +305,14 @@ setMethod("readBed",
 #' @param n_shift numeric.
 #' @return character. 
 #' @examples 
+#' \dontrun{
 #' # add suffix to stem
 #' shiftedStem("a", 100) == "a_shift_0100"
 #' shiftedStem("home/a", 100) == "home/a_shift_0100"
 #' shiftedStem("/home/a", 100) == "/home/a_shift_0100"
 #' shiftedStem(c("/home/a", "/home/b"), 100) == c("/home/a_shift_0100", 
 #' 		"/home/b_shift_0100")
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -348,15 +320,18 @@ shiftedStem = function(stem, n_shift) {
 	sprintf("%s_shift_%04d", stem, n_shift)
 }
 
+
+
 #' Shift bed files
 #' 
 #' Generates collapsed genotypes by shifting the bed file
 #' (i.e. SNP1 collapsed with SNP2, SNP2 collapsed with SNP3, etc, 
 #' when \code{n_shift == 1}).
 #' 
-#' @param rbed_info RbedInfo object
+#' @param rbed_info RbedInfoC object
 #' @param n_shift integer. 
 #' @param collapse_matrix matrix of integers. See details.
+#' @param db_setup logical. Whether to setup SQLite database for .bim, .fam and .frq files.
 #' 
 #' @details Collapsing matrix.
 #' The collapse_matrix parameter allows collapsing of two genotypes in
@@ -380,12 +355,12 @@ shiftedStem = function(stem, n_shift) {
 #'   0 \tab 1 \tab 3 \tab 3
 #' }
 #' 
-#' @return RbedInfo object, with the shifted bed file path in it. 
+#' @return RbedInfoC object, with the shifted bed file path in it. 
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 shiftBed = function(rbed_info, n_shift, db_setup = FALSE, collapse_matrix = NULL) {
-	stopifnot(isS4Class(rbed_info, "RbedInfo"))
+	stopifnot(isS4Class(rbed_info, "RbedInfoC"))
 	n_shift = as.integer(n_shift)
 	if(!is.null(collapse_matrix)) {
 		stopifnot(is.integer(collapse_matrix) && 
@@ -403,21 +378,21 @@ shiftBed = function(rbed_info, n_shift, db_setup = FALSE, collapse_matrix = NULL
 #' Remove files by matching the starting part
 #' 
 #' If \code{x} is a string, then this function matches \code{x*} by globbing.
-#' If \code{x} is a "PlInfo" object, it matches \code{x@@plink_stem*}, 
-#' If \code{x} is a "RbedInfo" object, it matches \code{x@@pl_info@@plink_stem*}.
+#' If \code{x} is a "PlInfoC" object, it matches \code{x@@plink_stem*}, 
+#' If \code{x} is a "RbedInfoC" object, it matches \code{x@@pl_info@@plink_stem*}.
 #' Otherwise nothing is removed.
 #' 
 #' 
-#' @param x character, PlInfo, or RbedInfo object.
+#' @param x character, PlInfoC, or RbedInfoC object.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 rmFilesByStem = function(x) {
 	if(is.character(x)) {
 		unlink(Sys.glob(paste(x, "*", sep = "")))
-	} else if(isS4Class(x, "PlInfo")) {
+	} else if(isS4Class(x, "PlInfoC")) {
 		unlink(Sys.glob(paste(x@plink_stem, "*", sep = "")))
-	} else if(isS4Class(x, "RbedInfo")) {
+	} else if(isS4Class(x, "RbedInfoC")) {
 		unlink(Sys.glob(paste(x@pl_info@plink_stem, "*", sep = "")))
 	} else {
 		NULL
@@ -531,19 +506,19 @@ gcdhReport = function(run_res) {
 
 
 
-#' Filter a PlGwas object by the results of a \code{plink --assoc} run
+#' Filter a PlGwasC object by the results of a \code{plink --assoc} run
 #' 
 #' This is meant for reduction in computational burden. The \code{plink --assoc} does not 
 #' accept covariates makes some assumptions accordingly, and thus runs faster than \code{--linear} and 
 #' \code{--logistic}. SNPs that does not produce a p-value more significant than a user-set threshold will
-#' be filtered out. A new PLINK file is made and a corresponding new PlGwas object is returned. 
+#' be filtered out. A new PLINK file is made and a corresponding new PlGwasC object is returned. 
 #' 
-#' @param pl_gwas PlGwas object
+#' @param pl_gwas PlGwasC object
 #' @param plink_out_stem character. Output plink file stem (without .bed extension). The default is to add a "_filtered_{RANDOM_ID}" suffix to the original.
 #' @param p_threshold numeric. P-value threshold.
-#' @param db_setup logical. Whether to setup the PlGwas object.
+#' @param db_setup logical. Whether to setup the PlGwasC object.
 #' @param force logical. Overwrite existing PLINK files.
-#' @return a new PlGwas object.
+#' @return a new PlGwasC object.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -578,13 +553,18 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, db_set
 
 #' Run GCDH analysis
 #' 
-#' @param pl_gwas PlGwas object
+#' Runs GCDH over the given PlGwasC object. 
+#' The PlGwasC object is first filtered by p-values from a \code{plink --assoc} run if a p-value threshold is given. 
+#' New PlGwasC objects are generated by shifting the PLINK bed file (e.g. shift1.bed, shift2.bed, ...) one by one. 
+#' A GWAS is run for each of these PlGwasC objects and results are collected into big.matrix files.
+#' 
+#' @param pl_gwas PlGwasC object
 #' @param n_shift integer. Maximum shift number.
 #' @param gwas_col_select character. Columns to read from a GWAS output file. Default to \code{collenv$.linear_header_default}
 #' @param collapse_matrix matrix. 4 by 4 matrix used for generating collapsed genotypes. 
 #' @param rm_shifted_files logical. Whether to remove shifted bed files after analysis is done.
 #' @param dist_threshold integer. SNPs beyond this distance will be ignored. Default to 500kb.
-#' @return A list with the following members: (1) the input PlGwas object. (2) an info data frame with CHR, BP and SNP columns. (3) One big.matrix object for each of the names in \code{gwas_col_select}
+#' @return A list with the following members: (1) the input PlGwasC object. (2) an info data frame with CHR, BP and SNP columns. (3) One big.matrix object for each of the names in \code{gwas_col_select}
 #' @importFrom bigmemory big.matrix attach.big.matrix filebacked.big.matrix
 #' @importFrom biganalytics apply min
 #' @author Kaiyin Zhong, Fan Liu
@@ -696,7 +676,7 @@ runGcdh = function(
 #' 
 #' A region around some SNP is extracted and GCDH analysis is conducted over that region.
 #' 
-#' @param pl_gwas PlGwas object
+#' @param pl_gwas PlGwasC object
 #' @param n_shift integer. Maximum shift number.
 #' @param snp character. SNP name
 #' @param window numeric. All variants with physical position no more than half the specified kb distance (decimal permitted) from the named variant are loaded. 
@@ -742,4 +722,19 @@ gcdhRegion = function(pl_gwas,
 		n_shift = nsnps - 1
 	}
 	runGcdh(pl_gwas, n_shift, gwas_col_select, collapse_matrix, rm_shifted_files, dist_threshold) 
+}
+
+
+#' Get row number of SNPs from their names
+#' 
+#' @param pl_info PlInfoC object.
+#' @param snp_names character. Vector of SNP names.
+#' @return integer. Vector of row numbers.
+#' 
+#' @author Kaiyin Zhong, Fan Liu
+#' @export
+snpRowId = function(pl_info, snp_names) {
+	stopifnot(isSetup(pl_info))
+	getQuery(sqliteFilePl(pl_info), 
+			sprintf("select rowid from bim where snp in %s order by rowid", strVectorSQLRepr(snp_names)))[, 1]
 }
