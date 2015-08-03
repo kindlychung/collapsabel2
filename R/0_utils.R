@@ -208,3 +208,42 @@ randNormDat = function(m, n) {
 	as.data.frame(matrix(rnorm(m * n), m, n))
 }
 
+
+#' Read phenotype file
+#' @param file character, path to phenotype file.
+#' @return data.frame
+#' 
+#' @author kaiyin
+#' @export
+read.phe.table = function(file) {
+	phe = read.table(file, header = TRUE)
+	stopifnot(all(c("FID", "IID") %in% colnames(phe)))
+	phe$FID = as.character(phe$FID)
+	phe$IID = as.character(phe$IID)
+	phe
+}
+
+#' Write a phenotype data.frame to file
+#' 
+#' @param phe data.frame
+#' @param file character, path to phenotype file.
+#' 
+#' @author Kaiyin Zhong
+#' @export
+write.phe.table = function(phe, file) {
+	stopifnot(all(c("FID", "IID") %in% colnames(phe)))
+	write.table(phe, file = file, quote = FALSE, row.names = FALSE)
+}
+
+#' Collpase genotypes
+#' 
+#' @param g1 numeric, genotype vector 1.
+#' @param g2 numeric, genotype vector 2.
+#' @return numeric, collapsed genotype of g1 and g2.
+#' 
+#' @author Kaiyin Zhong
+#' @export
+collapse = function(g1, g2) {
+	ifelse(g1 == 2 | g2 == 2, 2, 
+			ifelse(g1 + g2 >= 2, 2, 0))
+}
