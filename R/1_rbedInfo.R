@@ -602,7 +602,7 @@ runGcdh = function(
 				pheno = pl_gwas@opts$pheno, 
 				pheno_name = pl_gwas@opts$pheno_name, 
 				covar_name = {
-					if("covar_name" %in% pl_gwas@opts)
+					if("covar_name" %in% names(pl_gwas@opts))
 						pl_gwas@opts$covar_name
 					else
 						""
