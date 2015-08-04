@@ -43,7 +43,7 @@
 rbedInfo = function(bedstem, db_setup = FALSE) {
 	stopifnot(length(bedstem) == 1)
 	stopifnot(is.character(bedstem))
-	pl_info = plInfo(bedstem = bedstem, db_setup = FALSE)
+	pl_info = plInfo(bedstem = bedstem, db_setup = db_setup)
 	bed_path = pl_info@plink_trio["bed"]
 	
 	rbed_info = .RbedInfoC()
