@@ -156,6 +156,7 @@ sqliteFilePl = function(x) {
 	} else if(isS4Class(x, "PlGwasC")) {
 		filename = sprintf("%s.sqlite", x@pl_info@plink_stem)
 	}
+	filename
 }
 
 #' Check if a directory containing .bed .fam and .bim files is properly setup
