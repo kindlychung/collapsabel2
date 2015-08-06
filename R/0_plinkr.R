@@ -1245,6 +1245,8 @@ plinkr = function(
 	paramNameWithValue = character(nParam * 2)
 	paramNameWithValue[idxOdd] = paramName
 	paramNameWithValue[idxEven] = paramVector
+#	paramNameWithValue = ifelse(paramNameWithValue == "", "", paste0("'", paramNameWithValue, "'"))
+
 	
 	ret = system2('plink', paramNameWithValue, wait=wait, stdout=stdout, stderr=stderr)
     if(ret != 0) {

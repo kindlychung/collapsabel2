@@ -187,7 +187,7 @@ setup = function(pl_info) {
 		if(file.exists(sqlite_file)) {
 			unlink(sqlite_file)
 		}
-		if(!file.exists(pl_info@plink_frq)) {
+		if(!file.exists(pl_info@plink_frq) || !frqUpToDate(pl_info@plink_frq)) {
 			plinkr(bfile = pl_info@plink_stem, 
 					freq = "", 
 					out = pl_info@plink_stem, 

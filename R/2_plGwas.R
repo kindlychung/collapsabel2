@@ -335,11 +335,11 @@ setOptModel = function(pl_gwas, mod = "linear") {
 #' 
 #' @param pl_gwas PlGwasC object
 #' @param wait logical. Wait until GWAS is finished if this is set to TRUE. Default to FALSE.
-#' @param save_pl_gwas logical. Whether to save the plGwas object. Default to TRUE.
+#' @param save_pl_gwas logical. Whether to save the plGwas object. Default to FALSE.
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
-runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = TRUE) {
+runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = FALSE) {
 	dir.create2(gwasDir(pl_gwas))
 	stopifnot(isS4Class(pl_gwas, "PlGwasC"))
 	if(!wait) {

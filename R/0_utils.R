@@ -152,10 +152,21 @@ chExt = function(filename, ext_name) {
 dbUpToDate = function(dbname) {
 	fam_file = chExt(dbname, "fam")
 	bim_file = chExt(dbname, "bim")
+	bed_file = chExt(dbname, "bed")
+	frq_file = chExt(dbname, "frq")
 	db_ctime = as.integer(file.info(dbname)$ctime)
 	fam_mtime = as.integer(file.info(fam_file)$mtime)
 	bim_mtime = as.integer(file.info(bim_file)$mtime)
-	(db_ctime > fam_mtime) && (db_ctime > bim_mtime)
+	bed_mtime = as.integer(file.info(bed_file)$mtime)
+	frq_mtime = as.integer(file.info(frq_file)$mtime)
+	frqUpToDate(frq_file) && (db_ctime > fam_mtime) && (db_ctime > bim_mtime) && (db_ctime > bed_mtime) && (db_ctime > frq_mtime)
+}
+
+frqUpToDate = function(frq_file) {
+	bed_file = chExt(frq_file, "bed")
+	bed_ctime = as.integer(file.info(bed_file)$ctime)
+	frq_ctime = as.integer(file.info(frq_file)$ctime)
+	frq_ctime > bed_ctime
 }
 
 
