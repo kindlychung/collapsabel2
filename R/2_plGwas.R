@@ -340,8 +340,12 @@ setOptModel = function(pl_gwas, mod = "linear") {
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = FALSE) {
-	dir.create2(gwasDir(pl_gwas))
 	stopifnot(isS4Class(pl_gwas, "PlGwasC"))
+	gwas_dir = gwasDir(pl_gwas)
+	if(file.exists(gwas_dir)) {
+		unlink(gwas_dir, recursive = TRUE)
+	}
+	dir.create2(gwas_dir)
 	if(!wait) {
 		pl_gwas@opts$wait = FALSE
 	}
