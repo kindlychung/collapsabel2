@@ -45,7 +45,7 @@ rbedInfo = function(bedstem, db_setup = FALSE) {
 	stopifnot(is.character(bedstem))
 	pl_info = plInfo(bedstem = bedstem, db_setup = db_setup)
 	bed_path = pl_info@plink_trio["bed"]
-
+	
 	rbed_info = .RbedInfoC()
 	rbed_info@pl_info = pl_info
 	rbed_info@jbed = collUtils::rBed(bed_path)
@@ -195,7 +195,7 @@ setMethod("readBed",
 			} else {
 				stop("snp_vec must be either numeric or character.")
 			}
-
+			
 			mat_ref = rbed_info@jbed$readBed(
 					.jarray(snp_vec))
 			res = getJArray(mat_ref = mat_ref)
@@ -363,8 +363,11 @@ shiftBed = function(rbed_info, n_shift, db_setup = FALSE, collapse_matrix = NULL
 	stopifnot(isS4Class(rbed_info, "RbedInfoC"))
 	n_shift = as.integer(n_shift)
 	if(!is.null(collapse_matrix)) {
-		stopifnot(is.integer(collapse_matrix) &&
-						all(dim(collapse_matrix) == c(4, 4)))
+		if(! "jrectRef" %in% class(collapse_matrix)) {
+			stopifnot(is.integer(collapse_matrix) &&
+							all(dim(collapse_matrix) == c(4, 4)))
+			collapse_matrix = .jarray(collapse_matrix, dispatch = TRUE)
+		}
 		rbed_info@jbed$shift(n_shift, collapse_matrix)
 	} else {
 		rbed_info@jbed$shift(n_shift)
@@ -389,11 +392,11 @@ shiftBed = function(rbed_info, n_shift, db_setup = FALSE, collapse_matrix = NULL
 #' @export
 rmFilesByStem = function(x) {
 	if(is.character(x)) {
-		unlink(Sys.glob(paste(x, "*", sep = "")))
+		file.remove(Sys.glob(paste(x, "*", sep = "")))
 	} else if(isS4Class(x, "PlInfoC")) {
-		unlink(Sys.glob(paste(x@plink_stem, "*", sep = "")))
+		file.remove(Sys.glob(paste(x@plink_stem, "*", sep = "")))
 	} else if(isS4Class(x, "RbedInfoC")) {
-		unlink(Sys.glob(paste(x@pl_info@plink_stem, "*", sep = "")))
+		file.remove(Sys.glob(paste(x@pl_info@plink_stem, "*", sep = "")))
 	} else {
 		NULL
 	}
@@ -530,7 +533,7 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, db_set
 	target_bed = sprintf("%s.bed", plink_out_stem)
 	if(file.exists(target_bed) && !force) stopFormat("File already exists: ", target_bed)
 	pl_gwas1 = chGwasTag(pl_gwas, paste0(pl_gwas@gwas_tag, "_", rand_id))
-	pl_gwas1 = setOptModel(pl_gwas1, "assoc")
+#	pl_gwas1 = setOptModel(pl_gwas1, "assoc")
 	runGwas(pl_gwas1)
 	assoc_out = readGwasOut(pl_gwas1, c("SNP", "P"))
 	assoc_out = assoc_out[which(assoc_out$P < p_threshold), ]
@@ -593,6 +596,8 @@ runGcdh = function(
 				gcdhBmCreate(gcdh_tag, col_name, nsnps)
 		)
 		do.call("[<-", list(x = get(col_name), j = 1, value = gwas_out[, col_name]))
+		# reload big matrices after modification
+		assign(col_name, bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, col_name, "desc")))
 	}
 	# run GWAS on shifted bed files
 	for(shift_i in 1:n_shift) {
@@ -613,10 +618,12 @@ runGcdh = function(
 		gwas_out_shifted = readGwasOut(pl_gwas_shifted, gwas_col_select)
 		for(col_name in gwas_col_select) {
 			bmAddCol(bmFilepath(gcdh_tag, col_name, "bin"), gwas_out_shifted[, col_name])
+			# reload big matrices after modification
+			assign(col_name, bigmemory::attach.big.matrix(bmFilepath(gcdh_tag, col_name, "desc")))
 		}
 		# remove shifted files when requested
 		if(rm_shifted_files) {
-			unlink(
+			file.remove(
 					Sys.glob(
 							paste(
 									rbed_info_shifted@pl_info@plink_stem,
@@ -734,10 +741,10 @@ gcdhRegion = function(pl_gwas,
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 snpRowId = function(pl_info, snp_names) {
-    if(!isSetup(pl_info)) {
-        print(str(pl_info))
-        setup(pl_info)
-    }
+	if(!isSetup(pl_info)) {
+#        print(str(pl_info))
+		setup(pl_info)
+	}
 	getQuery(sqliteFilePl(pl_info),
 			sprintf("select rowid from bim where snp in %s order by rowid", strVectorSQLRepr(snp_names)))[, 1]
 }

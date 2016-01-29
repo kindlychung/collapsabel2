@@ -341,6 +341,11 @@ bmAddCol = function(bin_file, dat) {
 	
 	n_row = desc@description$nrow
 	n_col = desc@description$ncol
+#	print("\n==========")
+#	print(class(dat))
+#	print(dim(dat))
+#	print(head(dat))
+#	print(tail(dat))
 	if(is.vector(dat)) {
 		stopifnot(length(dat) == n_row)
 		dat = convertCol(dat)
@@ -357,13 +362,19 @@ bmAddCol = function(bin_file, dat) {
 	
 	# On some systems, bin file has a trailing null byte. This is a bug in the bigmemory package.
 	# I provide a temporary fix here. Bug has been reported on github.
-    n_trailing_bytes = file.info(bin_file)$size %% (n_row * n_col)
-	if(n_trailing_bytes != 0) collUtils::truncateEndOfFile(bin_file, n_trailing_bytes)
+	old_size = file.info(bin_file)$size
+    n_trailing_bytes = old_size %% (n_row * n_col)
+	if(n_trailing_bytes != 0) {
+		collUtils::truncateEndOfFile(bin_file, n_trailing_bytes)
+	}
+
 	# write dat as new column(s)
 	fh = file(bin_file, "ab")
 	tryCatch({
 				writeBin(dat, fh)
-#				writeBin(as.raw(0), fh)
+#				if(n_trailing_bytes != 0) {
+#					writeBin(as.raw(0), fh)
+#				}
 			}, finally = {
 				close(fh)
 			})
@@ -371,6 +382,7 @@ bmAddCol = function(bin_file, dat) {
 	# update description
 	desc = correctDesc(desc_file)
 	saveDesc(desc, desc_file)
+
 	invisible(desc)
 }
 

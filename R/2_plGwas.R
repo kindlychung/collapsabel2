@@ -365,8 +365,11 @@ runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = FALSE) {
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
-readGwasOut = function(pl_gwas, cn_select = "..all") {
-	readPlinkOut(gwasOut(pl_gwas), cn_select)
+readGwasOut = function(pl_gwas, cn_select = "..all", rmGwasOut = TRUE) {
+	filepath = gwasOut(pl_gwas)
+	res = readPlinkOut(filepath, cn_select)
+	if(rmGwasOut) file.remove(filepath)
+	res
 }
 
 #' Trim plink files
@@ -605,7 +608,9 @@ headPhe = function(pl_gwas, nrows = 5L) {
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 isBinary = function(v, na_value = NULL) {
-	stopifnot(is.numeric(v))
+	if(! is.numeric(v)) {
+		return(FALSE)
+	}
 	v = unique(na.omit(v))
 	if(! is.null(na_value)) {
 		v = v[! v %in% na_value]

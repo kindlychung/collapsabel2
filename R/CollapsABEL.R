@@ -10,7 +10,7 @@
 #' individually analyzing a large number of DNA sequence vari-ants, as being the
 #' routine in genome-wide association studies (GWAS), has limited power to detect
 #' genetic associations caused by GCH, which may be partially responsible for the
-#' currently still “missing heritability” .
+#' currently still "missing heritability".
 #' Existing tools specifically designed for detecting GCH alleles are scarce, in
 #' particular for the analysis of densely imputed Single Nucleotide Polymorphism
 #' (SNP) array data or whole genome se-quencing data. Previously, we developed a

@@ -5,8 +5,8 @@
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
-validPhe = function(phe_file) {
-	phe = read.table(phe_file, stringsAsFactors = FALSE, header = TRUE)
+validPhe = function(phe_file, ...) {
+	phe = read.table(phe_file, stringsAsFactors = FALSE, header = TRUE, ...)
 	if(!all(colnames(phe)[1:2] == c("FID", "IID"))) {
 		return(FALSE)
 	}
@@ -29,12 +29,12 @@ validPhe = function(phe_file) {
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
-permutePhe = function(phe_file, out_file, force = FALSE, valid = TRUE) {
+permutePhe = function(phe_file, out_file, force = FALSE, valid = TRUE, ...) {
 	if(file.exists(out_file) && !force) {
 		stopFormat("File %s already exists!", out_file)
 	}
-	if(valid) phe = validPhe(phe_file)
-	else phe = read.table(phe_file, stringsAsFactors = FALSE, header = TRUE)
+	if(valid) phe = validPhe(phe_file, ...)
+	else phe = read.table(phe_file, stringsAsFactors = FALSE, header = TRUE, ...)
 	fidiid = phe[, c("FID", "IID")]
 	others = phe[, !(colnames(phe) %in% c("FID", "IID"))]
 	others = others[sample(nrow(others)), ]
@@ -321,5 +321,27 @@ gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
 	res
 }
 
-
+#' Generate phenotype file from a fam file 
+#' @param famfile Character. Path of fam file.
+#' @param n_components Integer. Number of principle components to generate. 
+#' @return Phenotype data.frame. The data frame contains the FID, IID, SEX, AFFECTEDNESS columns of the fam file, plus principle components of genetic information.
+#' 
+#' @author kaiyin
+#' @export
+makePhe = function(famfile, n_components) {
+	base_filename = tools::file_path_sans_ext(famfile)
+	phe_file = paste0(base_filename, ".phe")
+	pca_file = paste0(base_filename, ".eigenvec")
+	phe = readFam(famfile, c("FID", "IID", "SEX", "PHE"))
+	plinkr(bfile = base_filename, pca = n_components, out = base_filename)
+	pca = read.table(pca_file, header = FALSE, stringsAsFactors = FALSE)
+	colnames(pca) = c("FID", "IID", paste0("pca", 1:n_components))
+	phe$FID = as.character(phe$FID)
+	phe$IID = as.character(phe$IID)
+	pca$FID = as.character(pca$FID)
+	pca$IID = as.character(pca$IID)
+	phe = dplyr::left_join(phe, pca)
+	write.table(phe, file = phe_file, quote = FALSE, row.names = FALSE)
+	phe
+}
 

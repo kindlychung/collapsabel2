@@ -229,6 +229,17 @@ randNormDat = function(m, n) {
 read.phe.table = function(file) {
 	phe = read.table(file, header = TRUE)
 	stopifnot(all(c("FID", "IID") %in% colnames(phe)))
+	for(i in 1:ncol(phe)) {
+		if(
+				all(
+						isBinary(phe[, i]) && sort(unique(na.omit(phe[, i]))) == c(0, 1)
+				)
+				) {
+			phe[, i] = phe[, i] + 1
+			# https://www.cog-genomics.org/plink2/input#pheno
+			warning(sprintf("%s, column %d: plink will take 0 as missing in binary trait.", file, i))
+		}
+	}
 	phe$FID = as.character(phe$FID)
 	phe$IID = as.character(phe$IID)
 	phe
@@ -250,11 +261,116 @@ write.phe.table = function(phe, file) {
 #' 
 #' @param g1 numeric, genotype vector 1.
 #' @param g2 numeric, genotype vector 2.
+#' @param collapse_matrix matrix of integers range from 0 to 3.
 #' @return numeric, collapsed genotype of g1 and g2.
 #' 
 #' @author Kaiyin Zhong
 #' @export
-collapse = function(g1, g2) {
-	ifelse(g1 == 2 | g2 == 2, 2, 
-			ifelse(g1 + g2 >= 2, 2, 0))
+collapse = function(g1, g2, collapse_matrix = NULL) {
+	if(is.null(collapse_matrix)) {
+		collapse_matrix = matrix(c(
+						0L, 0L, 0L, 0L, 
+						0L, 1L, 1L, 1L, 
+						0L, 1L, 0L, 3L, 
+						0L, 1L, 3L, 3L
+						), 4, 4)
+	}
+	convertToMachineCode = function(g) {
+		g[g == 0] = 3 
+		g[g == 2] = 0 
+		g[g == 1] = 2 
+		g[is.na(g)] = 1
+		g
+	}
+	convertToGeno = function(code) {
+		code[code == 1] = NA
+		code[code == 2] = 1 
+		code[code == 0] = 2 
+		code[code == 3] = 0
+		code
+	}
+#	geno = c(0, 1, 2, NA, 2, 2, 1, 2, 0, 0, 1, 2, NA, 1, 2, 0, 1, 1, 2, 2)
+#	x = convertToMachineCode(geno)
+#	convertToGeno(x) == geno
+	idx = cbind(convertToMachineCode(g1), convertToMachineCode(g2))
+	code = collapse_matrix[idx+1]
+	convertToGeno(code)
+}
+#coll_mat = matrix(c(
+#				0L, 0L, 0L, 0L, 
+#				0L, 1L, 2L, 1L, 
+#				0L, 2L, 0L, 2L, 
+#				0L, 1L, 2L, 3L
+#		), 4, 4)
+#g1 = sample(0:2, 100, repl = TRUE)
+#g2 = sample(0:2, 100, repl = TRUE)
+#g1[sample(1:100, 15)] = NA
+#g2[sample(1:100, 15)] = NA
+#cbind(g1, g2, collapse(g1, g2, coll_mat))
+
+#' Estimate percentage of variation explained
+#' 
+#' @param df Dataframe
+#' @param yn Name of the independent variable, must be one of the columns of \code{df}
+#' 
+#' @author Fan Liu
+#' @export
+getr2 <- function(df,yn){
+	if(!(yn %in% names(df))) {
+		stop("Dependent var name not valid!")
+	}
+	
+	# construct a names map
+	old_names = colnames(df)
+	new_names = paste0("x", 1:ncol(df))
+	names_map = data.frame(old_names, new_names)
+	df = setNames(df, new_names)
+	
+	old_yn = yn
+	yn = new_names[old_names == yn]
+	
+	# xn: independent var names
+	xn = names(df)[names(df) != yn]
+	
+	fo <- as.formula(paste(yn, "~",paste(xn,collapse="+")))
+	# summary table, intercept excluded
+	tb <- summary(glm(fo,data=df))$coef[-1,]
+	# sort rownames by reverse order of t values
+	xn <- rownames(tb)[order(-abs(tb[,3]))]
+	# setup result
+	r2 <- rep(NA,length(xn))
+	names(r2) <- xn
+	for (i in 1:length(xn)){
+		fo <- as.formula(paste(yn, "~",paste(xn[1:i],collapse="+")))
+		m <- lm(fo,data=df)
+		r2[i] <- summary(m)$r.squared
+	}
+	r2 <- (r2-c(0,r2[-length(r2)]))*100
+	
+	df1 <- as.data.frame(tb)
+	df1$Name<-rownames(tb)
+	df2 <- data.frame(Name=names(r2),r2=r2)
+	df3 <- merge(df1, df2, by="Name")
+	df3 <- df3[order(-df3$r2),]
+	
+	rownames(names_map) = new_names
+	df3$Name = names_map[df3$Name, ]$old_names
+	df3
+}
+
+
+#' Extract one row or column of a data frame as a vector
+#' @param dat data.frame
+#' @param i row or column number
+#' @param row Logical. If TRUE, then i is the row number, otherwise i is the column number
+#' @return A vector.
+#' 
+#' @author kaiyin
+#' @export
+datToVec = function(dat, i, row=TRUE) {
+	if(row) {
+		t(dat[i, ])[, 1]
+	} else {
+		data[, i]
+	}
 }

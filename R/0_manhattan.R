@@ -247,7 +247,6 @@ connectSnpPair = function(cplot, snp1, snp2, linetype = "dotted", hjust = 0, tex
 			y = c(top_y, top_y), 
 			xend = c(left_x, right_x), 
 			yend = c(left_y, right_y))
-	print(data)
 	cplot = cplot + geom_segment(
 					data = data,
 					mapping = aes(x = x,
@@ -263,3 +262,24 @@ connectSnpPair = function(cplot, snp1, snp2, linetype = "dotted", hjust = 0, tex
 
 
 
+#' Manhattan plot the simple way
+#' @param gcdh_report data.frame, from a GCDH analysis
+#' @param outfile output image filepath. Any type (.png, .pdf, etc) supported by ggplot2::ggsave. Default to NULL. When it's not NULL, this function will try to save the plot to the specified path.
+#' @return A ggplot object
+#' 
+#' @author kaiyin
+#' @export
+mh = function(gcdh_report, outfile=NULL) {
+	cdata = contrastData(
+			gcdh_report$CHR1, 
+			gcdh_report$BP1, 
+			gcdh_report$P1, 
+			gcdh_report$P, 
+			gcdh_report$SNP1
+	)
+	plot_res = manhattanPlot(cdata)
+	if(!is.null(outfile)) {
+		ggsave(outfile, plot_res, width = 11, height = 5)
+	}
+	plot_res
+}
