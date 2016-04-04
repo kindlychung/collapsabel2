@@ -180,25 +180,33 @@ setMethod("readBed",
 		function(rbed_info, snp_vec,
 				fid_iid, snp_names_as_colnames
 		) {
+#			if(is.numeric(snp_vec)) {
+#				snp_vec = sort(as.integer(snp_vec))
+#				snp_names = getQuery(
+#						sqliteFilePl(rbed_info@pl_info),
+#						sprintf("select snp from bim where rowid in %s order by rowid",
+#								numVectorSQLRepr(snp_vec)))[, 1]
+#			} else if(is.character(snp_vec)) {
+#				snp_names = snp_vec
+#				snp_vec = snpRowId(rbed_info@pl_info, snp_vec)
+#				snp_ord = order(snp_vec)
+#				snp_vec = snp_vec[snp_ord]
+#				snp_names = snp_names[snp_ord]
 			if(is.numeric(snp_vec)) {
 				snp_vec = sort(as.integer(snp_vec))
-				snp_names = getQuery(
-						sqliteFilePl(rbed_info@pl_info),
-						sprintf("select snp from bim where rowid in %s order by rowid",
-								numVectorSQLRepr(snp_vec)))[, 1]
 			} else if(is.character(snp_vec)) {
-				snp_names = snp_vec
-				snp_vec = snpRowId(rbed_info@pl_info, snp_vec)
-				snp_ord = order(snp_vec)
-				snp_vec = snp_vec[snp_ord]
-				snp_names = snp_names[snp_ord]
+
 			} else {
 				stop("snp_vec must be either numeric or character.")
 			}
 			
-			mat_ref = rbed_info@jbed$readBed(
+#			mat_ref = rbed_info@jbed$readBed( .jarray(snp_vec))
+			geno_data_ref = rbed_info@jbed$readBed(
 					.jarray(snp_vec))
+			mat_ref = geno_data_ref$getGeno()
+#			class(mat_ref) = c("jarrayRef", "jobjRef")
 			res = getJArray(mat_ref = mat_ref)
+			snp_names = geno_data_ref$getSnpNames()
 			if(snp_names_as_colnames) {
 				res = setNames(res, snp_names)
 			}
@@ -453,7 +461,7 @@ gcdhReport = function(run_res) {
 	stopifnot(all(collenv$.linear_header_default %in% names(run_res)))
 	# minimal p and number of tests
 	gcdh_p = biganalytics::apply(run_res$P, 1, function(i) {
-				biganalytics::min(na.omit(i))
+				min(na.omit(i))
 			})
 	gcdh_ntests = biganalytics::apply(run_res$P, 1, function(i) {length(na.omit(i))})
 	pl_gwas = setupRbed(run_res$pl_gwas)
@@ -521,7 +529,24 @@ gcdhReport = function(run_res) {
 #' @param p_threshold numeric. P-value threshold.
 #' @param db_setup logical. Whether to setup the PlGwasC object.
 #' @param force logical. Overwrite existing PLINK files.
-#' @return a new PlGwasC object.
+#' @return a new PlGwasC object. 
+#' 
+#' @examples 
+#' \dontrun{
+#' rbed_info = rbedInfo(bedstem = "mmp13", db_setup = FALSE)
+#' pl_gwas = plGwas(rbed_info, 
+#' 		pheno = "mmp13.phe",
+#' 		pheno_name = "Page", 
+#' 		gwas_tag = "mmp13_page_sex_age")
+#' runGwas(pl_gwas)
+#' x = readGwasOut(pl_gwas, c("SNP", "P"), rmGwasOut = FALSE)
+#' pl_gwas1 = assocFilter(pl_gwas, p_threshold = 0.001)
+#' runGwas(pl_gwas1)
+#' x1 = readGwasOut(pl_gwas1, c("SNP", "P"), rmGwasOut = FALSE)
+#' y = dplyr::inner_join(x, x1, by = "SNP")
+#' all(y$P.x == y$P.y)
+#' all(y$P.y < 0.001)
+#' }
 #'
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -569,7 +594,7 @@ assocFilter = function(pl_gwas, plink_out_stem = NULL, p_threshold = 0.1, db_set
 #' @param dist_threshold integer. SNPs beyond this distance will be ignored. Default to 500kb.
 #' @return A list with the following members: (1) the input PlGwasC object. (2) an info data frame with CHR, BP and SNP columns. (3) One big.matrix object for each of the names in \code{gwas_col_select}
 #' @importFrom bigmemory big.matrix attach.big.matrix filebacked.big.matrix
-#' @importFrom biganalytics apply min
+#' @importFrom biganalytics apply colmin
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 runGcdh = function(

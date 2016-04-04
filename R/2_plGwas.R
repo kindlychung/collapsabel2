@@ -84,7 +84,23 @@ covarNames = function(pl_gwas) {
 #' @param gwas_tag character. Tag for this GWAS.
 #' @param assoc logical. Whether use the "--assoc" option for PLINK.
 #' @param opts list. Options to be passed to PLINK.
-#' @return PlGwasC object
+#' @return PlGwasC object 
+#' @examples 
+#' \dontrun{
+#' gwas_tag = "mmp13_page_sex_age"
+#' rbed_info = rbedInfo(bedstem = "mmp13")
+#' pl_gwas = plGwas(rbed_info, 
+#' 		pheno = "mmp13.phe",
+#' 		pheno_name = "Page", 
+#' 		covar_name = "Sex,Cage", 
+#' 		gwas_tag = gwas_tag)
+#' runGwas(pl_gwas)
+#' "mmp13_page_sex_age" %in% listGwasTags() == "TRUE"
+#' gwas_out = readGwasOut(pl_gwas, rmGwasOut = FALSE)
+#' colClasses(gwas_out) == c("integer", "character", "integer", 
+#'     "character", "character", "integer", 
+#'     "numeric", "numeric", "numeric")
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @docType methods
@@ -361,6 +377,7 @@ runGwas = function(pl_gwas, wait = TRUE, save_pl_gwas = FALSE) {
 #' otherwise returns NULL.
 #' @param pl_gwas PlGwasC object.
 #' @param cn_select Colnames to select. Default to "..all"
+#' @param rmGwasOut Logical. Whether to remove GWAS output files after finished reading them. Default to TRUE. 
 #' @return data.frame 
 #' 
 #' @author Kaiyin Zhong, Fan Liu

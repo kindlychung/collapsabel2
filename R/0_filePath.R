@@ -20,6 +20,12 @@
 #' 
 #' @param s character, path to file or dir
 #' @return FilePath object
+#' @examples 
+#' \dontrun{
+#' fp = filePath(R.home())
+#' dirName(fp) == dirname(fp@path)
+#' baseName(fp) == basename(fp@path)
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export

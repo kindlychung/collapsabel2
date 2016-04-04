@@ -59,7 +59,17 @@ glm2 = function(dat, y, xs, ...) {
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
-glmIter = function(dat, y, xs, covars, ...) {
+glmIter = function(dat, y, xs = NULL, covars = character(), ...) {
+	cn = colnames(dat)
+	stopifnot(y %in% cn)
+	if(length(covars) != 0) {
+		stopifnot(all(covars %in% cn))
+	}
+	if(!is.null(xs)) {
+		stopifnot(all(xs %in% cn))
+	} else {
+		xs = cn[!(cn %in% y) & !(cn %in% covars)]
+	}
 	t(sapply(xs, function(x) {
 				glm2(dat, y, c(covars, x), ...)[x, ]
 			}))

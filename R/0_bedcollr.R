@@ -2,6 +2,9 @@
 #' 
 #' This is a wrapper around the \code{bedcoll} commandline tool.
 #' @import rJava
+#' @import stats 
+#' @importFrom utils write.table read.table
+#' @import methods
 #' 
 #' @param bfile bed filename, without the \code{.bed} extension.
 #' @param nshift_min Minimal shift number

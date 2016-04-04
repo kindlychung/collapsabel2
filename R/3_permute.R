@@ -1,6 +1,7 @@
 #' Validate a phenotype file
 #' 
 #' @param phe_file character. Phenotype file.
+#' @param ... Passed to read.table
 #' @return FALSE when the file is invalid, or a data.frame when it is. 
 #' 
 #' @author Kaiyin Zhong, Fan Liu
@@ -26,6 +27,7 @@ validPhe = function(phe_file, ...) {
 #' @param out_file character. Path to permuted phenotype file.
 #' @param force logical. When set to TRUE, existing file is overwritten.
 #' @param valid logical. Whether to validate the phenotype file first. 
+#' @param ... Passed to read.table
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export

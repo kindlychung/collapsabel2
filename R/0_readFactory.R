@@ -104,11 +104,17 @@ readFunFactory = function(header) {
 #' @name readInfo
 #' 
 #' @param filename Path of the file to read 
-#' @param cnames character. Expected column names (header).
+#' @param cnames character. Expected column names (header). 
+#' @examples 
+#' \dontrun{
+#' ri = readInfo("mmp13.frq")
+#' ri@cnames 
+#' ri@filename
+#' ri@header 
+#' }
 #' @return ReadInfo object
 #' 
 #' @author Kaiyin Zhong, Fan Liu
-#' @export
 setGeneric("readInfo",
 		function(filename, cnames) {
 			standardGeneric("readInfo")
@@ -258,7 +264,14 @@ famCorrectTypes = function(fam_dat)  {
 #' 
 #' @param filename .fam file path
 #' @param cn_select a character vector for selected colnames
-#' @return a data.frame
+#' @return a data.frame 
+#' 
+#' @examples 
+#' \dontrun{
+#' bim = readBim("mmp13.bim")
+#' bim1 = readBim("mmp13.bim", "..all")
+#' fam = readFam("mmp13.fam", "..all")
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
@@ -320,7 +333,22 @@ readQassoc = function(filename, cn_select = collenv$.qassoc_header) {
 #' 
 #' @param filename Filenames of plink output files, see \code{collenv$.plink_out_ext}
 #' @param ... passed to one of \code{readAssoc, readQassoc, readLinear, readLogistic}
-#' @return data.frame
+#' @return data.frame 
+#' @examples 
+#' \dontrun{
+#' dat1 = readPlinkOut("assoc/mmp13.assoc")
+#' dat2 =    readAssoc("assoc/mmp13.assoc")
+#' all(na.omit(dat1 == dat2))
+#' dat1 = readPlinkOut("assoc/mmp13.assoc", c("CHR", "SNP", "P", "OR"))
+#' dat2 =    readAssoc("assoc/mmp13.assoc", c("CHR", "SNP", "P", "OR"))
+#' all(na.omit(dat1 == dat2))
+#' dat1 = readPlinkOut("assoc/mmp13.qassoc")
+#' dat2 =   readQassoc("assoc/mmp13.qassoc")
+#' all(na.omit(dat1 == dat2))
+#' dat1 = readPlinkOut("assoc/mmp13.qassoc", c("CHR", "SNP", "P", "R2"))
+#' dat2 =   readQassoc("assoc/mmp13.qassoc", c("CHR", "SNP", "P", "R2"))
+#' all(na.omit(dat1 == dat2))
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export

@@ -126,7 +126,6 @@ colCors = function(dat1, dat2) {
 #' Default value for expression. 
 #' 
 #' When an expression evals to NULL, take the default value instead. Copied from dplyr source.
-#' @usage x \%||\% y
 #' @param x expression to be evaled. 
 #' @param y default value.
 #' @name getOrElse-operator
@@ -289,13 +288,36 @@ collapse = function(g1, g2, collapse_matrix = NULL) {
 		code[code == 3] = 0
 		code
 	}
-#	geno = c(0, 1, 2, NA, 2, 2, 1, 2, 0, 0, 1, 2, NA, 1, 2, 0, 1, 1, 2, 2)
-#	x = convertToMachineCode(geno)
-#	convertToGeno(x) == geno
 	idx = cbind(convertToMachineCode(g1), convertToMachineCode(g2))
 	code = collapse_matrix[idx+1]
 	convertToGeno(code)
 }
+
+#' Collapse two genotype matrices, column by column
+#' 
+#' Each column is assummed to be the genotype for a SNP. The two genotype matrices should have the same size. 
+#' 
+#' @param m1 first genotype matrix
+#' @param m2 second genotype matrix
+#' @param collapse_matrix collapsed genotype matrix
+#' @return collapsed genotyp matrix
+#' 
+#' @author kaiyin
+#' @export
+collapseMat = function(m1, m2, collapse_matrix = matrix(c(
+						0L, 0L, 0L, 0L, 
+						0L, 1L, 1L, 1L, 
+						0L, 1L, 0L, 3L, 
+						0L, 1L, 3L, 3L
+						), 4, 4))  {
+			if(!all(dim(m1) == dim(m2))) stop("m1 and m2 should have same size!")
+			m = m1 
+			for(i in 1:ncol(m1)) {
+				m[, i] = collapse(m1[, i], m2[, i], collapse_matrix = collapse_matrix)
+			}
+			m
+		}
+
 #coll_mat = matrix(c(
 #				0L, 0L, 0L, 0L, 
 #				0L, 1L, 2L, 1L, 
@@ -371,6 +393,6 @@ datToVec = function(dat, i, row=TRUE) {
 	if(row) {
 		t(dat[i, ])[, 1]
 	} else {
-		data[, i]
+		dat[, i]
 	}
 }

@@ -10,9 +10,10 @@
 #' @return TRUE or a string
 #' @examples 
 #' \dontrun{
-#' x = list(1, 2, 3)
-#' str(x[c(1, 3)])
 #' lenCheck(list(1, 2, 3), c(1, 1, 0))
+#' grepl("\\nGiven: \n.*", lenCheck(list(1, 2, 3), c(1, 1, 0)))
+#' grepl("\\nGiven: \n.*", lenCheck(list(1, c(1, 2, 3), list(4, 5, 6)), c(1, 1, 0))) 
+#' lenCheck(list(1, c(1, 2, 3), list(4, 5, 6)), c(1, 3, 3))
 #' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu

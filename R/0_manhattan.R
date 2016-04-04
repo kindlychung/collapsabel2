@@ -279,7 +279,7 @@ mh = function(gcdh_report, outfile=NULL) {
 	)
 	plot_res = manhattanPlot(cdata)
 	if(!is.null(outfile)) {
-		ggsave(outfile, plot_res, width = 11, height = 5)
+		ggplot2::ggsave(outfile, plot_res, width = 11, height = 5)
 	}
 	plot_res
 }

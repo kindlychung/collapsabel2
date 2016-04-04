@@ -10,6 +10,7 @@
 #' nonExistentFiles(R.home())
 #' nonExistentFiles(sapply(1:5, function(i) tempfile()))
 #' nonExistentFiles(sapply(1:5, function(i) tempdir()))
+#' nonExistentFiles(c("/tmp/f3412lds43289ajkfdlsa", R.home())) == "/tmp/f3412lds43289ajkfdlsa"
 #' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu

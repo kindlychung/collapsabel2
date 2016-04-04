@@ -77,6 +77,14 @@ plinkTrio <- function(bedstem, must_exist = FALSE) {
 #' @param bedstem path of bed file excluding extension name
 #' @param db_setup logical. Whether to setup SQLite database for .bim, .fam and .frq files.
 #' @return a PlInfoC object
+#' @examples 
+#' \dontrun{
+#'			pl_info = plInfo(.PlInfoC(), "mmp13", db_setup = TRUE)
+#'			isSetup(pl_info)
+#'			bim_ff = getQuery(sqliteFilePl(pl_info), "select * from bim")
+#'			fam_ff = getQuery(sqliteFilePl(pl_info), "select * from fam")
+#'			frq_ff = getQuery(sqliteFilePl(pl_info), "select * from frq")
+#' }
 #' @importFrom methods validObject
 #' @author Kaiyin Zhong, Fan Liu
 #' @export 
@@ -251,6 +259,14 @@ nIndivApprPl = function(pl_info) {
 #' 
 #' @param pl_info PlInfoC object
 #' @return data.frame of two columns "FID" and "IID"
+#' 
+#' @examples 
+#' \dontrun{
+#' pl_info = plInfo(bedstem = "mmp13", db_setup = TRUE)
+#' fidiid = fidIid(pl_info)
+#' fam = readFam("mmp13.fam", c("FID", "IID"))
+#' all(fam == fidiid)
+#' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
 #' @export

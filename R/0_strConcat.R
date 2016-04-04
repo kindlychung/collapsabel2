@@ -25,6 +25,8 @@ strConcat = function(ss, sep = "") {
 #' 
 #' @param ss character. 
 #' @param print_out logical. Whether to print out the string representation.
+#' @param single_quote Logical, whether to use single quote for wrap strings. Default to TRUE, when set to FALSE, double quote is used. 
+#' @param start_with_c Logical, whether the representation should start with "c(", when set to FALSE, "(" is used. Default to TRUE.
 #' @return character.
 #' @examples 
 #' \dontrun{
@@ -36,14 +38,15 @@ strConcat = function(ss, sep = "") {
 #' }
 #' 
 #' @author Kaiyin Zhong, Fan Liu
-#' @name strVectorRepr_methods
 #' @export
-strVectorRepr = function(ss, print_out = FALSE) {
+strVectorRepr = function(ss, print_out = FALSE, single_quote = TRUE, start_with_c = TRUE) {
+	delim = if(single_quote) "'" else '"'
+	start = if(start_with_c) "c(" else "("
 	ss = strConcat(
 			c(
-					"c(", 
+					start,
 					strConcat(
-							paste('"', ss, '"', sep = ""), 
+							paste(delim, ss, delim, sep = ""), 
 							", "),
 					")"
 			)
@@ -103,5 +106,26 @@ numVectorSQLRepr = function(vec, print_out = FALSE) {
 	res
 }
 
+
+
+#' Retrive SNP positions from hg19 database
+#' @param snps A vector of SNP names
+#' @param rm_underscore Remove irregular chromosome names
+#' @return data.frame
+#' 
+#' @author kaiyin
+#' @export
+snpPosSNP138 = function(snps, rm_underscore = TRUE) {
+	cmdStart = "mysql --user=genome --host=genome-mysql.cse.ucsc.edu -NA     -e \"select chrom, chromStart, chromEnd, name from hg19.snp138 where name in "
+	tmpfile = tempfile()
+	cmdEnd = sprintf("\" hg19 > %s", tmpfile)
+	snplist = strVectorRepr(snps, start_with_c = FALSE)
+	cmd = sprintf("%s %s %s", cmdStart, snplist, cmdEnd)
+	system(cmd)
+	res = read.table(tmpfile, header = FALSE)
+	colnames(res) = c("chrom", "chromStart", "chromEnd", "SNP")
+	hasUnderscore = stringr::str_detect(res$chrom, "_")
+	res[!hasUnderscore, ]
+}
 
 
