@@ -141,7 +141,7 @@ library(ggplot2)
 ggsave("/tmp/mplot.png", myplot, width = 10, height = 5)
 ```
 [[mplot]]
-image::mplot.png[]
+image::http://i.imgur.com/MB8CUIh.png[]
 
 === Contrast Manhattan plot of GCDH results
 
@@ -156,4 +156,4 @@ ggsave("/tmp/cplot.png", cplot, width = 10, height = 5)
 ```
 
 [[cplot]]
-image::cplot.png[]
+image::http://i.imgur.com/y2GqoKL.png[]
