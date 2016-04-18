@@ -262,14 +262,14 @@ connectSnpPair = function(cplot, snp1, snp2, linetype = "dotted", hjust = 0, tex
 
 
 
-#' Manhattan plot the simple way
+#' Contrast Manhattan plot the simple way
 #' @param gcdh_report data.frame, from a GCDH analysis
 #' @param outfile output image filepath. Any type (.png, .pdf, etc) supported by ggplot2::ggsave. Default to NULL. When it's not NULL, this function will try to save the plot to the specified path.
 #' @return A ggplot object
 #' 
 #' @author kaiyin
 #' @export
-mh = function(gcdh_report, outfile=NULL) {
+cmh = function(gcdh_report, outfile=NULL) {
 	cdata = contrastData(
 			gcdh_report$CHR1, 
 			gcdh_report$BP1, 
