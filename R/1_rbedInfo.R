@@ -45,7 +45,7 @@ rbedInfo = function(bedstem, db_setup = FALSE) {
 	stopifnot(is.character(bedstem))
 	pl_info = plInfo(bedstem = bedstem, db_setup = db_setup)
 	bed_path = pl_info@plink_trio["bed"]
-	
+
 	rbed_info = .RbedInfoC()
 	rbed_info@pl_info = pl_info
 	rbed_info@jbed = collUtils::rBed(bed_path)
@@ -199,7 +199,7 @@ setMethod("readBed",
 			} else {
 				stop("snp_vec must be either numeric or character.")
 			}
-			
+
 #			mat_ref = rbed_info@jbed$readBed( .jarray(snp_vec))
 			geno_data_ref = rbed_info@jbed$readBed(
 					.jarray(snp_vec))
@@ -381,7 +381,7 @@ shiftBed = function(rbed_info, n_shift, db_setup = FALSE, collapse_matrix = NULL
 		rbed_info@jbed$shift(n_shift)
 	}
 	invisible(
-			rbedInfo(bedstem = shiftedStem(rbed_info@pl_info@plink_stem, n_shift),
+			rbedInfo(bedstem = shiftedStem(sprintf("%s_%s", rbed_info@pl_info@plink_stem, rbed_info@gwas_tag), n_shift),
 					db_setup = db_setup)
 	)
 }
@@ -529,14 +529,14 @@ gcdhReport = function(run_res) {
 #' @param p_threshold numeric. P-value threshold.
 #' @param db_setup logical. Whether to setup the PlGwasC object.
 #' @param force logical. Overwrite existing PLINK files.
-#' @return a new PlGwasC object. 
-#' 
-#' @examples 
+#' @return a new PlGwasC object.
+#'
+#' @examples
 #' \dontrun{
 #' rbed_info = rbedInfo(bedstem = "mmp13", db_setup = FALSE)
-#' pl_gwas = plGwas(rbed_info, 
+#' pl_gwas = plGwas(rbed_info,
 #' 		pheno = "mmp13.phe",
-#' 		pheno_name = "Page", 
+#' 		pheno_name = "Page",
 #' 		gwas_tag = "mmp13_page_sex_age")
 #' runGwas(pl_gwas)
 #' x = readGwasOut(pl_gwas, c("SNP", "P"), rmGwasOut = FALSE)
