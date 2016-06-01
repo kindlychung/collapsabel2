@@ -637,8 +637,7 @@ runGcdh = function(
 					else
 						""
 				},
-				gwas_tag = shifted_tag,
-				opts = pl_gwas@opts
+				gwas_tag = shifted_tag
 		)
 		runGwas(pl_gwas_shifted)
 		gwas_out_shifted = readGwasOut(pl_gwas_shifted, gwas_col_select)
