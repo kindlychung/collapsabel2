@@ -381,7 +381,7 @@ shiftBed = function(rbed_info, n_shift, db_setup = FALSE, collapse_matrix = NULL
 		rbed_info@jbed$shift(n_shift)
 	}
 	invisible(
-			rbedInfo(bedstem = shiftedStem(sprintf("%s_%s", rbed_info@pl_info@plink_stem, rbed_info@gwas_tag), n_shift),
+			rbedInfo(bedstem = shiftedStem(rbed_info@pl_info@plink_stem, n_shift),
 					db_setup = db_setup)
 	)
 }
