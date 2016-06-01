@@ -4,4 +4,6 @@ man
 .project
 .settings
 *.bed
-
+.Rproj.user
+.Rbuildignore
+collapsabel2.Rproj
