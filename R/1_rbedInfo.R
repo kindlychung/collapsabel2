@@ -608,7 +608,7 @@ runGcdh = function(
 		gwas_col_select = collenv$.linear_header_default
 	}
 	# a random suffix makes multiple R session conflicts impossible
-	gcdh_tag = sprintf("%s_%s", pl_gwas@gwas_tag, randomString(6))
+	gcdh_tag = sprintf("%s_%s%s", pl_gwas@gwas_tag, randomString(6), as.hexmode(as.integer(Sys.time())))
 	pl_gwas = chGwasTag(pl_gwas, gcdh_tag)
 	# run the initial GWAS and store results in first column
 	runGwas(pl_gwas)
