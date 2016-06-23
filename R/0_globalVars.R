@@ -25,6 +25,7 @@
 #' .plink_stderr Plink stderr
 #' 
 #' @name collenv
+#' @export 
 collenv <<- new.env()
 
 collenv$.collapsabel_dir = file.path(Sys.getenv("HOME"), ".collapsabel")

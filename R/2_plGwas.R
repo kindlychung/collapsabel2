@@ -648,7 +648,7 @@ isBinary = function(v, na_value = NULL) {
 #' @export
 binPhe = function(pl_gwas) {
 	stopifnot(isS4Class(pl_gwas, "PlGwasC"))
-	validObject(pl_gwas)
+	methods::validObject(pl_gwas)
 	phe = readPhe(pl_gwas, pl_gwas@opts$pheno_name)
 	isBinary(phe[, 1])
 }
