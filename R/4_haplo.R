@@ -1,3 +1,7 @@
+# Translates a genotype vec into a format that haplo.stats understands:
+# 0 -> 1, 1
+# 1 -> 1, 2 
+# 2 -> 2, 2
 haplo.g = function(g) {
 	a1 = (g > 1) + 1
 	a2 = (g > 0) + 1
@@ -32,7 +36,7 @@ haploFormat = function(geno) {
 	haplo = data.frame(matrix(NA, nrow(geno), 0))
 	geno_ncol = ncol(geno)
 	for(i in 1:geno_ncol) {
-		# each SNP gets two haplotypes
+		# each SNP gets two alleles
 		haplo = cbind(haplo, haplo.g(geno[, i]))
 	}
 	old_cnames = rep(colnames(geno), each = 2)
@@ -42,6 +46,13 @@ haploFormat = function(geno) {
 }
 
 
+#' Infer haplotypes for a pair of SNPs
+#' 
+#' @param geno Genotype data frame. Must have 4 columns, the first two being "FID" and "IID", the last two being the genotypes.
+#' @return A data frame of haplotypes
+#' 
+#' @author kaiyin
+#' @export
 getHaplo = function(geno) {
 	stopifnot(ncol(geno) == 4 && all(c("FID", "IID") %in% colnames(geno)))
 	geno = geno[complete.cases(geno), ]
@@ -59,8 +70,35 @@ getHaplo = function(geno) {
 	hapdat = dplyr::left_join(hapdat, haptab, by = c("h1" = "h"))
 #	geno.hapdat = renameLoci(geno.hapdat, 1)
 	hapdat = dplyr::left_join(hapdat, haptab, by = c("h2" = "h"))
-	hapdat$diplo = apply(hapdat[, 5:8], 1, function(x) paste0("-", paste(x, collapse = "-"), "-"))
+	hapdat$diplo = apply(hapdat[, 5:8], 1, 
+			function(x)  {
+				s1 = paste(x[1:2], collapse = "-")
+				s2 = paste(x[3:4], collapse = "-")
+				s1 = paste0("-", s1, "-")
+				s2 = paste0("-", s2, "-")
+				paste0(s1, "+", s2)
+			}
+	)
 	hapdat = dplyr::left_join(geno, hapdat, by = "id")
 	hapdat$id = NULL
 	hapdat
+}
+
+getHaplos = function(g1, g2, phe) {
+	stopifnot(all(dim(g1) == dim(g2)))
+	stopifnot(all(g1$FID == g2$FID))
+	stopifnot(all(g1$IID == g2$IID))
+	nc = ncol(g1)
+	stopifnot(nc > 2)
+	stopifnot(ncol(phe) > 2)
+	stopifnot(all(c("FID", "IID") %in% colnames(phe)))
+	ret = list()
+	for (i in 3:nc) {
+		x = dplyr::left_join(g1[, c(1, 2, i)], g2[, c(1, 2, i)])
+		h = getHaplo(x)
+		dat = dplyr::inner_join(phe, h[, c("FID", "IID", "diplo")])
+		name = paste0(names(g1)[i], "_", names(g2)[i])
+		ret[[name]] = dat
+	}
+	ret
 }
