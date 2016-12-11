@@ -51,6 +51,7 @@ globalVariables(
 				"collenv", 
 				"alphaNumeric", 
 				"x", "y", "xend", "yend", 
-				"XPOS", "MLOGP", "BP", "COLOR", "ACHR"
+				"XPOS", "MLOGP", "BP", "COLOR", "ACHR",
+				"p", "geno_pool", "group", "id"
 		)
 )
