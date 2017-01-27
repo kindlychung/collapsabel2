@@ -283,3 +283,70 @@ cmh = function(gcdh_report, outfile=NULL) {
 	}
 	plot_res
 }
+
+
+validatedIdx = function(pvector) {
+	!is.na(pvector) & !is.nan(pvector) & !is.null(pvector) & is.finite(pvector) & pvector < 1 & pvector > 0
+}
+
+#' QQ plot of one p-value vector
+#' 
+#' @param pvector p-value vector	
+#' @return A ggplot object
+#' 
+#' @importFrom ggplot2 geom_point geom_abline ggplot xlab ylab
+#' @author kaiyin
+#' @export
+qq = function(pvector) {
+	pvector <- pvector[validatedIdx(pvector)]
+	o = -log10(sort(pvector))
+	e = -log10(ppoints(length(pvector)))
+	data = data.frame(e = e, o = o)
+	gp = ggplot2::ggplot(data, aes(x = e, y = o)) + ggplot2::geom_point() + ggplot2::geom_abline(slope = 1, intercept = 0, color = "gray") + 
+			ggplot2::xlab(expression(Expected ~ ~-log[10](italic(p)))) + 
+			ggplot2::ylab(expression(Observed ~ ~-log[10](italic(p)))) 
+	gp
+}
+
+#' QQ plot of multiple p-value vectors
+#' @param ... p-value vectors. These vectors don't have to have the same length.
+#' @return A ggplot object. One QQ plot for each p-value vector and they superposed one after another. 
+#' 
+#' @author kaiyin
+#' @importFrom ggplot2 geom_point geom_abline ggplot xlab ylab
+#' @export
+qqmulti = function(...) {
+	ps = list(...)
+	for(i in 1:length(ps)) {
+		o = -log10(sort(ps[[i]]))
+		e = -log10(ppoints(length(o)))
+		ps[[i]] = data.frame(e = e, o = o, group = i)
+	}
+	data = do.call(rbind, ps)
+	gp = ggplot2::ggplot(data, aes(x = e, y = o, color = factor(group))) + ggplot2::geom_point() + ggplot2::geom_abline(slope = 1, intercept = 0, color = "gray") + 
+			ggplot2::xlab(expression(Expected ~ ~-log[10](italic(p)))) + 
+			ggplot2::ylab(expression(Observed ~ ~-log[10](italic(p)))) 
+	gp
+}
+
+
+#' QQ plot of two p-value vector
+#' 
+#' @return A ggplot object
+#' @param p1 First p-value vector
+#' @param p2 Second p-value vector
+#' 
+#' @author kaiyin
+#' @export
+qq2 = function(p1, p2) {
+	p1 <- p1[validatedIdx(p1)]
+	p2 <- p2[validatedIdx(p2)]
+	data = as.data.frame(qqplot(p1, p2, plot.it=FALSE))
+	e = -log10(sort(data$x))
+	o = -log10(sort(data$y))
+	data = data.frame(x = e, y = o)
+	gp = ggplot2::ggplot(data, aes(x = x, y = y)) + ggplot2::geom_point() + ggplot2::geom_abline(slope = 1, intercept = 0, color = "gray") + 
+			ggplot2::xlab(expression(Expected ~ ~-log[10](italic(p)))) + 
+			ggplot2::ylab(expression(Observed ~ ~-log[10](italic(p)))) 
+	gp
+}
