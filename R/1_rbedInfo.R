@@ -45,7 +45,7 @@ rbedInfo = function(bedstem, db_setup = FALSE) {
 	stopifnot(is.character(bedstem))
 	pl_info = plInfo(bedstem = bedstem, db_setup = db_setup)
 	bed_path = pl_info@plink_trio["bed"]
-	
+
 	rbed_info = .RbedInfoC()
 	rbed_info@pl_info = pl_info
 	rbed_info@jbed = collUtils::rBed(bed_path)
@@ -199,7 +199,7 @@ setMethod("readBed",
 			} else {
 				stop("snp_vec must be either numeric or character.")
 			}
-			
+
 #			mat_ref = rbed_info@jbed$readBed( .jarray(snp_vec))
 			geno_data_ref = rbed_info@jbed$readBed(
 					.jarray(snp_vec))
@@ -529,14 +529,14 @@ gcdhReport = function(run_res) {
 #' @param p_threshold numeric. P-value threshold.
 #' @param db_setup logical. Whether to setup the PlGwasC object.
 #' @param force logical. Overwrite existing PLINK files.
-#' @return a new PlGwasC object. 
-#' 
-#' @examples 
+#' @return a new PlGwasC object.
+#'
+#' @examples
 #' \dontrun{
 #' rbed_info = rbedInfo(bedstem = "mmp13", db_setup = FALSE)
-#' pl_gwas = plGwas(rbed_info, 
+#' pl_gwas = plGwas(rbed_info,
 #' 		pheno = "mmp13.phe",
-#' 		pheno_name = "Page", 
+#' 		pheno_name = "Page",
 #' 		gwas_tag = "mmp13_page_sex_age")
 #' runGwas(pl_gwas)
 #' x = readGwasOut(pl_gwas, c("SNP", "P"), rmGwasOut = FALSE)
@@ -608,7 +608,7 @@ runGcdh = function(
 		gwas_col_select = collenv$.linear_header_default
 	}
 	# a random suffix makes multiple R session conflicts impossible
-	gcdh_tag = sprintf("%s_%s", pl_gwas@gwas_tag, randomString(6))
+	gcdh_tag = sprintf("%s_%s%s", pl_gwas@gwas_tag, randomString(6), as.hexmode(as.integer(Sys.time())))
 	pl_gwas = chGwasTag(pl_gwas, gcdh_tag)
 	# run the initial GWAS and store results in first column
 	runGwas(pl_gwas)

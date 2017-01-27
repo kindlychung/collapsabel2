@@ -1,9 +1,9 @@
 #' Validate a phenotype file
-#' 
+#'
 #' @param phe_file character. Phenotype file.
 #' @param ... Passed to read.table
-#' @return FALSE when the file is invalid, or a data.frame when it is. 
-#' 
+#' @return FALSE when the file is invalid, or a data.frame when it is.
+#'
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 validPhe = function(phe_file, ...) {
@@ -20,15 +20,15 @@ validPhe = function(phe_file, ...) {
 }
 
 #' Permute a phenotype file
-#' 
+#'
 #' All columns except FID and IID are permuted.
-#' 
+#'
 #' @param phe_file character. Phenotype file.
 #' @param out_file character. Path to permuted phenotype file.
 #' @param force logical. When set to TRUE, existing file is overwritten.
-#' @param valid logical. Whether to validate the phenotype file first. 
+#' @param valid logical. Whether to validate the phenotype file first.
 #' @param ... Passed to read.table
-#' 
+#'
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 permutePhe = function(phe_file, out_file, force = FALSE, valid = TRUE, ...) {
@@ -46,15 +46,15 @@ permutePhe = function(phe_file, out_file, force = FALSE, valid = TRUE, ...) {
 }
 
 #' Run simulations to control type-I error
-#' 
-#' Simulate a new phenotype N times and run GCDH with each. 
-#' The \code{phe_fun} function is used to generate new phenotype file. 
+#'
+#' Simulate a new phenotype N times and run GCDH with each.
+#' The \code{phe_fun} function is used to generate new phenotype file.
 #' When this function is not given, the phenotype file from the PlGwasC object will be
-#' permuted and used as the new phenotype file (permutation analysis). Thus when no \code{phe_fun} 
-#' is supplied, this function can be used to survey p-values under the null distribution. 
+#' permuted and used as the new phenotype file (permutation analysis). Thus when no \code{phe_fun}
+#' is supplied, this function can be used to survey p-values under the null distribution.
 #' A threshold for Genome-wide significance can be calculated from these p-values by 5% (or
 #' any other alpha-level) quantile.
-#' 
+#'
 #' @param pl_gwas PlGwasC object
 #' @param n_shift integer. \code{n_shift} for each GCDH run.
 #' @param n_simu integer. Number of simulations to run.
@@ -63,16 +63,16 @@ permutePhe = function(phe_file, out_file, force = FALSE, valid = TRUE, ...) {
 #' @param p_threshold numeric or NULL. When it's not NULL, the PlGwasC object is filtered by \code{assocFilter} first.
 #' @param collapse_matrix See runGcdh.
 #' @param rm_shifted_files  See runGcdh.
-#' @return A list with the following members: (1) tag of this simulation, can be used to remove related files. (2) 
-#' a list of SNP pairs. If "snp_pair" is a member of the result from \code{phe_fun}, then this list will be non-empty, 
+#' @return A list with the following members: (1) tag of this simulation, can be used to remove related files. (2)
+#' a list of SNP pairs. If "snp_pair" is a member of the result from \code{phe_fun}, then this list will be non-empty,
 #' otherwise it will be empty. (3) a list of reports from all the GCDH analysis. (4) global minimal p-values of the single-SNP
 #' approach. (4) global minimal p-values of GCDH.
-#' 
+#'
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 runTypeI = function(
 		pl_gwas,
-		n_shift, 
+		n_shift,
 		n_simu,
 		phe_fun = NULL,
 		dist_threshold = 500e3,
@@ -83,7 +83,7 @@ runTypeI = function(
 	stopifnot(is.data.frame(validPhe(pl_gwas@opts$pheno)))
 	# to avoid collision between multiple R sessions, add a suffix of random chars
 	rand_id = randomString(6)
-	type_one_tag = sprintf("%s_%s", pl_gwas@gwas_tag, rand_id)
+	type_one_tag = sprintf("%s_%s%s", pl_gwas@gwas_tag, rand_id, as.hexmode(as.integer(Sys.time())))
 	pl_gwas = chGwasTag(pl_gwas, type_one_tag)
 	pl_gwas = setupRbed(pl_gwas)
 	nsnps = nSnpPl(pl_gwas@pl_info)
@@ -98,7 +98,7 @@ runTypeI = function(
 		}
 	}
 	for(simu_i in 1:n_simu) {
-		phe_fun_ret = phe_fun(new_pheno) 
+		phe_fun_ret = phe_fun(new_pheno)
 		if("snp_pair" %in% names(phe_fun_ret)) {
 			snp_pairs[[length(snp_pairs) + 1]] = phe_fun_ret$snp_pair
 		}
@@ -109,13 +109,13 @@ runTypeI = function(
 			new_pl_gwas = assocFilter(new_pl_gwas, p_threshold = p_threshold)
 		}
 		gcdh_res = runGcdh(
-				pl_gwas = new_pl_gwas, 
-				n_shift = n_shift, 
-				collapse_matrix = collapse_matrix, 
-				rm_shifted_files = rm_shifted_files, 
+				pl_gwas = new_pl_gwas,
+				n_shift = n_shift,
+				collapse_matrix = collapse_matrix,
+				rm_shifted_files = rm_shifted_files,
 				dist_threshold = dist_threshold
 		)
-		gcdh_reports[[length(gcdh_reports) + 1]] = getQuery(gcdhReport(gcdh_res), "select snp1, snp2, p1, p2, p from gcdh_report order by rowid")			
+		gcdh_reports[[length(gcdh_reports) + 1]] = getQuery(gcdhReport(gcdh_res), "select snp1, snp2, p1, p2, p from gcdh_report order by rowid")
 		removeTag(gcdh_res$tag, "gcdh")
 		if(!is.null(p_threshold)) {
 			rmPlinkFiles(new_pl_gwas@pl_info@plink_stem)
@@ -142,12 +142,12 @@ runTypeI = function(
 dummyPhe = function(rbed_info, filename) {
 	phe = fidIid(rbed_info@pl_info)
 	phe$y = rnorm(nrow(phe))
-	write.table(phe, quote = FALSE, row.names = FALSE, file = filename)	
+	write.table(phe, quote = FALSE, row.names = FALSE, file = filename)
 }
 
-dummyTypeI <- function(rbed_info, 
-		n_shift, 
-		n_simu, 
+dummyTypeI <- function(rbed_info,
+		n_shift,
+		n_simu,
 		...) {
 	phe_fun = function(filename) dummyPhe(rbed_info, filename)
 	dummy_tag = paste0("dummy_", randomString(6))
@@ -155,14 +155,14 @@ dummyTypeI <- function(rbed_info,
 	dir.create2(dummy_dir)
 	phe_file = file.path(dummy_dir, paste0("phe_", randomString(6), ".txt"))
 	phe_fun(phe_file)
-	pl_gwas = plGwas(pl_gwas = rbed_info, 
+	pl_gwas = plGwas(pl_gwas = rbed_info,
 			pheno = phe_file,
-			pheno_name = "y", 
+			pheno_name = "y",
 			gwas_tag = dummy_tag)
-	typeI_res = runTypeI(pl_gwas = pl_gwas, 
-			n_shift = n_shift, 
-			n_simu = n_simu, 
-			phe_fun = phe_fun, 
+	typeI_res = runTypeI(pl_gwas = pl_gwas,
+			n_shift = n_shift,
+			n_simu = n_simu,
+			phe_fun = phe_fun,
 			...)
 	unlink(dummy_dir, recursive = TRUE)
 	typeI_res
@@ -170,50 +170,50 @@ dummyTypeI <- function(rbed_info,
 
 
 #' GCDH power analysis
-#' 
-#' This function makes use of \code{runTypeI}. 
-#' Random phenotypes are used to survey p-values under the null hypothesis (SNPs are not associated phenotype), 
-#' and genome-wide significance thresholds for single-SNP approach and GCDH are calculated by a user given 
+#'
+#' This function makes use of \code{runTypeI}.
+#' Random phenotypes are used to survey p-values under the null hypothesis (SNPs are not associated phenotype),
+#' and genome-wide significance thresholds for single-SNP approach and GCDH are calculated by a user given
 #' alpha-level.
-#' A custom \code{phe_fun} is supplied 
-#' for simulating a phenotype associated with a certain pair of SNPs. 
-#' Total number of such simulations is set by the n_simu parameter. In each simulation 4 p-values are generated: 
-#' 
+#' A custom \code{phe_fun} is supplied
+#' for simulating a phenotype associated with a certain pair of SNPs.
+#' Total number of such simulations is set by the n_simu parameter. In each simulation 4 p-values are generated:
+#'
 #' P_single: p-values from single-SNP approach.
-#' 
+#'
 #' P_GCDH:  p-values from GCDH.
-#' 
+#'
 #' P_(single,no causal): p-values from single-SNP approach when causal SNPs are untyped.
-#' 
+#'
 #' P_(GCDH,no causal): p-values from GCDH when causal SNPs are untyped.
-#' 
-#' When all simulations are finished, 
+#'
+#' When all simulations are finished,
 #' 4 vectors of p-values are obtained: P_single_vec, P_GCDH_vec, P_(single,no causal)_vec, P_(GCDH,no causal)_vec.
 #' The power for each of the category (single-SNP, single-SNP without causal genotypes, GCDH, GCDH without causal genotypes)
-#' are proportions of these vectors that are more significant than the genome-wide significance thresholds 
+#' are proportions of these vectors that are more significant than the genome-wide significance thresholds
 #' we have obtained.
-#' 
+#'
 #' @param rbed_info RbedInfoC object
 #' @param n_shift integer. \code{n_shift} for each GCDH run.
 #' @param n_simu integer. Number of simulations to run.
-#' @param maf_min numeric. Lower limit of MAF interval. 
-#' @param maf_max numeric. Upper limit of MAF interval. 
+#' @param maf_min numeric. Lower limit of MAF interval.
+#' @param maf_max numeric. Upper limit of MAF interval.
 #' @param r_limit numeric. Upper limit of correlation coefficient between the two causal SNPs.
 #' @param beta numeric. Effect size of the simulated phenotype.
 #' @param collapse_matrix See runGcdh.
 #' @param dist_threshold See runGcdh.
 #' @param alpha_level numeric. Control type-I error rate at this level.
-#' 
+#'
 #' @author Kaiyin Zhong
 #' @export
 gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
-		r_limit, beta, 
-		collapse_matrix = NULL, 
+		r_limit, beta,
+		collapse_matrix = NULL,
 		dist_threshold = 5e5,
 		alpha_level = 0.05
 ) {
 	rbed_info = setupRbed(rbed_info)
-	snp_frq = getQuery(sqliteFilePl(rbed_info@pl_info), 
+	snp_frq = getQuery(sqliteFilePl(rbed_info@pl_info),
 			sprintf("select chr,snp,bp,maf from bim join frq using (chr,snp) where maf > %s and maf < %s order by chr,bp ", maf_min, maf_max))
 	phe_fun1 = function(filename) {
 		chooseSnps = function() {
@@ -225,7 +225,7 @@ gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
 			snp1_idx = which(snp_frq1$SNP == snp1)
 			# further extraction, we only need the SNPs within the window size (n_shift)
 			end_idx = min(c(snp1_idx + n_shift, nrow(snp_frq1)))
-			if((end_idx - snp1_idx) < 3) { 
+			if((end_idx - snp1_idx) < 3) {
 				return(NULL) # make sure the pool is big enough
 			}
 			snp_frq1 = snp_frq1[snp1_idx:end_idx, ]
@@ -243,7 +243,7 @@ gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
 			if(length(snps) > 10) {
 				snps = sample(snps, 10)
 			}
-			geno = readBed(rbed_info, 
+			geno = readBed(rbed_info,
 					snp_vec = snps)
 			r_vec = apply(geno[, 3:ncol(geno)], 2, function(g) {
 						idx = !is.na(g) & !is.na(geno[, 3])
@@ -259,7 +259,7 @@ gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
 		}
 		chooseSnpsLoop = function() {
 			geno_pair = chooseSnps()
-			n_try = 1 
+			n_try = 1
 			while(is.null(geno_pair) && n_try < 21) {
 				geno_pair = chooseSnps()
 				message(sprintf("No suitable SNPs found in this round of sampling, retry %d", n_try))
@@ -274,21 +274,21 @@ gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
 		geno1 = geno[, 3]
 		geno2 = geno[, 4]
 		geno$y = ((geno1 + geno2) >= 2) * beta + rnorm(length(geno1))
-		write.table(geno[, c(1, 2, 5)], file = filename, 
+		write.table(geno[, c(1, 2, 5)], file = filename,
 				quote = FALSE, row.names = FALSE)
 		list(snp_pair = colnames(geno)[3:4])
 	}
 	phe_dummy = tempfile()
 	dummyPhe(rbed_info, phe_dummy)
-	pl_gwas = plGwas(rbed_info, 
-			pheno = phe_dummy, 
-			pheno_name = "y", 
+	pl_gwas = plGwas(rbed_info,
+			pheno = phe_dummy,
+			pheno_name = "y",
 			gwas_tag = "power_est")
-	typeI_res = runTypeI(pl_gwas, 
-			n_shift = n_shift, 
-			n_simu = n_simu, 
-			phe_fun = phe_fun1, 
-			dist_threshold = dist_threshold, 
+	typeI_res = runTypeI(pl_gwas,
+			n_shift = n_shift,
+			n_simu = n_simu,
+			phe_fun = phe_fun1,
+			dist_threshold = dist_threshold,
 			collapse_matrix = collapse_matrix
 	)
 	pmins_no_causal = t(
@@ -307,8 +307,8 @@ gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
 	)
 	typeI_res$pbasemins_no_causal = pmins_no_causal[,"PSINGLE"]
 	typeI_res$pminmins_no_causal = pmins_no_causal[, "P"]
-	dummy_res = dummyTypeI(rbed_info, n_shift, n_simu, 
-			dist_threshold = dist_threshold, 
+	dummy_res = dummyTypeI(rbed_info, n_shift, n_simu,
+			dist_threshold = dist_threshold,
 			collapse_matrix = collapse_matrix)[c("pbasemins", "pminmins")]
 	alpha_single = quantile(dummy_res$pbasemins, alpha_level)
 	alpha_gcdh = quantile(dummy_res$pminmins)
@@ -316,18 +316,18 @@ gcdhPower = function(rbed_info, n_shift, n_simu, maf_min, maf_max,
 	pow_gcdh = mean(typeI_res$pminmins < alpha_gcdh, na.rm = TRUE)
 	pow_single_nc = mean(typeI_res$pbasemins_no_causal < alpha_single, na.rm = TRUE)
 	pow_gcdh_nc = mean(typeI_res$pminmins_no_causal < alpha_gcdh, na.rm = TRUE)
-	res = data.frame(pow_single = pow_single, 
-			pow_gcdh = pow_gcdh, 
-			pow_single_nc = pow_single_nc, 
+	res = data.frame(pow_single = pow_single,
+			pow_gcdh = pow_gcdh,
+			pow_single_nc = pow_single_nc,
 			pow_gcdh_nc = pow_gcdh_nc)
 	res
 }
 
-#' Generate phenotype file from a fam file 
+#' Generate phenotype file from a fam file
 #' @param famfile Character. Path of fam file.
-#' @param n_components Integer. Number of principle components to generate. 
+#' @param n_components Integer. Number of principle components to generate.
 #' @return Phenotype data.frame. The data frame contains the FID, IID, SEX, AFFECTEDNESS columns of the fam file, plus principle components of genetic information.
-#' 
+#'
 #' @author kaiyin
 #' @export
 makePhe = function(famfile, n_components) {
