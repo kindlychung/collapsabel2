@@ -321,7 +321,7 @@ gwasOut = function(pl_gwas) {
 #' @author Kaiyin Zhong, Fan Liu
 #' @export
 setOptModel = function(pl_gwas, mod = "linear") {
-	poss_mods = c("linear", "logistic", "assoc")
+	poss_mods = c("linear", "logistic")
 	stopifnot(isS4Class(pl_gwas, "PlGwasC"))
 	stopifnot((length(mod) == 1) && (mod %in% poss_mods))
 	# nullify all modes that are not selected
