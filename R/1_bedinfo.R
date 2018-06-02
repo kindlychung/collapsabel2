@@ -201,7 +201,8 @@ setup = function(pl_info) {
 					out = pl_info@plink_stem, 
 					wait = TRUE)
 		}
-		frq = read.table(pl_info@plink_frq, header = TRUE, stringsAsFactors = FALSE, comment.char = "*")
+		frq = read.table(pl_info@plink_frq, header = FALSE, stringsAsFactors = FALSE)
+		frq = setNames(frq, c("CHR", "SNP", "REF", "ALT", "MAF", "NMISS"))
 		bim = readBim(pl_info@plink_trio["bim"])
 		fam = readFam(pl_info@plink_trio["fam"])
 		fam = setNames(fam, c("FID", "IID", "PID", "MID", "SEX", "PHE"))
