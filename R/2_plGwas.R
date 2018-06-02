@@ -304,16 +304,8 @@ isS4Class = function(obj, c) {
 #' @export
 gwasOut = function(pl_gwas) {
 	stem = gwasOutStem(pl_gwas)
-	if("assoc" %in% names(pl_gwas@opts)) {
-		if(binPhe(pl_gwas)) {
-			paste(stem, ".assoc", sep = '')
-		} else {
-			paste(stem, ".qassoc", sep = '')
-		}
-	} else if("linear" %in% names(pl_gwas@opts)) {
-		paste(stem, ".assoc.linear", sep = "")
-	} else if("logistic" %in% names(pl_gwas@opts)) {
-		paste(stem, ".assoc.logistic", sep = "")
+	if("linear" %in% names(pl_gwas@opts) || "logistic" %in% names(pl_gwas@opts)) {
+		paste(stem, ".", pl_gwas@opts$pheno_name, ".glm.linear", sep = "")
 	} else {
 		stop("no modeling option specified?")
 	}

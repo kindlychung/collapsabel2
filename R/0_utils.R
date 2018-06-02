@@ -178,10 +178,7 @@ rmPlinkFiles = function(plink_stem) {
 							".frq", 
 							".nosex", 
 							".log", 
-							".assoc",
-							".qassoc",
-							".assoc.linear", 
-							".assoc.logistic", 
+							".glm.linear", 
 							".sqlite" 
 					))
 	)
