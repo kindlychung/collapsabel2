@@ -1248,7 +1248,7 @@ plinkr = function(
 #	paramNameWithValue = ifelse(paramNameWithValue == "", "", paste0("'", paramNameWithValue, "'"))
 
 	
-	ret = system2('plink', paramNameWithValue, wait=wait, stdout=stdout, stderr=stderr)
+	ret = system2('plink2', paramNameWithValue, wait=wait, stdout=stdout, stderr=stderr)
     if(ret != 0) {
 		warning("plink failed.")
 		invisible(FALSE)

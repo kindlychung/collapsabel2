@@ -112,7 +112,7 @@ setMethod("plInfo",
 			
 			# frq file
 			# TODO: autogen frq files using plinkr
-			plink_frq = paste(bedstem, ".frq", sep="")
+			plink_frq = paste(bedstem, ".afreq", sep="")
 			
 			# return a PlInfoC obj
 			pl_info@main_dir = main_dir
