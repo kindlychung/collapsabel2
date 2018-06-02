@@ -461,7 +461,8 @@ gcdhReport = function(run_res) {
 	stopifnot(all(collenv$.linear_header_default %in% names(run_res)))
 	# minimal p and number of tests
 	gcdh_p = biganalytics::apply(run_res$P, 1, function(i) {
-				min(na.omit(i))
+				x = min(na.omit(i))
+				x
 			})
 	gcdh_ntests = biganalytics::apply(run_res$P, 1, function(i) {length(na.omit(i))})
 	pl_gwas = setupRbed(run_res$pl_gwas)
