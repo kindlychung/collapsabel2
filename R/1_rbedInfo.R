@@ -486,7 +486,7 @@ gcdhReport = function(run_res) {
 			P2     = stats1$P1[second_snp_indices]
 	)
 	# gcdh_nmiss, gcdh_beta, gcdh_stat, gcdh_p
-	idx = cbind(1:nrow(run_res$NMISS), minimal_p_indices)
+	idx = cbind(1:nrow(run_res$OBS_CT), minimal_p_indices)
 	gcdh_nmiss = run_res$OBS_CT[,][idx]
 	gcdh_beta = run_res$BETA[,][idx]
 	gcdh_stat = run_res$T_STAT[,][idx]
