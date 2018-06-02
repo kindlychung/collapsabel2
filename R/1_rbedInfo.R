@@ -487,9 +487,9 @@ gcdhReport = function(run_res) {
 	)
 	# gcdh_nmiss, gcdh_beta, gcdh_stat, gcdh_p
 	idx = cbind(1:nrow(run_res$NMISS), minimal_p_indices)
-	gcdh_nmiss = run_res$NMISS[,][idx]
+	gcdh_nmiss = run_res$OBS_CT[,][idx]
 	gcdh_beta = run_res$BETA[,][idx]
-	gcdh_stat = run_res$STAT[,][idx]
+	gcdh_stat = run_res$T_STAT[,][idx]
 	gcdh_p1 = run_res$P[,][idx]
 	stopifnot(all(gcdh_p1 == gcdh_p))
 	# combined all stats in one data.frame
