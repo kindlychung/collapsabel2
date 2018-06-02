@@ -83,20 +83,14 @@ export LD_LIBRARY_PATH=/usr/lib/jvm/java-8-oracle/jre/lib/amd64/server:$LD_LIBRA
 
 === Install PLINK2
 
-Go to PLINK2 website and download the package, extract it and put the `plink` executable in your `$PATH`, `/usr/local/bin`, for example (if you are the administrator of the machine).
+Go to PLINK2 website and download the package, extract it and put the `plink2` executable in your `$PATH`, `/usr/local/bin`, for example (if you are the administrator of the machine).
 
-=== Install R packages
+=== Install CollapsABEL
 In R:
 ```
-# dependencies
-install.packages( c("rJava"), repos = "http://cran.us.r-project.org")
-install.packages( c("Rcpp"), repos = "http://cran.us.r-project.org")
-install.packages( c("R.utils"), repos = "http://cran.us.r-project.org")
-install.packages( c("RSQLite"), repos = "http://cran.us.r-project.org")
-install.packages( c("dplyr", "ggplot2", "stringr"), repos = "http://cran.us.r-project.org")
-install.packages( c("biganalytics", "bigmemory"), repos = "http://cran.us.r-project.org")
-# replace the paths
-install.packages(c("collUtils_1.0.4.tar.gz", "CollapsABEL_0.10.6.tar.gz"), type = "source", repos = NULL)
+install.packages("devtools")
+library(devtools)
+install_github("kindlychung/collapsabel2")
 ```
 
 == Run CollapsABEL with a toy example
