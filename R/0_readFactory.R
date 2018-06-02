@@ -285,48 +285,15 @@ readFam = readFactory("fam")
 #' 
 #' @author Kaiyin Zhong
 #' @export
-readLogistic = function(filename, cn_select = collenv$.linear_header)  {
+readLinear = function(filename, cn_select = collenv$.linear_header)  {
 	info = readInfo(filename)
 	dat = info@read_fun(info, cn_select)
 	correctTypes(dat, c("CHR", "BP", "NMISS", "BETA", "STAT", "P"), 
 			c(rep("integer", 3), rep("numeric", 3)))
 }
 
-readLinear = readLogistic
 
 
-#' Read PLINK .assoc files
-#' 
-#' @param filename character. Filename
-#' @param cn_select character. Columns to read.
-#' @return data.frame
-#' 
-#' @author Kaiyin Zhong
-#' @export
-readAssoc = function(filename, cn_select = collenv$.assoc_header) {
-	info = readInfo(filename)
-	dat = info@read_fun(info, cn_select)
-	correctTypes(dat, c("CHR", "BP", "F_A", "F_U", "CHISQ", "P", "OR"),
-			c(rep("integer", 2), rep("numeric", 5)))
-}
-
-
-#' Read .qassoc files
-#' 
-#' @param filename Path of the file to read
-#' @param cn_select a character vector for selected colnames
-#' @return data.frame. 
-#' 
-#' @author Kaiyin Zhong
-#' @export
-readQassoc = function(filename, cn_select = collenv$.qassoc_header) {
-	info = readInfo(filename)
-	dat = info@read_fun(info, cn_select)
-	correctTypes(dat, 
-			c("CHR",  "BP", "NMISS", "BETA", "SE", "R2", "T", "P"),
-			c(rep("integer", 3), rep("numeric", 5))
-			)
-}
 
 
 #' Read plink output files

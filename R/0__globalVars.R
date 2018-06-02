@@ -35,7 +35,7 @@ collenv$.logistic_header = c( "CHROM", "POS", "ID", "REF", "ALT", "A1", "TEST", 
 collenv$.logistic_header_default = c("OBS_CT", "BETA", "T_STAT", "P")
 collenv$.linear_header = collenv$.logistic_header
 collenv$.linear_header_default = collenv$.logistic_header_default
-collenv$.plink_out_ext = c("glm.linear")
+collenv$.plink_out_ext = c("linear")
 collenv$.plink_stdout = FALSE
 collenv$.plink_stderr = FALSE
 
