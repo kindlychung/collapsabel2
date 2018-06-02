@@ -470,9 +470,9 @@ gcdhReport = function(run_res) {
 	# chr1, bp1, snp1, maf1, nmiss1, beta1, stat1, p1
 	basic_info1 = setNames(cbind(run_res$chr_bp, maf), c("SNP1", "CHR1", "BP1", "MAF1"))
 	stats1 = data.frame(
-			NMISS1 = run_res$NMISS[, 1],
+			NMISS1 = run_res$OBS_CT[, 1],
 			BETA1 = run_res$BETA[, 1],
-			STAT1 = run_res$STAT[, 1],
+			STAT1 = run_res$T_STAT[, 1],
 			P1 = run_res$P[, 1]
 	)
 	# chr2, bp2, snp2, maf2, nmiss2, beta2, stat2, p2
